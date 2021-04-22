@@ -1,0 +1,6 @@
+pytest==6.2.3
+numpy==1.19.5
+six==1.15.0
+PyYAML==5.4.1
+ray==1.2.0
+wandb==0.10.27
