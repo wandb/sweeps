@@ -8,4 +8,4 @@ workflows:
     jobs:
       - python/test:
           test-tool: pytest
-          version: "3.6"
+          version: "3.8"
