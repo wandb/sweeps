@@ -2,10 +2,25 @@ version: 2.1
 
 orbs:
   python: circleci/python@1.4.0
+  codecov: codecov/codecov@1.1.5
+
+jobs:
+  linux38:
+    executor:
+      name: python/default
+      tag: "3.8"
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: pip install -r requirements.dev.txt
+      - run:
+          name: Run Tests          
+          command: pytest --cov=./ --cov-report=xml
+      - codecov/upload:
+          file: coverage.xml
 
 workflows:
   main:
     jobs:
-      - python/test:
-          test-tool: pytest
-          version: "3.8"
+      - linux38
