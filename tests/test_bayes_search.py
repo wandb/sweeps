@@ -1,7 +1,9 @@
-from wandb.sweeps import bayes_search as bayes
+import platform
+
 import numpy as np
 import pytest
-import platform
+
+from sweeps import bayes_search as bayes
 
 
 def squiggle(x):

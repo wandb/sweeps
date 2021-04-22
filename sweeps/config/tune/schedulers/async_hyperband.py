@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tune asynchyperband schedulers.
 """
-from wandb.sweeps.config import cfg
+from .config import cfg
 
 
 class AsyncHyperband(cfg.SweepConfigElement):

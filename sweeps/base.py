@@ -2,9 +2,7 @@
 Base classes to be inherited from for Search and EarlyTerminate algorithms
 """
 
-import math
-
-from wandb.sweeps.util import is_nan_or_nan_string
+from .util import is_nan_or_nan_string
 
 
 class Search:

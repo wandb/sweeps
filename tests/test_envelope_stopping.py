@@ -1,7 +1,7 @@
-import numpy as np
-from numpy.random import uniform
 from numpy.random import randint
-from wandb.sweeps import envelope_stopping
+from numpy.random import uniform
+
+from sweeps import envelope_stopping
 
 
 def synthetic_loss(start, asympt, decay, noise, length):

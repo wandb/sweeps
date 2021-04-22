@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tune hyperopt generation.
 """
-from wandb.sweeps.config import cfg
+from .config import cfg
 
 
 class HyperOpt(cfg.SweepConfigElement):

@@ -1,5 +1,4 @@
-from wandb.sweeps import hyperband_stopping as search
-import numpy as np
+from sweeps import hyperband_stopping as search
 
 
 def test_hyperband_min_iter_bands():

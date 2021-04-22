@@ -2,9 +2,8 @@
 """RayTune Search / Stopping.
 """
 
-from wandb.sweeps.base import Search
-from wandb.sweeps.params import HyperParameterSet
-from wandb.sweeps import engine
+from . import engine
+from .base import Search
 
 
 def config_to_dict(config):

@@ -7,7 +7,8 @@ and then we build up an envelope where we stop jobs where the metric doesn't get
 """
 
 import numpy as np
-from wandb.sweeps.base import EarlyTerminate
+
+from .base import EarlyTerminate
 
 
 def top_k_indicies(arr, k):

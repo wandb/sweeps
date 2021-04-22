@@ -1,8 +1,9 @@
-import numpy as np
-from wandb.sweeps import random_search
 import random
+
+import numpy as np
 import pytest
 
+from sweeps import random_search
 
 sweep_config_2params = {
     "parameters": {"v1": {"min": 3, "max": 5}, "v2": {"min": 5, "max": 6}}

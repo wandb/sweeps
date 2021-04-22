@@ -2,11 +2,11 @@
 """Tune config generation.
 """
 
-import wandb
-from wandb.sweeps.config import cfg
-import sys
 import random
 
+import wandb
+
+from .config import cfg
 
 _cfg_module = "tune"
 _cfg_version = "0.7.6"

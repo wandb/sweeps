@@ -6,9 +6,8 @@ from __future__ import division
 from __future__ import print_function
 
 import six
-import copy
-from wandb.sweeps import sweepwarn, sweepdebug
 from wandb.sweeps import engine
+from wandb.sweeps import sweepwarn, sweepdebug
 
 
 class TuneHyperOptSearch:
@@ -27,7 +26,6 @@ class TuneHyperOptSearch:
         **kwargs
     ):
 
-        from hyperopt import hp
         from ray.tune.suggest.hyperopt import HyperOptSearch
 
         _wandb = _wandb or {}

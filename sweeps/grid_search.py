@@ -4,8 +4,9 @@ Grid Search
 
 import itertools
 import random
-from wandb.sweeps.params import HyperParameter, HyperParameterSet
-from wandb.sweeps.base import Search
+
+from .base import Search
+from .params import HyperParameter, HyperParameterSet
 
 
 class GridSearch(Search):

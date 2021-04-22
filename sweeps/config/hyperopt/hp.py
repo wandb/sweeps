@@ -2,7 +2,7 @@
 """Tune config generation.
 """
 
-from wandb.sweeps.config import cfg
+from .config import cfg
 
 
 _cfg_module = "hyperopt"

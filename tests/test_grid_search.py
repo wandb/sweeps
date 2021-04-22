@@ -1,6 +1,5 @@
-import numpy as np
-from wandb.sweeps import grid_search
-from wandb.sweeps.params import HyperParameter
+from sweeps import grid_search
+from sweeps.params import HyperParameter
 
 
 class Run(object):

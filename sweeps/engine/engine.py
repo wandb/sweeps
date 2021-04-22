@@ -2,12 +2,9 @@
 """Interpret SweepConfig object.
 """
 
-from wandb.sweeps.config import SweepConfig
-from wandb.sweeps import config
 from wandb.sweeps import engine
-from wandb.sweeps import util
 from wandb.sweeps import sweeperror
-
+from wandb.sweeps import util
 
 supported = {
     "tune": engine.tune,

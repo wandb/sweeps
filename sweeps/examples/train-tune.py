@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
-import wandb
 import argparse
 import sys
-from wandb.sweeps.config import tune
-from wandb.sweeps.config.hyperopt import hp
-from wandb.sweeps.config.tune.schedulers import AsyncHyperBandScheduler
-from wandb.sweeps.config.tune.suggest.hyperopt import HyperOptSearch
 from datetime import datetime
+
+import wandb
+
+from .config import tune
+from .config.hyperopt import hp
+from .config.tune.schedulers import AsyncHyperBandScheduler
+from .config.tune.suggest.hyperopt import HyperOptSearch
 
 # define command line options
 parser = argparse.ArgumentParser()

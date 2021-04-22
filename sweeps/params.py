@@ -3,13 +3,9 @@ Hyperparameter search parameters
 """
 
 import random
+
 import numpy as np
-from wandb.util import get_module
-
-# import scipy.stats as stats
-
-
-stats = get_module("scipy.stats")
+import scipy.stats as stats
 
 
 class HyperParameter:

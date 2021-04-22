@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-import time
-import wandb
-import random
 import argparse
+import random
+import time
+
+import wandb
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--project", type=str, default=None, help="project")
