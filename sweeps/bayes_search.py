@@ -10,25 +10,29 @@ as well as the case where X is very large.
 """
 
 import numpy as np
-#from sklearn.gaussian_process import GaussianProcessRegressor
-#from sklearn.gaussian_process.kernels import Matern
-#import scipy.stats as stats
+
+# from sklearn.gaussian_process import GaussianProcessRegressor
+# from sklearn.gaussian_process.kernels import Matern
+# import scipy.stats as stats
 import math
 from wandb.util import get_module
 from wandb.sweeps.base import Search
 from wandb.sweeps.params import HyperParameter, HyperParameterSet
 
-sklearn_gaussian = get_module('sklearn.gaussian_process')
-scipy_stats = get_module('scipy.stats')
+sklearn_gaussian = get_module("sklearn.gaussian_process")
+scipy_stats = get_module("scipy.stats")
 
 
 def fit_normalized_gaussian_process(X, y, nu=1.5):
     """
-        We fit a gaussian process but first subtract the mean and divide by stddev.
-        To undo at prediction tim, call y_pred = gp.predict(X) * y_stddev + y_mean
+    We fit a gaussian process but first subtract the mean and divide by stddev.
+    To undo at prediction tim, call y_pred = gp.predict(X) * y_stddev + y_mean
     """
     gp = sklearn_gaussian.GaussianProcessRegressor(
-        kernel=sklearn_gaussian.kernels.Matern(nu=nu), n_restarts_optimizer=2, alpha=0.0000001, random_state=2
+        kernel=sklearn_gaussian.kernels.Matern(nu=nu),
+        n_restarts_optimizer=2,
+        alpha=0.0000001,
+        random_state=2,
     )
     if len(y) == 1:
         y = np.array(y)
@@ -52,17 +56,13 @@ def random_sample(X_bounds, num_test_samples):
     for ii in range(num_test_samples):
         for jj in range(num_hyperparameters):
             if type(X_bounds[jj][0]) == int:
-                assert (type(X_bounds[jj][1]) == int)
-                test_X[ii, jj] = np.random.randint(
-                    X_bounds[jj][0], X_bounds[jj][1])
+                assert type(X_bounds[jj][1]) == int
+                test_X[ii, jj] = np.random.randint(X_bounds[jj][0], X_bounds[jj][1])
             else:
-                test_X[ii, jj] = np.random.uniform() * (
-                    X_bounds[jj][1] - X_bounds[jj][0]
-                ) + X_bounds[
-                    jj
-                ][
-                    0
-                ]
+                test_X[ii, jj] = (
+                    np.random.uniform() * (X_bounds[jj][1] - X_bounds[jj][0])
+                    + X_bounds[jj][0]
+                )
     return test_X
 
 
@@ -81,7 +81,7 @@ def train_runtime_model(sample_X, runtimes, X_bounds):
     return train_gaussian_process(sample_X, runtimes, X_bounds)
 
 
-#def train_failure_model(sample_X, failures, X_bounds):
+# def train_failure_model(sample_X, failures, X_bounds):
 #    if sample_X.shape[0] != failures.shape[0]:
 #        raise ValueError("Sample X and runtimes must be the same length")
 #
@@ -124,7 +124,7 @@ def train_gaussian_process(
             print(
                 "current_X is bigger than max samples - 5 so dropping some currently running parameters"
             )
-            current_X = current_X[:(max_samples - 5), :]
+            current_X = current_X[: (max_samples - 5), :]
     if len(sample_y.shape) != 1:
         raise ValueError("Sample y must be a 1 dimensional array")
 
@@ -182,45 +182,45 @@ def next_sample(
     test_X=None,
 ):
     """
-        Calculates the best next sample to look at via bayesian optimization.
+    Calculates the best next sample to look at via bayesian optimization.
 
-        Check out https://arxiv.org/pdf/1206.2944.pdf
-         for explanation of bayesian optimization
+    Check out https://arxiv.org/pdf/1206.2944.pdf
+     for explanation of bayesian optimization
 
-        Arguments:
-            sample_X - 2d array of already evaluated sets of hyperparameters
-            sample_y - 1d array of already evaluated loss function values
-            X_bounds - 2d array minimum and maximum values for every dimension of X
+    Arguments:
+        sample_X - 2d array of already evaluated sets of hyperparameters
+        sample_y - 1d array of already evaluated loss function values
+        X_bounds - 2d array minimum and maximum values for every dimension of X
 
-            runtimes - vector of length sample_y - should be the time taken to train each model in sample X
-            failures - vector of length sample_y - should be True for models where training failed and False where
-                training succeeded.  This model will throw out NaNs and Infs so if you want it to avaoid
-                failure values for X, use this failure vector.
+        runtimes - vector of length sample_y - should be the time taken to train each model in sample X
+        failures - vector of length sample_y - should be True for models where training failed and False where
+            training succeeded.  This model will throw out NaNs and Infs so if you want it to avaoid
+            failure values for X, use this failure vector.
 
-            current_X - hyperparameters currently being explored
-            nu - input to the Matern function, higher numbers make it smoother 0.5, 1.5, 2.5 are good values
-             see http://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.Matern.html
+        current_X - hyperparameters currently being explored
+        nu - input to the Matern function, higher numbers make it smoother 0.5, 1.5, 2.5 are good values
+         see http://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.Matern.html
 
-            max_samples_for_gp - maximum samples to consider (since algo is O(n^3)) for performance, but also adds some randomness
-            improvement - amount of improvement to optimize for -- higher means take more exploratory risks
-            num_points_to_try - number of X values to try when looking for value with highest
-                        expected probability of improvement
-            opt_func - one of {"expected_improvement", "prob_of_improvement"} - whether to optimize expected
-                improvement of probability of improvement.  Expected improvement is generally better - may want
-                to remove probability of improvement at some point.  (But I think prboability of improvement
-                is a little easier to calculate)
-            test_X - X values to test when looking for the best values to try
+        max_samples_for_gp - maximum samples to consider (since algo is O(n^3)) for performance, but also adds some randomness
+        improvement - amount of improvement to optimize for -- higher means take more exploratory risks
+        num_points_to_try - number of X values to try when looking for value with highest
+                    expected probability of improvement
+        opt_func - one of {"expected_improvement", "prob_of_improvement"} - whether to optimize expected
+            improvement of probability of improvement.  Expected improvement is generally better - may want
+            to remove probability of improvement at some point.  (But I think prboability of improvement
+            is a little easier to calculate)
+        test_X - X values to test when looking for the best values to try
 
-        Returns:
-            suggested_X - X vector to try running next
-            suggested_X_prob_of_improvement - probability of the X vector beating the current best
-            suggested_X_predicted_y - predicted output of the X vector
-            test_X - 2d array of length num_points_to_try by num features: tested X values
-            y_pred - 1d array of length num_points_to_try: predicted values for test_X
-            y_pred_std - 1d array of length num_points_to_try: predicted std deviation for test_X
-            prob_of_improve 1d array of lenth num_points_to_try: predicted porbability of improvement
-            prob_of_failure 1d array of predicted probabilites of failure
-            expected_runtime 1d array of expected runtimes
+    Returns:
+        suggested_X - X vector to try running next
+        suggested_X_prob_of_improvement - probability of the X vector beating the current best
+        suggested_X_predicted_y - predicted output of the X vector
+        test_X - 2d array of length num_points_to_try by num features: tested X values
+        y_pred - 1d array of length num_points_to_try: predicted values for test_X
+        y_pred_std - 1d array of length num_points_to_try: predicted std deviation for test_X
+        prob_of_improve 1d array of lenth num_points_to_try: predicted porbability of improvement
+        prob_of_failure 1d array of predicted probabilites of failure
+        expected_runtime 1d array of expected runtimes
     """
     # Sanity check the data
     sample_X = np.array(sample_X)
@@ -255,9 +255,11 @@ def next_sample(
             sample_X, runtimes
         )
         if runtime_filtered_X.shape[0] >= 2:
-            runtime_model, runtime_model_mean, runtime_model_stddev = train_runtime_model(
-                runtime_filtered_X, runtime_filtered_runtimes
-            )
+            (
+                runtime_model,
+                runtime_model_mean,
+                runtime_model_stddev,
+            ) = train_runtime_model(runtime_filtered_X, runtime_filtered_runtimes)
     # We train our failure model on *sample_X*, all the data including NaNs
     # This is *different* than the runtime model.
     failure_model = None
@@ -266,9 +268,11 @@ def next_sample(
             sample_X, failures
         )
         if failure_filtered_X.shape[0] >= 2:
-            failure_model, failure_model_mean, failure_model_stddev = train_runtime_model(
-                failure_filtered_X, failure_filtered_runtimes
-            )
+            (
+                failure_model,
+                failure_model_mean,
+                failure_model_stddev,
+            ) = train_runtime_model(failure_filtered_X, failure_filtered_runtimes)
     # we can't run this algothim with less than two sample points, so we'll
     # just return a random point
     if filtered_X.shape[0] < 2:
@@ -296,15 +300,15 @@ def next_sample(
     if failure_model is None:
         prob_of_failure = [0.0] * len(test_X)
     else:
-        prob_of_failure = failure_model.predict(
-            test_X
-        ) * failure_model_stddev + failure_model_mean
+        prob_of_failure = (
+            failure_model.predict(test_X) * failure_model_stddev + failure_model_mean
+        )
     if runtime_model is None:
         expected_runtime = [0.0] * len(test_X)
     else:
-        expected_runtime = runtime_model.predict(
-            test_X
-        ) * runtime_model_stddev + runtime_model_mean
+        expected_runtime = (
+            runtime_model.predict(test_X) * runtime_model_stddev + runtime_model_mean
+        )
     # best value of y we've seen so far.  i.e. y*
     min_unnorm_y = np.min(filtered_y)
     # hack for dealing with predicted std of 0
@@ -314,9 +318,9 @@ def next_sample(
         # find best chance of an improvement by "at least norm improvement"
         # so if norm_improvement is zero, we are looking for best chance of any
         # improvment over the best result observerd so far.
-        #norm_improvement = improvement / y_stddev
+        # norm_improvement = improvement / y_stddev
         min_norm_y = (min_unnorm_y - y_mean) / y_stddev - improvement
-        distance = (y_pred - min_norm_y)
+        distance = y_pred - min_norm_y
         std_dev_distance = (y_pred - min_norm_y) / (y_pred_std + epsilon)
         prob_of_improve = sigmoid(-std_dev_distance)
         best_test_X_index = np.argmax(prob_of_improve)
@@ -324,9 +328,9 @@ def next_sample(
         min_norm_y = (min_unnorm_y - y_mean) / y_stddev
         Z = -(y_pred - min_norm_y) / (y_pred_std + epsilon)
         prob_of_improve = scipy_stats.norm.cdf(Z)
-        e_i = -(y_pred - min_norm_y) * scipy_stats.norm.cdf(Z) + y_pred_std * scipy_stats.norm.pdf(
+        e_i = -(y_pred - min_norm_y) * scipy_stats.norm.cdf(
             Z
-        )
+        ) + y_pred_std * scipy_stats.norm.pdf(Z)
         best_test_X_index = np.argmax(e_i)
     # TODO: support expected improvement per time by dividing e_i by runtime
     suggested_X = test_X[best_test_X_index]
@@ -348,7 +352,7 @@ def next_sample(
 
 
 def target(x):
-    return np.exp(-(x - 2) ** 2) + np.exp(-(x - 6) ** 2 / 10) + 1 / (x ** 2 + 1)
+    return np.exp(-((x - 2) ** 2)) + np.exp(-((x - 6) ** 2) / 10) + 1 / (x ** 2 + 1)
 
 
 class BayesianSearch(Search):
@@ -356,12 +360,12 @@ class BayesianSearch(Search):
         self.minimum_improvement = minimum_improvement
 
     def next_run(self, sweep):
-        if 'parameters' not in sweep['config']:
+        if "parameters" not in sweep["config"]:
             raise ValueError('Bayesian search requires "parameters" section')
-        if 'metric' not in sweep['config']:
+        if "metric" not in sweep["config"]:
             raise ValueError('Bayesian search requires "metric" section')
 
-        config = sweep['config']['parameters']
+        config = sweep["config"]["parameters"]
         params = HyperParameterSet.from_config(config)
 
         sample_X = []
@@ -373,18 +377,23 @@ class BayesianSearch(Search):
 
         # X_bounds = [[0., 1.]] * len(self.searchable_params)
         # params.numeric_bounds()
-        X_bounds = [[0., 1.]] * len(params.searchable_params)
+        X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
 
-        runs = sweep['runs']
+        runs = sweep["runs"]
 
         # we calc the max metric to put as the metric for failed runs
         # so that our bayesian search stays away from them
-        max_metric = 0.
+        max_metric = 0.0
         if any(run.state == "finished" for run in runs):
             # for run in runs:
             #    print("DEBUG0", run)
-            max_metric = max([self._metric_from_run(sweep['config'], run, default=0.) for run in runs
-                              if run.state == "finished"])
+            max_metric = max(
+                [
+                    self._metric_from_run(sweep["config"], run, default=0.0)
+                    for run in runs
+                    if run.state == "finished"
+                ]
+            )
 
         X_norms = params.convert_runs_to_normalized_vector(runs)
         for i in range(len(runs)):
@@ -392,8 +401,8 @@ class BayesianSearch(Search):
             X_norm = X_norms[i]
             if run.state == "finished":
                 # run is complete
-                #print("DEBUG0.1", run)
-                metric = self._metric_from_run(sweep['config'], run, default=max_metric)
+                # print("DEBUG0.1", run)
+                metric = self._metric_from_run(sweep["config"], run, default=max_metric)
                 if math.isnan(metric):
                     metric = max_metric
                 y.append(metric)
@@ -403,7 +412,9 @@ class BayesianSearch(Search):
                 # we wont use the metric, but we should pass it into our optimizer to
                 # account for the fact that it is running
                 current_X.append(X_norm)
-            elif run.state == "failed" or run.state == "crashed" or run.state == "killed":
+            elif (
+                run.state == "failed" or run.state == "crashed" or run.state == "killed"
+            ):
                 # run failed, but we're still going to use it
                 # maybe we should be smarter about this
                 y.append(max_metric)
@@ -418,12 +429,23 @@ class BayesianSearch(Search):
             current_X = None
         else:
             np.array(current_X)
-        (try_params, success_prob, pred,
-            test_X, y_pred, y_pred_std, prob_of_improve,
-            prob_of_failure, expected_runtime) = next_sample(
-                np.array(sample_X),
-                np.array(y), X_bounds,
-                current_X=current_X, improvement=self.minimum_improvement)
+        (
+            try_params,
+            success_prob,
+            pred,
+            test_X,
+            y_pred,
+            y_pred_std,
+            prob_of_improve,
+            prob_of_failure,
+            expected_runtime,
+        ) = next_sample(
+            np.array(sample_X),
+            np.array(y),
+            X_bounds,
+            current_X=current_X,
+            improvement=self.minimum_improvement,
+        )
 
         # convert the parameters from vector of [0,1] values
         # to the original ranges
@@ -442,17 +464,17 @@ class BayesianSearch(Search):
             try_value = try_params[params.param_names_to_index[param.name]]
             param.value = param.ppf(try_value)
 
-        metric_name = sweep['config']['metric']['name']
+        metric_name = sweep["config"]["metric"]["name"]
 
         ret_dict = params.to_config()
         info = {}
-        info['predictions'] = {metric_name: pred}
-        info['success_probability'] = success_prob
+        info["predictions"] = {metric_name: pred}
+        info["success_probability"] = success_prob
         if test_X is not None:
-            info['acq_func'] = {}
-            info['acq_func']['sample_x'] = params.denormalize_vector(test_X)
-            info['acq_func']['y_pred'] = y_pred
-            info['acq_func']['y_pred_std'] = y_pred_std
-            info['acq_func']['score'] = prob_of_improve
+            info["acq_func"] = {}
+            info["acq_func"]["sample_x"] = params.denormalize_vector(test_X)
+            info["acq_func"]["y_pred"] = y_pred
+            info["acq_func"]["y_pred_std"] = y_pred_std
+            info["acq_func"]["score"] = prob_of_improve
 
         return ret_dict, info

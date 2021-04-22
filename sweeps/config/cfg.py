@@ -41,12 +41,15 @@ class SweepConfig(UserDict):
         if name:
             self.set_settings(settings)
         for k in kwargs.keys():
-            wandb.termwarn("Unsupported parameter passed to SweepConfig set(): {}".format(k))
+            wandb.termwarn(
+                "Unsupported parameter passed to SweepConfig set(): {}".format(k)
+            )
         return self
 
 
 class SweepConfigElement:
     _version_dict = {}
+
     def __init__(self, module=None, version=None):
         self._module = module
         self._version = version
@@ -55,7 +58,7 @@ class SweepConfigElement:
             self._version_dict.setdefault(module, version)
 
     def _config(self, base, args, kwargs, root=False):
-        kwargs = {k:v for k, v in kwargs.items() if v is not None and k != "self"}
+        kwargs = {k: v for k, v in kwargs.items() if v is not None and k != "self"}
         # remove kwargs if empty
         if kwargs.get("kwargs") == {}:
             del kwargs["kwargs"]

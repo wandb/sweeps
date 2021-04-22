@@ -16,11 +16,11 @@ args = parser.parse_args()
 
 run = wandb.init(project=args.project)
 # Force configuration update (should not be needed in the future)
-wandb.config.update({'dummy': 1})
+wandb.config.update({"dummy": 1})
 
 time.sleep(1)
 
-metric = args.base + random.random()*args.variance
+metric = args.base + random.random() * args.variance
 for e, x in enumerate(range(args.epochs)):
     metric += args.increment * args.direction
     if metric < 0:

@@ -15,32 +15,34 @@ class Param(object):
         self.type = type
 
 
-sweep_config_2params = {'parameters': {
-    'v1': {'values': [1, 2, 3]},
-    'v2': {'values': [4, 5]}}}
+sweep_config_2params = {
+    "parameters": {"v1": {"values": [1, 2, 3]}, "v2": {"values": [4, 5]}}
+}
 
 
-sweep_config_1params_none = {'parameters': {
-    'v1': {'values': [None, 2, 3]},
-    }}
+sweep_config_1params_none = {
+    "parameters": {
+        "v1": {"values": [None, 2, 3]},
+    }
+}
 
 
 def test_grid_single():
     gs = grid_search.GridSearch(randomize_order=False)
     runs = []
-    sweep = {'config': sweep_config_2params, 'runs': runs}
+    sweep = {"config": sweep_config_2params, "runs": runs}
     params, info = gs.next_run(sweep)
     assert info == None
-    assert params['v1']['value'] == 1 and params['v2']['value'] == 4
+    assert params["v1"]["value"] == 1 and params["v2"]["value"] == 4
 
 
 def test_grid_single_none():
     gs = grid_search.GridSearch(randomize_order=False)
     runs = []
-    sweep = {'config': sweep_config_1params_none, 'runs': runs}
+    sweep = {"config": sweep_config_1params_none, "runs": runs}
     params, info = gs.next_run(sweep)
     assert info == None
-    assert params['v1']['value'] == None
+    assert params["v1"]["value"] == None
 
 
 def test_grid_all():
@@ -48,7 +50,7 @@ def test_grid_all():
     num = 0
     while True:
         gs = grid_search.GridSearch()
-        sweep = {'config': sweep_config_2params, 'runs': runs}
+        sweep = {"config": sweep_config_2params, "runs": runs}
         params = gs.next_run(sweep)
         if params is None:
             break

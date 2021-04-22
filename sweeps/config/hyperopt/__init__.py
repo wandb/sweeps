@@ -7,9 +7,9 @@ from __future__ import division
 from __future__ import print_function
 
 from wandb.sweeps.config.hyperopt.hp import hp
-#import wandb.sweeps.config.hyperopt
+
+# import wandb.sweeps.config.hyperopt
 
 __all__ = [
     "hp",
 ]
-

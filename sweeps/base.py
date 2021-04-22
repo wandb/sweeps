@@ -7,14 +7,14 @@ import math
 from wandb.sweeps.util import is_nan_or_nan_string
 
 
-class Search():
+class Search:
     def _metric_from_run(self, sweep_config, run, default=None):
         metric = None
-        metric_name = sweep_config['metric']['name']
+        metric_name = sweep_config["metric"]["name"]
 
         maximize = False
-        if 'goal' in sweep_config['metric']:
-            if sweep_config['metric']['goal'] == 'maximize':
+        if "goal" in sweep_config["metric"]:
+            if sweep_config["metric"]["goal"] == "maximize":
                 maximize = True
 
         # Use summary to find metric
@@ -28,7 +28,7 @@ class Search():
 
         # Use history to find metric (if available)
         metric_history = []
-        run_history = getattr(run, 'history', [])
+        run_history = getattr(run, "history", [])
         for line in run_history:
             m = line.get(metric_name)
             if m is None:
@@ -48,8 +48,7 @@ class Search():
         # use default if specified
         if metric is None:
             if default is None:
-                raise ValueError(
-                    "Couldn't find summary metric {}".format(metric_name))
+                raise ValueError("Couldn't find summary metric {}".format(metric_name))
             metric = default
         return metric
 
@@ -64,16 +63,16 @@ class Search():
         raise NotImplementedError
 
 
-class EarlyTerminate():
+class EarlyTerminate:
     def _load_metric_name_and_goal(self, sweep_config):
-        if not 'metric' in sweep_config:
+        if not "metric" in sweep_config:
             raise ValueError("Key 'metric' required for early termination")
 
-        self.metric_name = sweep_config['metric']['name']
+        self.metric_name = sweep_config["metric"]["name"]
 
         self.maximize = False
-        if 'goal' in sweep_config['metric']:
-            if sweep_config['metric']['goal'] == 'maximize':
+        if "goal" in sweep_config["metric"]:
+            if sweep_config["metric"]["goal"] == "maximize":
                 self.maximize = True
 
     def _load_run_metric_history(self, run):
@@ -85,8 +84,7 @@ class EarlyTerminate():
 
         # Filter out bad values
         metric_history = [
-            x for x in metric_history
-            if x is not None and not is_nan_or_nan_string(x)
+            x for x in metric_history if x is not None and not is_nan_or_nan_string(x)
         ]
         if self.maximize:
             metric_history = [-m for m in metric_history]

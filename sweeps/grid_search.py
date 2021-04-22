@@ -13,20 +13,24 @@ class GridSearch(Search):
         self.randomize_order = randomize_order
 
     def next_run(self, sweep):
-        if 'parameters' not in sweep['config']:
+        if "parameters" not in sweep["config"]:
             raise ValueError('Grid search requires "parameters" section')
-        config = sweep['config']['parameters']
+        config = sweep["config"]["parameters"]
         params = HyperParameterSet.from_config(config)
 
         # Check that all parameters are categorical or constant
         for p in params:
-            if p.type != HyperParameter.CATEGORICAL and p.type != HyperParameter.CONSTANT:
+            if (
+                p.type != HyperParameter.CATEGORICAL
+                and p.type != HyperParameter.CONSTANT
+            ):
                 raise ValueError(
-                    'Parameter %s is a disallowed type with grid search. Grid search requires all parameters to be categorical or constant' % p.name)
+                    "Parameter %s is a disallowed type with grid search. Grid search requires all parameters to be categorical or constant"
+                    % p.name
+                )
 
         # we can only deal with discrete params in a grid search
-        discrete_params = [p for p in params if p.type ==
-                           HyperParameter.CATEGORICAL]
+        discrete_params = [p for p in params if p.type == HyperParameter.CATEGORICAL]
 
         # build an iterator over all combinations of param values
         param_names = [p.name for p in discrete_params]
@@ -37,11 +41,16 @@ class GridSearch(Search):
             random.shuffle(param_value_set)
 
         new_value_set = next(
-            (value_set for value_set in param_value_set
-             # check if parameter set is contained in some run
-                if not self._runs_contains_param_values(sweep['runs'], dict(zip(param_names, value_set))
-                                                        )
-             ), None)
+            (
+                value_set
+                for value_set in param_value_set
+                # check if parameter set is contained in some run
+                if not self._runs_contains_param_values(
+                    sweep["runs"], dict(zip(param_names, value_set))
+                )
+            ),
+            None,
+        )
 
         # handle the case where we couldn't find a unique parameter set
         if new_value_set == None:
@@ -57,12 +66,11 @@ class GridSearch(Search):
         for key, value in params.items():
             if not key in run.config:
                 return False
-            if not run.config[key]['value'] == value:
-                #print("not same {} {}".format(run.config[key], value))
+            if not run.config[key]["value"] == value:
+                # print("not same {} {}".format(run.config[key], value))
                 return False
         return True
 
     def _runs_contains_param_values(self, runs, params):
-        ret_val = any(self._run_contains_param_values(run, params)
-                      for run in runs)
+        ret_val = any(self._run_contains_param_values(run, params) for run in runs)
         return any(self._run_contains_param_values(run, params) for run in runs)

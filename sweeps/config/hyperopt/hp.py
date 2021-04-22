@@ -8,6 +8,7 @@ from wandb.sweeps.config import cfg
 _cfg_module = "hyperopt"
 _cfg_version = "0.2.1"
 
+
 class Hyperopt(cfg.SweepConfigElement):
     def __init__(self):
         super(Hyperopt, self).__init__(_cfg_module, _cfg_version)
@@ -27,13 +28,14 @@ class Struct(object):
     def __init__(self, spec):
         self._spec = spec
 
+
 # Define config interfaces supported
-#hp = ParamObject("hyperopt")
-#tune = Struct("raytune")
+# hp = ParamObject("hyperopt")
+# tune = Struct("raytune")
 
 hp = Hyperopt()
 
-#tune.run = ParamObject("run", extra=dict(provider=dict(name="raytune")), base=tune)
-#tune.run = run
-#tune.grid_search = ParamObject("grid_search")
-#tune.loguniform = ParamObject("loguniform")
+# tune.run = ParamObject("run", extra=dict(provider=dict(name="raytune")), base=tune)
+# tune.run = run
+# tune.grid_search = ParamObject("grid_search")
+# tune.loguniform = ParamObject("loguniform")

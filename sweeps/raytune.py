@@ -12,7 +12,7 @@ def config_to_dict(config):
     for k, v in config.items():
         if k == "wandb_version":
             continue
-        params[k] = v['value']
+        params[k] = v["value"]
     return params
 
 
@@ -28,16 +28,16 @@ class RayTuneSearch(Search):
         pass
 
     def next_run(self, sweep):
-        sweep_id = sweep.get('name')
-        runs = sweep.get('runs', [])
+        sweep_id = sweep.get("name")
+        runs = sweep.get("runs", [])
         results = []
         for r in runs:
-            config = getattr(r, 'config', {})
+            config = getattr(r, "config", {})
             config = config_to_dict(config)
-            result = getattr(r, 'summaryMetrics', {})
+            result = getattr(r, "summaryMetrics", {})
             results.append(dict(params=config, result=result))
 
-        tune_config = sweep.get('config', {}).get('tune')
+        tune_config = sweep.get("config", {}).get("tune")
         tune_run = engine.execute({"tune.run": tune_config})
         if tune_run is None:
             return (None, None)

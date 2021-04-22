@@ -10,9 +10,9 @@ from wandb.sweeps import sweeperror
 
 
 supported = {
-        "tune": engine.tune,
-        "hyperopt.hp": engine.hyperopt,
-        }
+    "tune": engine.tune,
+    "hyperopt.hp": engine.hyperopt,
+}
 
 
 def execute(config):
@@ -22,11 +22,13 @@ def execute(config):
 
     top_level_keys = list(config.keys())
     if len(top_level_keys) != 1:
-        sweeperror("Expecting only 1 toplevel config key (Found %d)" % len(top_level_keys))
+        sweeperror(
+            "Expecting only 1 toplevel config key (Found %d)" % len(top_level_keys)
+        )
         return
     top_level = top_level_keys[0]
     top_value = config.get(top_level)
-    top_mod, top_func = util.pad(top_level.rsplit('.', 1), 2, left=True)
+    top_mod, top_func = util.pad(top_level.rsplit(".", 1), 2, left=True)
     if not top_mod:
         sweeperror("Required module specification: mod.func")
         return
@@ -54,7 +56,7 @@ def translate(space):
         if isinstance(v, dict):
             op = execute(v)
             # FIXME(jhr): make this part of specific engine, not in generic engine?
-            if getattr(op, 'func', None):
+            if getattr(op, "func", None):
                 v = op.func(1)
             else:
                 v = op(1)

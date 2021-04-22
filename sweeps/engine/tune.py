@@ -12,28 +12,31 @@ from wandb.sweeps import engine
 
 
 class TuneHyperOptSearch:
-    def __init__(self,
-                 space,
-                 max_concurrent=10,
-                 reward_attr=None,
-                 metric="episode_reward_mean",
-                 mode="max",
-                 points_to_evaluate=None,
-                 n_initial_points=20,
-                 random_state_seed=None,
-                 gamma=0.25,
-                 _wandb=None,
-                 **kwargs):
+    def __init__(
+        self,
+        space,
+        max_concurrent=10,
+        reward_attr=None,
+        metric="episode_reward_mean",
+        mode="max",
+        points_to_evaluate=None,
+        n_initial_points=20,
+        random_state_seed=None,
+        gamma=0.25,
+        _wandb=None,
+        **kwargs
+    ):
 
         from hyperopt import hp
         from ray.tune.suggest.hyperopt import HyperOptSearch
+
         _wandb = _wandb or {}
 
         space = engine.translate(space)
 
         # save useful parameters
         self._metric = metric
-            
+
         # load previous results
         self._wandb_results = _wandb.get("results", [])
 
@@ -50,16 +53,17 @@ class TuneHyperOptSearch:
             random_state_seed = wandb_seed
 
         self._search = HyperOptSearch(
-                space,
-                max_concurrent=max_concurrent,
-                reward_attr=reward_attr,
-                metric=metric,
-                mode=mode,
-                points_to_evaluate=points_to_evaluate,
-                n_initial_points=n_initial_points,
-                random_state_seed=random_state_seed,
-                gamma=gamma,
-                **kwargs)
+            space,
+            max_concurrent=max_concurrent,
+            reward_attr=reward_attr,
+            metric=metric,
+            mode=mode,
+            points_to_evaluate=points_to_evaluate,
+            n_initial_points=n_initial_points,
+            random_state_seed=random_state_seed,
+            gamma=gamma,
+            **kwargs
+        )
 
     def next_args(self):
         for num, run in enumerate(self._wandb_results):
@@ -73,7 +77,9 @@ class TuneHyperOptSearch:
             name = "junk_%d" % num
             params = self._search._suggest(name)
             new_params = tuple((k, v) for k, v in sorted(params.items()))
-            old_params = tuple((k, v) for k, v in sorted(run["params"].items()) if k in params)
+            old_params = tuple(
+                (k, v) for k, v in sorted(run["params"].items()) if k in params
+            )
             if new_params != old_params:
                 # TODO(JHR): need to do a precision fuzz
                 sweepdebug("mismatch {} != {}".format(new_params, old_params))
@@ -91,7 +97,7 @@ class TuneRun:
 
         self._search = {
             "hyperopt.HyperOptSearch": TuneHyperOptSearch,
-            }
+        }
 
     def add_result(self, result):
         # load all previous requests
@@ -123,8 +129,8 @@ class TuneRun:
                     sweepwarn("bad")
 
                 kwargs["_wandb"] = dict(
-                        results=self._results,
-                        seed=self._spec.get("_wandb", {}).get("seed"))
+                    results=self._results, seed=self._spec.get("_wandb", {}).get("seed")
+                )
                 o = search_class(*args, **kwargs)
                 p = o.next_args()
                 return p
@@ -142,7 +148,7 @@ class TuneRun:
 
 class Tune:
     def __init__(self):
-        #super(Tune, self).__init__(_cfg_module, _cfg_version)
+        # super(Tune, self).__init__(_cfg_module, _cfg_version)
         pass
 
     def run(self, config, version=None):
@@ -150,11 +156,13 @@ class Tune:
 
     def loguniform(self, config, version=None):
         from ray import tune
+
         args = dict(config)
         return tune.loguniform(**args)
 
     def uniform(self, config, version=None):
         from ray import tune
+
         args = []
         kwargs = {}
         if isinstance(config, tuple):
@@ -170,16 +178,19 @@ class Tune:
 
     def choice(self, config, version=None):
         from ray import tune
+
         args = dict(config)
         return tune.choice(**args)
 
     def randint(self, config, version=None):
         from ray import tune
+
         args = dict(config)
         return tune.randint(**args)
 
     def randn(self, config, version=None):
         from ray import tune
+
         args = dict(config)
         return tune.randn(**args)
 

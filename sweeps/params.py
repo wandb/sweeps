@@ -5,13 +5,14 @@ Hyperparameter search parameters
 import random
 import numpy as np
 from wandb.util import get_module
-#import scipy.stats as stats
+
+# import scipy.stats as stats
 
 
-stats = get_module('scipy.stats')
+stats = get_module("scipy.stats")
 
 
-class HyperParameter():
+class HyperParameter:
     CONSTANT = 0
     CATEGORICAL = 1
     INT_UNIFORM = 2
@@ -28,8 +29,12 @@ class HyperParameter():
         if param_name in param_config:
             setattr(self, param_name, param_config[param_name])
         else:
-            raise ValueError("Need to specify {} \
-                with distribution: {}.".format(param_name, param_config['distribution']))
+            raise ValueError(
+                "Need to specify {} \
+                with distribution: {}.".format(
+                    param_name, param_config["distribution"]
+                )
+            )
 
     def _load_optional_parameter(self, param_config, param_name, default_value):
         if param_name in param_config:
@@ -42,88 +47,100 @@ class HyperParameter():
         self.name = param_name
         self.config = param_config.copy()
 
-        allowed_config_keys = set(['distribution', 'value', 'values', 'min', 'max', 'q',
-                                   'mu', 'sigma', 'desc'])
+        allowed_config_keys = set(
+            [
+                "distribution",
+                "value",
+                "values",
+                "min",
+                "max",
+                "q",
+                "mu",
+                "sigma",
+                "desc",
+            ]
+        )
         for key in self.config.keys():
             if key not in allowed_config_keys:
                 raise ValueError(
-                    "Unexpected hyperparameter configuration {}".format(key))
+                    "Unexpected hyperparameter configuration {}".format(key)
+                )
 
         self.type = None
-        if 'distribution' in self.config:
-            self.distribution = self.config['distribution']
-            if self.distribution == 'constant':
+        if "distribution" in self.config:
+            self.distribution = self.config["distribution"]
+            if self.distribution == "constant":
                 self.type = HyperParameter.CONSTANT
-                self._load_parameter(self.config, 'value')
-            elif self.distribution == 'categorical':
+                self._load_parameter(self.config, "value")
+            elif self.distribution == "categorical":
                 self.type = HyperParameter.CATEGORICAL
-                self._load_parameter(self.config, 'values')
-            elif self.distribution == 'int_uniform':
+                self._load_parameter(self.config, "values")
+            elif self.distribution == "int_uniform":
                 self.type = HyperParameter.INT_UNIFORM
-                self._load_parameter(self.config, 'min')
-                self._load_parameter(self.config, 'max')
-            elif self.distribution == 'uniform':
+                self._load_parameter(self.config, "min")
+                self._load_parameter(self.config, "max")
+            elif self.distribution == "uniform":
                 self.type = HyperParameter.UNIFORM
-                self._load_parameter(self.config, 'min')
-                self._load_parameter(self.config, 'max')
-            elif self.distribution == 'q_uniform':
+                self._load_parameter(self.config, "min")
+                self._load_parameter(self.config, "max")
+            elif self.distribution == "q_uniform":
                 self.type = HyperParameter.Q_UNIFORM
-                self._load_parameter(self.config, 'min')
-                self._load_parameter(self.config, 'max')
-                self._load_optional_parameter(self.config, 'q', 1.0)
-            elif self.distribution == 'log_uniform':
+                self._load_parameter(self.config, "min")
+                self._load_parameter(self.config, "max")
+                self._load_optional_parameter(self.config, "q", 1.0)
+            elif self.distribution == "log_uniform":
                 self.type = HyperParameter.LOG_UNIFORM
-                self._load_parameter(self.config, 'min')
-                self._load_parameter(self.config, 'max')
-            elif self.distribution == 'q_log_uniform':
+                self._load_parameter(self.config, "min")
+                self._load_parameter(self.config, "max")
+            elif self.distribution == "q_log_uniform":
                 self.type = HyperParameter.Q_LOG_UNIFORM
-                self._load_parameter(self.config, 'min')
-                self._load_parameter(self.config, 'max')
-                self._load_optional_parameter(self.config, 'q', 1.0)
-            elif self.distribution == 'normal':
+                self._load_parameter(self.config, "min")
+                self._load_parameter(self.config, "max")
+                self._load_optional_parameter(self.config, "q", 1.0)
+            elif self.distribution == "normal":
                 self.type = HyperParameter.NORMAL
-                self._load_optional_parameter(self.config, 'mu', 0.0)
-                self._load_optional_parameter(self.config, 'sigma', 1.0)
+                self._load_optional_parameter(self.config, "mu", 0.0)
+                self._load_optional_parameter(self.config, "sigma", 1.0)
                 # need or set mean and stddev
-            elif self.distribution == 'q_normal':
+            elif self.distribution == "q_normal":
                 self.type = HyperParameter.Q_NORMAL
-                self._load_optional_parameter(self.config, 'mu', 0.0)
-                self._load_optional_parameter(self.config, 'sigma', 1.0)
-                self._load_optional_parameter(self.config, 'q', 1.0)
-            elif self.distribution == 'log_normal':
+                self._load_optional_parameter(self.config, "mu", 0.0)
+                self._load_optional_parameter(self.config, "sigma", 1.0)
+                self._load_optional_parameter(self.config, "q", 1.0)
+            elif self.distribution == "log_normal":
                 self.type = HyperParameter.LOG_NORMAL
-                self._load_optional_parameter(self.config, 'mu', 0.0)
-                self._load_optional_parameter(self.config, 'sigma', 1.0)
+                self._load_optional_parameter(self.config, "mu", 0.0)
+                self._load_optional_parameter(self.config, "sigma", 1.0)
                 # need or set mean and stdev
-            elif self.distribution == 'q_log_normal':
+            elif self.distribution == "q_log_normal":
                 self.type = HyperParameter.Q_LOG_NORMAL
-                self._load_optional_parameter(self.config, 'mu', 0.0)
-                self._load_optional_parameter(self.config, 'sigma', 1.0)
-                self._load_optional_parameter(self.config, 'q', 1.0)
+                self._load_optional_parameter(self.config, "mu", 0.0)
+                self._load_optional_parameter(self.config, "sigma", 1.0)
+                self._load_optional_parameter(self.config, "q", 1.0)
                 # need or set mean and stdev
             else:
                 raise ValueError(
-                    "Unsupported distribution: {}".format(self.distribution))
+                    "Unsupported distribution: {}".format(self.distribution)
+                )
 
-            if 'q' in dir(self):
+            if "q" in dir(self):
                 if self.q < 0.0:
-                    raise ValueError('q must be positive.')
-            if 'sigma' in dir(self):
+                    raise ValueError("q must be positive.")
+            if "sigma" in dir(self):
                 if self.sigma < 0.0:
-                    raise ValueError('sigma must be positive.')
+                    raise ValueError("sigma must be positive.")
         else:
             self._infer_distribution(self.config, param_name)
-        if ('min' in dir(self) and 'max' in dir(self)):
+        if "min" in dir(self) and "max" in dir(self):
             if self.min >= self.max:
-                raise ValueError('max must be greater than min.')
+                raise ValueError("max must be greater than min.")
 
     def value_to_int(self, value):
         if self.type != HyperParameter.CATEGORICAL:
-            raise ValueError(
-                "Can only call value_to_int on categorical variable")
+            raise ValueError("Can only call value_to_int on categorical variable")
 
         for ii, test_value in enumerate(self.values):
-            if (value == test_value):
+            if value == test_value:
                 return ii
 
         raise ValueError("Couldn't find {}".format(value))
@@ -141,17 +158,21 @@ class HyperParameter():
             return stats.randint.cdf(x, 0, len(self.values))
         elif self.type == HyperParameter.INT_UNIFORM:
             return stats.randint.cdf(x, self.min, self.max + 1)
-        elif (self.type == HyperParameter.UNIFORM or
-                self.type == HyperParameter.Q_UNIFORM):
+        elif (
+            self.type == HyperParameter.UNIFORM or self.type == HyperParameter.Q_UNIFORM
+        ):
             return stats.uniform.cdf(x, self.min, self.max - self.min)
-        elif (self.type == HyperParameter.LOG_UNIFORM or
-                self.type == HyperParameter.Q_LOG_UNIFORM):
+        elif (
+            self.type == HyperParameter.LOG_UNIFORM
+            or self.type == HyperParameter.Q_LOG_UNIFORM
+        ):
             return stats.uniform.cdf(np.log(x), self.min, self.max - self.min)
-        elif (self.type == HyperParameter.NORMAL or
-                self.type == HyperParameter.Q_NORMAL):
+        elif self.type == HyperParameter.NORMAL or self.type == HyperParameter.Q_NORMAL:
             return stats.norm.cdf(x, loc=self.mu, scale=self.sigma)
-        elif (self.type == HyperParameter.LOG_NORMAL or
-                self.type == HyperParameter.Q_LOG_NORMAL):
+        elif (
+            self.type == HyperParameter.LOG_NORMAL
+            or self.type == HyperParameter.Q_LOG_NORMAL
+        ):
             return stats.lognorm.cdf(x, s=self.sigma, scale=np.exp(self.mu))
         else:
             raise ValueError("Unsupported hyperparameter distribution type")
@@ -245,7 +266,7 @@ class HyperParameter():
     def to_config(self):
         config = dict(value=self.value)
         # Remove values list if we have picked a value for this parameter
-        self.config.pop('values', None)
+        self.config.pop("values", None)
         return self.name, config
 
     def _infer_distribution(self, config, param_name):
@@ -255,27 +276,36 @@ class HyperParameter():
             2) If the min and max are floats, assume uniform.
             3) If the min and max are ints, assume int_uniform.
         """
-        if 'values' in config:
+        if "values" in config:
             self.type = HyperParameter.CATEGORICAL
-            self.values = config['values']
-        elif 'min' in config:
-            if not 'max' in config:
+            self.values = config["values"]
+        elif "min" in config:
+            if not "max" in config:
                 raise ValueError(
-                    "Need to have a max with a min or specify the distribution for parameter {}".format(param_name))
-            self.min = config['min']
-            self.max = config['max']
+                    "Need to have a max with a min or specify the distribution for parameter {}".format(
+                        param_name
+                    )
+                )
+            self.min = config["min"]
+            self.max = config["max"]
 
-            if type(config['min']) == int and type(config['max']) == int:
+            if type(config["min"]) == int and type(config["max"]) == int:
                 self.type = HyperParameter.INT_UNIFORM
-            elif type(config['min']) in (int, float) and type(config['max']) in (int, float):
+            elif type(config["min"]) in (int, float) and type(config["max"]) in (
+                int,
+                float,
+            ):
                 self.type = HyperParameter.UNIFORM
             else:
                 raise ValueError(
-                    "Min and max must be type int or float for parameter {}".format(param_name))
+                    "Min and max must be type int or float for parameter {}".format(
+                        param_name
+                    )
+                )
 
-        elif 'value' in config:
+        elif "value" in config:
             self.type = HyperParameter.CONSTANT
-            self.value = config['value']
+            self.value = config["value"]
         else:
             raise ValueError("Bad configuration for parameter: {}".format(param_name))
 
@@ -283,8 +313,12 @@ class HyperParameter():
 class HyperParameterSet(list):
     @staticmethod
     def from_config(config):
-        hpd = HyperParameterSet([HyperParameter(param_name, param_config)
-                                 for param_name, param_config in sorted(config.items())])
+        hpd = HyperParameterSet(
+            [
+                HyperParameter(param_name, param_config)
+                for param_name, param_config in sorted(config.items())
+            ]
+        )
         return hpd
 
     def to_config(self):
@@ -292,7 +326,8 @@ class HyperParameterSet(list):
 
     def index_searchable_params(self):
         self.searchable_params = [
-            param for param in self if param.type != HyperParameter.CONSTANT]
+            param for param in self if param.type != HyperParameter.CONSTANT
+        ]
 
         self.param_names_to_index = {}
         self.param_names_to_param = {}
@@ -308,9 +343,10 @@ class HyperParameterSet(list):
 
         """
         self.searchable_params = [
-            param for param in self if param.type != HyperParameter.CONSTANT]
+            param for param in self if param.type != HyperParameter.CONSTANT
+        ]
 
-        X_bounds = [[0., 0.]] * len(self.searchable_params)
+        X_bounds = [[0.0, 0.0]] * len(self.searchable_params)
 
         self.param_names_to_index = {}
         self.param_names_to_param = {}
@@ -384,16 +420,22 @@ class HyperParameterSet(list):
 
         for key, bayes_opt_index in self.param_names_to_index.items():
             param = self.param_names_to_param[key]
-            row = np.array([
-                (param.value_to_int(config[key]['value'])
-                if param.type == HyperParameter.CATEGORICAL else config[key]['value'])
-                if key in config else float('nan')
-                for config in runs_params
-            ])
+            row = np.array(
+                [
+                    (
+                        param.value_to_int(config[key]["value"])
+                        if param.type == HyperParameter.CATEGORICAL
+                        else config[key]["value"]
+                    )
+                    if key in config
+                    else float("nan")
+                    for config in runs_params
+                ]
+            )
             X_row = param.cdf(row)
 
             # only use values where input wasn't nan
             non_nan = row == row
-            X[bayes_opt_index,non_nan] = X_row[non_nan]
+            X[bayes_opt_index, non_nan] = X_row[non_nan]
 
         return np.transpose(X)

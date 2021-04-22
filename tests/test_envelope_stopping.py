@@ -25,7 +25,7 @@ def synthetic_loss_family(num):
     histories = []
     for ii in range(num):
         history = synthetic_loss(
-            uniform(4, 20), uniform(2, 3.), uniform(0.05, 0.4), 0.5, randint(10, 20)
+            uniform(4, 20), uniform(2, 3.0), uniform(0.05, 0.4), 0.5, randint(10, 20)
         )
         histories.append(history)
     return histories
@@ -41,12 +41,12 @@ def test_envelope_terminate():
     tries = 10
     for i in range(tries):
         new_history = synthetic_loss(
-            20 + uniform(4, 20), 20., uniform(0.05, 0.4), 0.5, randint(10, 40)
+            20 + uniform(4, 20), 20.0, uniform(0.05, 0.4), 0.5, randint(10, 40)
         )
-        assert (not envelope_stopping.is_inside_envelope(new_history, envelope))
+        assert not envelope_stopping.is_inside_envelope(new_history, envelope)
     for i in range(tries):
         new_history = synthetic_loss(
-            uniform(0, 2.), 20., uniform(0, 1.), 0.5, randint(10, 50)
+            uniform(0, 2.0), 20.0, uniform(0, 1.0), 0.5, randint(10, 50)
         )
         print(new_history)
         print(envelope)

@@ -30,12 +30,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-#from wandb.sweeps.config.tune import tune
+# from wandb.sweeps.config.tune import tune
 from wandb.sweeps.config.cfg import SweepConfig
-#from wandb.sweeps.config import hyperopt
+
+# from wandb.sweeps.config import hyperopt
 
 __all__ = [
     "tune",
     "SweepConfig",
 ]
-
