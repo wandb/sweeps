@@ -1,6 +1,8 @@
 pytest==6.2.3
 numpy==1.19.5
+scipy==1.5.4
 six==1.15.0
 PyYAML==5.4.1
 ray==1.2.0
+scikit_learn==0.24.1
 wandb==0.10.27
