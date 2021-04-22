@@ -7,4 +7,5 @@ workflows:
   main:
     jobs:
       - python/test:
-          test-tool: pytest 
+          test-tool: pytest
+          version: "3.6"
