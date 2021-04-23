@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Sweep engine.
-"""
+"""Sweep engine."""
 
 from __future__ import absolute_import
 from __future__ import division

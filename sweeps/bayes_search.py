@@ -1,19 +1,13 @@
-"""
-Bayesian Search
+"""Bayesian Search.
 
 Check out https://arxiv.org/pdf/1206.2944.pdf
  for explanation of bayesian optimization
 
 We do bayesian optimization and handle the cases where some X values are integers
 as well as the case where X is very large.
-
 """
 
-# from sklearn.gaussian_process import GaussianProcessRegressor
-# from sklearn.gaussian_process.kernels import Matern
-# import scipy.stats as stats
 import math
-
 import numpy as np
 
 from .base import Search
@@ -23,8 +17,9 @@ from scipy import stats as scipy_stats
 
 
 def fit_normalized_gaussian_process(X, y, nu=1.5):
-    """
-    We fit a gaussian process but first subtract the mean and divide by stddev.
+    """We fit a gaussian process but first subtract the mean and divide by
+    stddev.
+
     To undo at prediction tim, call y_pred = gp.predict(X) * y_stddev + y_mean
     """
     gp = sklearn_gaussian.GaussianProcessRegressor(
@@ -80,18 +75,10 @@ def train_runtime_model(sample_X, runtimes, X_bounds):
     return train_gaussian_process(sample_X, runtimes, X_bounds)
 
 
-# def train_failure_model(sample_X, failures, X_bounds):
-#    if sample_X.shape[0] != failures.shape[0]:
-#        raise ValueError("Sample X and runtimes must be the same length")
-#
-#    return train_gaussian_process(sample_X, runtimes, X_bounds)
-
-
 def train_gaussian_process(
     sample_X, sample_y, X_bounds, current_X=None, nu=1.5, max_samples=100
 ):
-    """
-    Trains a Gaussian Process function from sample_X, sample_y data
+    """Trains a Gaussian Process function from sample_X, sample_y data.
 
     Handles the case where there are other training runs in flight (current_X)
 
@@ -110,7 +97,6 @@ def train_gaussian_process(
 
             To make a prediction with gp on real world data X, need to call:
             (gp.predict(X) * y_stddev) + y_mean
-
     """
     if current_X is not None:
         current_X = np.array(current_X)
@@ -180,8 +166,7 @@ def next_sample(
     opt_func="expected_improvement",
     test_X=None,
 ):
-    """
-    Calculates the best next sample to look at via bayesian optimization.
+    """Calculates the best next sample to look at via bayesian optimization.
 
     Check out https://arxiv.org/pdf/1206.2944.pdf
      for explanation of bayesian optimization
@@ -319,7 +304,6 @@ def next_sample(
         # improvment over the best result observerd so far.
         # norm_improvement = improvement / y_stddev
         min_norm_y = (min_unnorm_y - y_mean) / y_stddev - improvement
-        distance = y_pred - min_norm_y
         std_dev_distance = (y_pred - min_norm_y) / (y_pred_std + epsilon)
         prob_of_improve = sigmoid(-std_dev_distance)
         best_test_X_index = np.argmax(prob_of_improve)
@@ -368,7 +352,6 @@ class BayesianSearch(Search):
         params = HyperParameterSet.from_config(config)
 
         sample_X = []
-        sample_y = []
         current_X = []
         y = []
 

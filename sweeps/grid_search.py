@@ -1,6 +1,4 @@
-"""
-Grid Search
-"""
+"""Grid Search."""
 
 import itertools
 import random
@@ -54,7 +52,7 @@ class GridSearch(Search):
         )
 
         # handle the case where we couldn't find a unique parameter set
-        if new_value_set == None:
+        if new_value_set is None:
             return None
 
         # set next_run_params based on our new set of params
@@ -65,7 +63,7 @@ class GridSearch(Search):
 
     def _run_contains_param_values(self, run, params):
         for key, value in params.items():
-            if not key in run.config:
+            if key not in run.config:
                 return False
             if not run.config[key]["value"] == value:
                 # print("not same {} {}".format(run.config[key], value))
@@ -73,5 +71,4 @@ class GridSearch(Search):
         return True
 
     def _runs_contains_param_values(self, runs, params):
-        ret_val = any(self._run_contains_param_values(run, params) for run in runs)
         return any(self._run_contains_param_values(run, params) for run in runs)

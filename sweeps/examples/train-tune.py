@@ -65,7 +65,10 @@ sweep_registry = dict(
 def train():
     run = wandb.init(config=config_defaults)
     shorten = dict(width="w", height="h", activation="a")
-    clean = lambda x: "{:0.1f}".format(x) if isinstance(x, float) else x
+
+    def clean(x):
+        return "{:0.1f}".format(x) if isinstance(x, float) else x
+
     run.name = "run:" + ",".join(
         [
             "{}={}".format(shorten.get(k), clean(v))

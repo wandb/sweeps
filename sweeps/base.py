@@ -1,6 +1,5 @@
-"""
-Base classes to be inherited from for Search and EarlyTerminate algorithms
-"""
+"""Base classes to be inherited from for Search and EarlyTerminate
+algorithms."""
 
 from .util import is_nan_or_nan_string
 
@@ -52,6 +51,7 @@ class Search:
 
     def next_run(self, sweep):
         """Called each time an agent requests new work.
+
         Arguments:
             sweep: <defined above>
         Returns:
@@ -63,7 +63,7 @@ class Search:
 
 class EarlyTerminate:
     def _load_metric_name_and_goal(self, sweep_config):
-        if not "metric" in sweep_config:
+        if "metric" not in sweep_config:
             raise ValueError("Key 'metric' required for early termination")
 
         self.metric_name = sweep_config["metric"]["name"]

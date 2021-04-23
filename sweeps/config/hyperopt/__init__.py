@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Hyperopt objects
-"""
+"""Hyperopt objects."""
 
 from __future__ import absolute_import
 from __future__ import division

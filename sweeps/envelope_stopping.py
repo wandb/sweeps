@@ -1,9 +1,8 @@
-"""
-Envelope Early Terminate
+"""Envelope Early Terminate.
 
-Library to help with early termination of runs
-Here we use a strategy where we take the top k runs or top k percent of runs
-and then we build up an envelope where we stop jobs where the metric doesn't get better
+Library to help with early termination of runs Here we use a strategy
+where we take the top k runs or top k percent of runs and then we build
+up an envelope where we stop jobs where the metric doesn't get better
 """
 
 import numpy as np
@@ -41,13 +40,9 @@ def histories_for_top_n(histories, metrics, n=3):
 def envelope_from_histories(histories, envelope_len):
     envelope = []
     cum_min_hs = []
-    longest = 0
     for h in histories:
         cum_min_hs.append(cumulative_min(h, envelope_len))
     for jj in range(envelope_len):
-        prev_max = -np.inf
-        if len(envelope) > 0:
-            prev_max = max(envelope)
         envelope.append(max([h[jj] for h in cum_min_hs]))
     return envelope
 

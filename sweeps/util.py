@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Utility routines
-"""
+"""Utility routines."""
 
 import math
 

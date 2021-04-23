@@ -31,7 +31,7 @@ def test_grid_single():
     runs = []
     sweep = {"config": sweep_config_2params, "runs": runs}
     params, info = gs.next_run(sweep)
-    assert info == None
+    assert info is None
     assert params["v1"]["value"] == 1 and params["v2"]["value"] == 4
 
 
@@ -40,8 +40,8 @@ def test_grid_single_none():
     runs = []
     sweep = {"config": sweep_config_1params_none, "runs": runs}
     params, info = gs.next_run(sweep)
-    assert info == None
-    assert params["v1"]["value"] == None
+    assert info is None
+    assert params["v1"]["value"] is None
 
 
 def test_grid_all():

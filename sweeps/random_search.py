@@ -1,6 +1,4 @@
-"""
-Random Search
-"""
+"""Random Search."""
 
 from .base import Search
 from .params import HyperParameterSet

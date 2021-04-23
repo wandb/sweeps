@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Sweep config tune interface.
-"""
+"""Sweep config tune interface."""
 
 from __future__ import absolute_import
 from __future__ import division

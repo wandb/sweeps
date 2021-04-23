@@ -1,6 +1,4 @@
-"""
-Hyperparameter search parameters
-"""
+"""Hyperparameter search parameters."""
 
 import random
 
@@ -266,17 +264,18 @@ class HyperParameter:
         return self.name, config
 
     def _infer_distribution(self, config, param_name):
-        """
-        Attempt to automatically figure out the distribution if it's not specified.
-            1) If the values are set, assume categorical.
-            2) If the min and max are floats, assume uniform.
-            3) If the min and max are ints, assume int_uniform.
+        """Attempt to automatically figure out the distribution if it's not
+        specified.
+
+        1) If the values are set, assume categorical. 2) If the min and
+        max are floats, assume uniform. 3) If the min and max are ints,
+        assume int_uniform.
         """
         if "values" in config:
             self.type = HyperParameter.CATEGORICAL
             self.values = config["values"]
         elif "min" in config:
-            if not "max" in config:
+            if "max" not in config:
                 raise ValueError(
                     "Need to have a max with a min or specify the distribution for parameter {}".format(
                         param_name
@@ -333,11 +332,8 @@ class HyperParameterSet(list):
             self.param_names_to_param[param.name] = param
 
     def numeric_bounds(self):
-        """
-        Gets a set of numeric minimums and maximums for doing ml
-        predictions on the hyperparameters
-
-        """
+        """Gets a set of numeric minimums and maximums for doing ml predictions
+        on the hyperparameters."""
         self.searchable_params = [
             param for param in self if param.type != HyperParameter.CONSTANT
         ]
@@ -362,10 +358,9 @@ class HyperParameterSet(list):
         return X_bounds
 
     def convert_run_to_vector(self, run):
-        """
-        Converts run parameters to vectors.
-        Should be able to remove.
+        """Converts run parameters to vectors.
 
+        Should be able to remove.
         """
 
         run_params = run.config or {}
@@ -386,7 +381,7 @@ class HyperParameterSet(list):
         return X
 
     def denormalize_vector(self, X):
-        """Converts a list of vectors [0,1] to values in the original space"""
+        """Converts a list of vectors [0,1] to values in the original space."""
         v = np.zeros(X.shape).tolist()
 
         for ii, param in enumerate(self.searchable_params):
@@ -395,7 +390,8 @@ class HyperParameterSet(list):
         return v
 
     def convert_run_to_normalized_vector(self, run):
-        """Converts run parameters to vectors with all values compressed to [0, 1]"""
+        """Converts run parameters to vectors with all values compressed to [0,
+        1]"""
         run_params = run.config or {}
         X = np.zeros([len(self.searchable_params)])
 

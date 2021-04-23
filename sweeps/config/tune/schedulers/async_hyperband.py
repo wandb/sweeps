@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tune asynchyperband schedulers.
-"""
+"""Tune asynchyperband schedulers."""
 from .config import cfg
 
 

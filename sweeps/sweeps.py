@@ -1,6 +1,4 @@
-"""
-Sweep service
-"""
+"""Sweep service."""
 
 from . import base
 from . import grid_search, bayes_search, random_search

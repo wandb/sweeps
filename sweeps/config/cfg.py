@@ -1,5 +1,4 @@
-"""Base SweepConfig classes.
-"""
+"""Base SweepConfig classes."""
 
 import wandb
 import yaml
@@ -48,7 +47,7 @@ class SweepConfig(UserDict):
 
 
 class SweepConfigElement:
-    _version_dict = {}
+    _version_dict: dict = {}
 
     def __init__(self, module=None, version=None):
         self._module = module
@@ -63,7 +62,7 @@ class SweepConfigElement:
         if kwargs.get("kwargs") == {}:
             del kwargs["kwargs"]
         # if only kwargs specified and only two keys "args" and "kargs"
-        special = not args and set(kwargs.keys()) == set(("args", "kwargs"))
+        special = not args and set(kwargs.keys()) == {"args", "kwargs"}
         if args and kwargs or special:
             d = dict(args=args, kwargs=kwargs)
         elif args:

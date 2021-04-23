@@ -1,3 +1,4 @@
+# flake8: noqa
 from .bayes_search import BayesianSearch
 from .envelope_stopping import EnvelopeEarlyTerminate
 from .grid_search import GridSearch

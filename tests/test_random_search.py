@@ -22,7 +22,7 @@ def test_rand_single():
     runs = []
     sweep = {"config": sweep_config_2params, "runs": runs}
     params, info = gs.next_run(sweep)
-    assert info == None
+    assert info is None
     assert params["v1"]["value"] == 3 and params["v2"]["value"] == 6
 
 
@@ -32,5 +32,5 @@ def test_rand_bad():
     gs = random_search.RandomSearch()
     runs = []
     sweep = {"config": sweep_config_bad, "runs": runs}
-    with pytest.raises(ValueError) as excinfo:
-        params, info = gs.next_run(sweep)
+    with pytest.raises(ValueError):
+        _ = gs.next_run(sweep)

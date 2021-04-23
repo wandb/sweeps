@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Interpret SweepConfig object.
-"""
+"""Interpret SweepConfig object."""
 
 from wandb.sweeps import engine
 from wandb.sweeps import sweeperror
