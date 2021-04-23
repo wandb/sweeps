@@ -7,7 +7,6 @@ from sweeps import envelope_stopping
 def synthetic_loss(start, asympt, decay, noise, length):
     val = start
     history = []
-    metric = []
     for ii in range(length):
         history.append(val)
         val += uniform(-noise, noise)

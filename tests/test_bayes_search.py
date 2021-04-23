@@ -55,7 +55,6 @@ def test_squiggle():
 
 
 def test_nans():
-    f = squiggle
     X = np.array([np.random.uniform([0.0], [5.0]) for x in range(200)])
     Y = np.array([np.nan] * 200)
     (

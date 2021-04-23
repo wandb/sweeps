@@ -7,11 +7,7 @@ We do bayesian optimization and handle the cases where some X values are integer
 as well as the case where X is very large.
 """
 
-# from sklearn.gaussian_process import GaussianProcessRegressor
-# from sklearn.gaussian_process.kernels import Matern
-# import scipy.stats as stats
 import math
-
 import numpy as np
 
 from .base import Search
@@ -77,13 +73,6 @@ def train_runtime_model(sample_X, runtimes, X_bounds):
         raise ValueError("Sample X and runtimes must be the same length")
 
     return train_gaussian_process(sample_X, runtimes, X_bounds)
-
-
-# def train_failure_model(sample_X, failures, X_bounds):
-#    if sample_X.shape[0] != failures.shape[0]:
-#        raise ValueError("Sample X and runtimes must be the same length")
-#
-#    return train_gaussian_process(sample_X, runtimes, X_bounds)
 
 
 def train_gaussian_process(
