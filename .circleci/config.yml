@@ -26,6 +26,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install dependencies
+          command: pip install -r requirements.dev.txt
+      - run:
           pre-commit run --all-files
 
 workflows:
