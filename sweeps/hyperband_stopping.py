@@ -1,6 +1,4 @@
-"""
-Hyperband Early Terminate
-"""
+"""Hyperband Early Terminate."""
 
 import numpy as np
 

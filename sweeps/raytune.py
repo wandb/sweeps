@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""RayTune Search / Stopping.
-"""
+"""RayTune Search / Stopping."""
 
 from . import engine
 from .base import Search
@@ -27,7 +26,6 @@ class RayTuneSearch(Search):
         pass
 
     def next_run(self, sweep):
-        sweep_id = sweep.get("name")
         runs = sweep.get("runs", [])
         results = []
         for r in runs:

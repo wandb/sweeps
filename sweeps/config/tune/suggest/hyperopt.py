@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tune hyperopt generation.
-"""
+"""Tune hyperopt generation."""
 from .config import cfg
 
 

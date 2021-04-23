@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tune config generation.
-"""
+"""Tune config generation."""
 
 from .config import cfg
 
