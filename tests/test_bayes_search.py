@@ -3,6 +3,8 @@ import platform
 import numpy as np
 import pytest
 
+import sweeps
+from .conftest import Run
 from sweeps import bayes_search as bayes
 
 
@@ -164,42 +166,10 @@ def test_iterations_squiggle_chunked():
     run_iterations_chunked(squiggle, [[0.0, 5.0]])
 
 
-class Run(object):
-    def __init__(self, name, state, config, summary, history):
-        self.name = name
-        self.state = state
-        self.config = config
-        self.summaryMetrics = summary
-        self.history = history
-
-    def __repr__(self):
-        return "Run(%s,%s,%s,%s,%s)" % (
-            self.name,
-            self.state,
-            self.config,
-            self.history,
-            self.summaryMetrics,
-        )
-
-
-sweep_config_2params = {
-    "metric": {"name": "loss"},
-    "parameters": {"v1": {"min": 1, "max": 10}, "v2": {"min": 1, "max": 10}},
-}
-
-sweep_config_2params_acc = {
-    "metric": {
-        "name": "acc",
-        "goal": "maximize",
-    },
-    "parameters": {"v1": {"min": 1, "max": 10}, "v2": {"min": 1, "max": 10}},
-}
-
-
 # search with 0 runs - hardcoded results
-def test_runs_bayes():
+def test_runs_bayes(sweep_config_2params):
     np.random.seed(73)
-    bs = bayes.BayesianSearch()
+    bs = sweeps.BayesianSearch()
     runs = []
     sweep = {"config": sweep_config_2params, "runs": runs}
     params, info = bs.next_run(sweep)
@@ -207,9 +177,9 @@ def test_runs_bayes():
 
 
 # search with 2 finished runs - hardcoded results
-def test_runs_bayes_runs2():
+def test_runs_bayes_runs2(sweep_config_2params):
     np.random.seed(73)
-    bs = bayes.BayesianSearch()
+    bs = sweeps.BayesianSearch()
     r1 = Run(
         "b",
         "finished",
@@ -230,9 +200,9 @@ def test_runs_bayes_runs2():
 
 
 # search with 2 finished runs - hardcoded results - missing metric
-def test_runs_bayes_runs2_missingmetric():
+def test_runs_bayes_runs2_missingmetric(sweep_config_2params):
     np.random.seed(73)
-    bs = bayes.BayesianSearch()
+    bs = sweeps.BayesianSearch()
     r1 = Run(
         "b", "finished", {"v1": {"value": 7}, "v2": {"value": 5}}, {"xloss": 0.2}, []
     )
@@ -243,9 +213,9 @@ def test_runs_bayes_runs2_missingmetric():
 
 
 # search with 2 finished runs - hardcoded results - missing metric
-def test_runs_bayes_runs2_missingmetric_acc():
+def test_runs_bayes_runs2_missingmetric_acc(sweep_config_2params_acc):
     np.random.seed(73)
-    bs = bayes.BayesianSearch()
+    bs = sweeps.BayesianSearch()
     r1 = Run(
         "b", "finished", {"v1": {"value": 7}, "v2": {"value": 5}}, {"xloss": 0.2}, []
     )
@@ -259,9 +229,9 @@ def test_runs_bayes_runs2_missingmetric_acc():
     platform.system() == "Darwin",
     reason="problem with test on mac, TODO: look into this",
 )
-def test_runs_bayes_nan():
+def test_runs_bayes_nan(sweep_config_2params):
     np.random.seed(73)
-    bs = bayes.BayesianSearch()
+    bs = sweeps.BayesianSearch()
     r1 = Run(
         "b",
         "finished",
@@ -297,24 +267,9 @@ def test_runs_bayes_nan():
     assert params["v1"]["value"] == 10 and params["v2"]["value"] == 2
 
 
-sweep_config_2params_categorical = {
-    "metric": {
-        "name": "acc",
-        "goal": "maximize",
-    },
-    "parameters": {
-        "v1": {
-            "distribution": "categorical",
-            "values": [(2, 3), [3, 4], ["5", "6"], [(7, 8), ["9", [10, 11]]]],
-        },
-        "v2": {"min": 1, "max": 10},
-    },
-}
-
-
-def test_runs_bayes_categorical_list():
+def test_runs_bayes_categorical_list(sweep_config_2params_categorical):
     np.random.seed(73)
-    bs = bayes.BayesianSearch()
+    bs = sweeps.BayesianSearch()
     r1 = Run(
         "b", "finished", {"v1": {"value": [3, 4]}, "v2": {"value": 5}}, {"acc": 0.2}, []
     )
