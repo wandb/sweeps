@@ -1,11 +1,95 @@
-"""Base classes to be inherited from for Search and EarlyTerminate
-algorithms."""
-
 from .util import is_nan_or_nan_string
+from .config.cfg import SweepConfig
+from typing import Iterable, Union, Optional
+from enum import Enum
+
+from dataclasses import dataclass
+
+
+RunState = Enum(
+    "run_states",
+    (
+        "running",
+        "finished",
+        "killed",
+        "crashed",
+        "failed",
+        "preempted",
+        "preempting",
+    ),
+)
+
+
+@dataclass
+class Run:
+    """A W&B Run.
+
+    Attributes
+    ----------
+    name : str
+        Name of the run.
+    state : {'running', 'finished', 'killed', 'crashed', 'failed', 'preempting', 'preempted'}
+        State of the run.
+    config : dict
+        dict representation of the run's wandb.config. E.g.,
+        `{'config_variable_1': 1, 'config_variable_2': 2, 'optimizer': 'sgd'}`
+    summaryMetrics : dict
+        dict of summary statistics for the run. E.g., `{'loss': 0.5, 'accuracy': 0.9}`.
+    history : list of dict
+        Iterable of dicts containing the arguments to calls of wandb.log
+        made during the run. E.g., [{"loss": 10}, {"a": 9}, {"a": 8}, {"a": 7}]
+    """
+
+    name: str
+    state: RunState
+    config: dict
+    summaryMetrics: dict
+    history: Iterable[dict]
+
+
+@dataclass
+class Sweep:
+    """A W&B Hyperparameter Sweep.
+
+    Attributes
+    ----------
+    runs : iterable of `Run`s
+        The runs associated with the sweep.
+    config : SweepConfig
+        The configuration of the sweep.
+    """
+
+    runs: Iterable[Run]
+    config: SweepConfig
 
 
 class Search:
-    def _metric_from_run(self, sweep_config, run, default=None):
+    """Base class for Hyperparameter sweep search methods."""
+
+    def _metric_from_run(
+        self,
+        sweep_config: Union[SweepConfig, dict],
+        run: Run,
+        default: Optional[float] = None,
+    ) -> float:
+        """Extract the value of the target optimization metric from a
+         specified sweep run.
+
+        Parameters
+        ----------
+        sweep_config: SweepConfig or dict
+            The sweep configuration, where the name of the target metric
+            is specified.
+        run: Run
+            The run to extract the value of the metric from.
+        default: float, optional, default None
+            The default value to use if no metric is found.
+
+        Returns
+        -------
+        metric: float
+            The run's metric.
+        """
         metric = None
         metric_name = sweep_config["metric"]["name"]
 
@@ -49,14 +133,20 @@ class Search:
             metric = default
         return metric
 
-    def next_run(self, sweep):
-        """Called each time an agent requests new work.
+    def next_run(self, sweep: Sweep) -> Optional[Run]:
+        """Calculate the next run in the sweep, update the sweep's list of runs,
+        then return the new run.
 
-        Arguments:
-            sweep: <defined above>
-        Returns:
-            None if all work complete for this sweep. A dictionary of configuration
-            parameters for the next run.
+        Parameters
+        ----------
+        sweep: Sweep
+            The sweep to calculate a run for.
+
+        Returns
+        -------
+        next_run: Run or NoneType
+            None if all work complete for this sweep. Otherwise, the next
+            run in the sweep.
         """
         raise NotImplementedError
 

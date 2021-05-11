@@ -1,24 +1,6 @@
 import pytest
 
 
-class Run(object):
-    def __init__(self, name, state, config, summary, history):
-        self.name = name
-        self.state = state
-        self.config = config
-        self.summaryMetrics = summary
-        self.history = history
-
-    def __repr__(self):
-        return "Run(%s,%s,%s,%s,%s)" % (
-            self.name,
-            self.state,
-            self.config,
-            self.history,
-            self.summaryMetrics,
-        )
-
-
 @pytest.fixture()
 def sweep_config_2params():
     return {
