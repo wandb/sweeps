@@ -1,0 +1,210 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://dev.wandb.com/schema/config.json",
+    "title": "SweepConfig",
+    "description": "Weights & Biases Sweep Configuration",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "apiVersion": {
+            "type": "string",
+            "description": "Version"
+        },
+        "kind": {
+            "type": "string",
+            "description": "Possible values: sweep",
+            "enum": [
+                "sweep"
+            ]
+        },
+        "description": {
+            "type": "string",
+            "description": "Short package description"
+        },
+        "program": {
+            "type": "string",
+            "description": "Training script to run"
+        },
+        "method": {
+            "description": "Possible values: bayes, random, grid",
+            "enum": [
+                "bayes",
+                "random",
+                "grid"
+            ]
+        },
+        "command": {
+            "type": "array",
+            "description": "Command used to launch the training script"
+        },
+        "name": {
+            "type": "string",
+            "description": "The name of the sweep, displayed in the W&B UI"
+        },
+        "metric": {
+            "type": "object",
+            "description": "Metric to optimize",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name of metric"
+                },
+                "goal": {
+                    "type": "string",
+                    "description": "Possible values: minimize, maximize",
+                    "enum": [
+                        "minimize",
+                        "maximize"
+                    ]
+                },
+                "target": {
+                    "type": "number",
+                    "description": "The sweep will finish once any run achieves this value"
+                }
+            },
+            "required": ["name"],
+            "additionalProperties": false
+        },
+        "early_terminate": {
+            "type": "object",
+            "description": "Speed up hyperparameter search by killing off runs that appear to have lower performance than successful training runs",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "Possible values: hyperband",
+                    "enum": [
+                        "hyperband"
+                    ]
+                },
+                "max_iter": {
+                    "type": "number",
+                    "description": "Set the last epoch to finish trimming runs, and hyperband will automatically calculate the prior epochs to trim runs"
+                },
+                "min_iter": {
+                    "type": "number",
+                    "description": "Set the first epoch to start trimming runs, and hyperband will automatically calculate the subsequent epochs to trim runs"
+                },
+                "s": {
+                    "type": "number",
+                    "description": "Set the number of steps you trim runs at, working backwards from the max_iter"
+                },
+                "eta": {
+                    "type": "number",
+                    "description": "At every eta^n steps, hyperband continues running the top 1/eta runs and stops all other runs"
+                }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+        },
+        "parameters": {
+            "type": "object",
+            "description": "Config parameters to sweep",
+            "propertyNames": {
+                "pattern": "^^[A-Za-z_][A-Za-z0-9_.]*$"
+            },
+            "additionalProperties": {
+                "$ref": "#/definitions/param"
+            }
+        }
+    },
+    "definitions": {
+        "param": {
+            "type": "object",
+            "description": "Parameter definition",
+            "properties": {
+                "min": {
+                    "description": "int or float",
+                    "anyOf": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "number"
+                        }
+                    ]
+                },
+                "max": {
+                    "description": "int or float",
+                    "anyOf": [
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "number"
+                        }
+                    ]
+                },
+                "mu": {
+                    "type": "number",
+                    "description": "Mean for normal or lognormal distributions"
+                },
+                "sigma": {
+                    "type": "number",
+                    "description": "Std Dev for normal or lognormal distributions"
+                },
+                "q": {
+                    "type": "number",
+                    "description": "Quantization parameter for quantized distributions"
+                },
+                "values": {
+                    "$comment": "Should we validate this type?",
+                    "type": "array",
+                    "description": "Discrete values"
+                },
+                "value": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "number"
+                        }
+                    ],
+                    "description": "A constant"
+                },
+                "distribution": {
+                    "type": "string",
+                    "description": "If not specified, the sweep will set to uniform if max and min are set, categorical if values are set and constant if value is set",
+                    "anyOf": [
+                        {
+                            "enum": [
+                                "constant",
+                                "categorical",
+                                "int_uniform",
+                                "uniform",
+                                "q_uniform",
+                                "log_uniform",
+                                "q_log_uniform",
+                                "normal",
+                                "q_normal",
+                                "log_normal",
+                                "q_log_normal"
+                            ]
+                        }
+                    ]
+                }
+            },
+            "oneOf": [
+                {
+                    "required": [
+                        "min",
+                        "max"
+                    ]
+                },
+                {
+                    "required": [
+                        "value"
+                    ]
+                },
+                {
+                    "required": [
+                        "values"
+                    ]
+                }
+            ]
+        }
+    },
+    "required": [
+        "program"
+    ]
+}
