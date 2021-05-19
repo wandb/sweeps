@@ -2,73 +2,50 @@
 
 import itertools
 import random
+from typing import List, Optional
 
-from .base import Search
+from .config.cfg import SweepConfig
+from .run import Run
 from .params import HyperParameter, HyperParameterSet
 
 
-class GridSearch(Search):
-    def __init__(self, randomize_order=False):
-        self.randomize_order = randomize_order
+def grid_search_next_run(
+    runs: List[Run], config: SweepConfig, randomize_order: bool = False
+) -> Optional[Run]:
 
-    def next_run(self, sweep):
-        if "parameters" not in sweep["config"]:
-            raise ValueError('Grid search requires "parameters" section')
-        config = sweep["config"]["parameters"]
-        params = HyperParameterSet.from_config(config)
+    # make sure the sweep config is valid
 
-        # Check that all parameters are categorical or constant
-        for p in params:
-            if (
-                p.type != HyperParameter.CATEGORICAL
-                and p.type != HyperParameter.CONSTANT
-            ):
-                raise ValueError(
-                    "Parameter %s is a disallowed type with grid search. Grid search requires all parameters to be categorical or constant"
-                    % p.name
-                )
+    if "parameters" not in config:
+        raise ValueError('Grid search requires "parameters" section')
+    params = HyperParameterSet.from_config(config["parameters"])
 
-        # we can only deal with discrete params in a grid search
-        discrete_params = [p for p in params if p.type == HyperParameter.CATEGORICAL]
+    # Check that all parameters are categorical or constant
+    for p in params:
+        if p.type != HyperParameter.CATEGORICAL and p.type != HyperParameter.CONSTANT:
+            raise ValueError(
+                "Parameter %s is a disallowed type with grid search. Grid search requires all parameters to be categorical or constant"
+                % p.name
+            )
 
-        # build an iterator over all combinations of param values
-        param_names = [p.name for p in discrete_params]
-        param_values = [p.values for p in discrete_params]
-        param_value_set = list(itertools.product(*param_values))
+    # we can only deal with discrete params in a grid search
+    discrete_params = [p for p in params if p.type == HyperParameter.CATEGORICAL]
 
-        if self.randomize_order:
-            random.shuffle(param_value_set)
+    # build an iterator over all combinations of param values
+    param_names = [p.name for p in discrete_params]
+    param_values = [p.values for p in discrete_params]
 
-        new_value_set = next(
-            (
-                value_set
-                for value_set in param_value_set
-                # check if parameter set is contained in some run
-                if not self._runs_contains_param_values(
-                    sweep["runs"], dict(zip(param_names, value_set))
-                )
-            ),
-            None,
-        )
+    all_param_values = set(itertools.product(*param_values))
+    param_values_seen = set(
+        [[run.config[name] for name in param_names] for run in runs]
+    )
 
-        # handle the case where we couldn't find a unique parameter set
-        if new_value_set is None:
-            return None
+    # this is O(N) due to the O(1) complexity of individual hash lookups; previous implementation was O(N^2)
+    remaining_params = list(all_param_values - param_values_seen)
 
-        # set next_run_params based on our new set of params
-        for param, value in zip(discrete_params, new_value_set):
-            param.value = value
+    if randomize_order:
+        random.shuffle(remaining_params)
 
-        return (params.to_config(), None)
-
-    def _run_contains_param_values(self, run, params):
-        for key, value in params.items():
-            if key not in run.config:
-                return False
-            if not run.config[key]["value"] == value:
-                # print("not same {} {}".format(run.config[key], value))
-                return False
-        return True
-
-    def _runs_contains_param_values(self, runs, params):
-        return any(self._run_contains_param_values(run, params) for run in runs)
+    # we have searched over the entire parameter space
+    if len(remaining_params) == 0:
+        return None
+    return Run(config=dict(zip(param_names, remaining_params[0])))
