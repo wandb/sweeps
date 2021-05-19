@@ -1,14 +1,33 @@
 """Base SweepConfig classes."""
 
-import wandb
+import warnings
+import json
 import yaml
-
 from six.moves import UserDict
+from pathlib import Path
+
+import jsonschema
+
+sweep_config_jsonschema_fname = Path(__file__).parent / "schema.json"
+with open(sweep_config_jsonschema_fname, "r") as f:
+    sweep_config_jsonschema = json.load(f)
+
+
+validator = jsonschema.Draft7Validator(schema=sweep_config_jsonschema)
 
 
 class SweepConfig(UserDict):
     def __init__(self, d):
         super(SweepConfig, self).__init__(d)
+
+        # ensure the data conform to the schema
+        schema_violation_messages = []
+        for error in validator.iter_errors(self):
+            schema_violation_messages.append(f"{error}")
+
+        if len(schema_violation_messages) > 0:
+            err_msg = "\n".join(schema_violation_messages)
+            raise jsonschema.ValidationError(err_msg)
 
     def __str__(self):
         return yaml.safe_dump(self.data)
@@ -40,12 +59,13 @@ class SweepConfig(UserDict):
         if name:
             self.set_settings(settings)
         for k in kwargs.keys():
-            wandb.termwarn(
+            warnings.warn(
                 "Unsupported parameter passed to SweepConfig set(): {}".format(k)
             )
         return self
 
 
+"""
 class SweepConfigElement:
     _version_dict: dict = {}
 
@@ -83,3 +103,4 @@ class SweepConfigElement:
                 d["tune"]["_wandb"]["versions"][m] = v
             return SweepConfig(d)
         return d
+"""
