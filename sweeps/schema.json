@@ -25,6 +25,14 @@
             "type": "string",
             "description": "Training script to run"
         },
+        "entity": {
+            "type": "string",
+            "description": "The entity for this sweep"
+        },
+        "project": {
+            "type": "string",
+            "description": "The project for this sweep"
+        },
         "method": {
             "description": "Possible values: bayes, random, grid",
             "enum": [
@@ -62,10 +70,269 @@
                     "description": "The sweep will finish once any run achieves this value"
                 }
             },
-            "required": ["name"],
+            "required": [
+                "name"
+            ],
             "additionalProperties": false
         },
         "early_terminate": {
+            "oneOf": [
+                {
+                    "$ref": "#/definitions/hyperband_stopping"
+                },
+                {
+                    "$ref": "#/definitions/envelope_stopping"
+                }
+            ]
+        },
+        "parameters": {
+            "type": "object",
+            "description": "Config parameters to sweep",
+            "propertyNames": {
+                "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
+            },
+            "additionalProperties": {
+                "$ref": "#/definitions/parameter"
+            }
+        }
+    },
+    "definitions": {
+        "param_categorical": {
+            "type": "object",
+            "description": "A categorical parameter with allowed values.",
+            "properties": {
+                "values": {
+                    "type": "array",
+                    "description": "Discrete values"
+                },
+                "distribution": {
+                    "enum": [
+                        "categorical"
+                    ]
+                }
+            },
+            "required": [
+                "values"
+            ]
+        },
+        "param_single_value": {
+            "type": "object",
+            "description": "A constant parameter.",
+            "properties": {
+                "value": {
+                    "description": "A constant"
+                },
+                "distribution": {
+                    "enum": [
+                        "constant"
+                    ]
+                }
+            },
+            "required": [
+                "value"
+            ]
+        },
+        "param_quantized": {
+            "type": "object",
+            "description": "A parameter with a distribution that is quantized",
+            "properties": {
+                "q": {
+                    "type": "number",
+                    "default": 1.0,
+                    "description": "Quantization parameter for quantized distributions"
+                }
+            }
+        },
+        "uniform_or_loguniform_base": {
+            "type": "object",
+            "description": "A parameter with a distribution function.",
+            "properties": {
+                "min": {
+                    "description": "float",
+                    "type": "number"
+                },
+                "max": {
+                    "description": "float",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "min",
+                "max"
+            ]
+        },
+        "param_lognormal_or_normal_base": {
+            "type": "object",
+            "description": "A lognormally or normally distributed parameter (they share a schema).",
+            "properties": {
+                "mu": {
+                    "type": "number",
+                    "description": "Mean for normal or lognormal distributions",
+                    "default": 0.0
+                },
+                "sigma": {
+                    "type": "number",
+                    "description": "Std Dev for normal or lognormal distributions",
+                    "default": 1.0
+                }
+            }
+        },
+        "param_lognormal_or_normal": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "distribution": {
+                            "enum": [
+                                "normal",
+                                "log_normal"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "distribution"
+                    ]
+                },
+                {
+                    "$ref": "#/definitions/param_lognormal_or_normal_base"
+                }
+            ]
+        },
+        "param_qlognormal_or_qnormal": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/param_quantized"
+                },
+                {
+                    "$ref": "#/definitions/param_lognormal_or_normal_base"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "distribution": {
+                            "enum": [
+                                "q_normal",
+                                "q_log_normal"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "distribution"
+                    ]
+                }
+            ]
+        },
+        "param_uniform": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/uniform_or_loguniform_base"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "distribution": {
+                            "enum": [
+                                "uniform"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "param_loguniform": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/uniform_or_loguniform_base"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "distribution": {
+                            "enum": [
+                                "log_uniform"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "distribution"
+                    ]
+                }
+            ]
+        },
+        "param_quniform_or_qloguniform": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/uniform_or_loguniform_base"
+                },
+                {
+                    "$ref": "#/definitions/param_quantized"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "distribution": {
+                            "enum": [
+                                "q_uniform",
+                                "q_log_uniform"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "distribution"
+                    ]
+                }
+            ]
+        },
+        "param_int_uniform": {
+            "type": "object",
+            "description": "Discrete uniform distribution on integers.",
+            "properties": {
+                "max": {
+                    "type": "integer"
+                },
+                "min": {
+                    "type": "integer"
+                },
+                "distribution": {
+                    "enum": [
+                        "int_uniform"
+                    ]
+                }
+            },
+            "required": [
+                "min",
+                "max"
+            ]
+        },
+        "parameter": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/param_categorical"
+                },
+                {
+                    "$ref": "#/definitions/param_single_value"
+                },
+                {
+                    "$ref": "#/definitions/param_lognormal_or_normal"
+                },
+                {
+                    "$ref": "#/definitions/param_qlognormal_or_qnormal"
+                },
+                {
+                    "$ref": "#/definitions/param_uniform"
+                },
+                {
+                    "$ref": "#/definitions/param_loguniform"
+                },
+                {
+                    "$ref": "#/definitions/param_quniform_or_qloguniform"
+                },
+                {
+                    "$ref": "#/definitions/param_int_uniform"
+                }
+            ]
+        },
+        "hyperband_stopping": {
             "type": "object",
             "description": "Speed up hyperparameter search by killing off runs that appear to have lower performance than successful training runs",
             "properties": {
@@ -93,118 +360,49 @@
                     "description": "At every eta^n steps, hyperband continues running the top 1/eta runs and stops all other runs"
                 }
             },
-            "required": ["type"],
-            "additionalProperties": false
-        },
-        "parameters": {
-            "type": "object",
-            "description": "Config parameters to sweep",
-            "propertyNames": {
-                "pattern": "^^[A-Za-z_][A-Za-z0-9_.]*$"
-            },
-            "additionalProperties": {
-                "$ref": "#/definitions/param"
-            }
-        }
-    },
-    "definitions": {
-        "param": {
-            "type": "object",
-            "description": "Parameter definition",
-            "properties": {
-                "min": {
-                    "description": "int or float",
-                    "anyOf": [
-                        {
-                            "type": "integer"
-                        },
-                        {
-                            "type": "number"
-                        }
+            "allOf": [
+                {
+                    "required": [
+                        "type"
                     ]
                 },
-                "max": {
-                    "description": "int or float",
+                {
                     "anyOf": [
                         {
-                            "type": "integer"
+                            "required": [
+                                "max_iter",
+                                "s"
+                            ]
                         },
                         {
-                            "type": "number"
-                        }
-                    ]
-                },
-                "mu": {
-                    "type": "number",
-                    "description": "Mean for normal or lognormal distributions"
-                },
-                "sigma": {
-                    "type": "number",
-                    "description": "Std Dev for normal or lognormal distributions"
-                },
-                "q": {
-                    "type": "number",
-                    "description": "Quantization parameter for quantized distributions"
-                },
-                "values": {
-                    "$comment": "Should we validate this type?",
-                    "type": "array",
-                    "description": "Discrete values"
-                },
-                "value": {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "number"
-                        }
-                    ],
-                    "description": "A constant"
-                },
-                "distribution": {
-                    "type": "string",
-                    "description": "If not specified, the sweep will set to uniform if max and min are set, categorical if values are set and constant if value is set",
-                    "anyOf": [
-                        {
-                            "enum": [
-                                "constant",
-                                "categorical",
-                                "int_uniform",
-                                "uniform",
-                                "q_uniform",
-                                "log_uniform",
-                                "q_log_uniform",
-                                "normal",
-                                "q_normal",
-                                "log_normal",
-                                "q_log_normal"
+                            "required": [
+                                "min_iter"
                             ]
                         }
                     ]
                 }
-            },
-            "oneOf": [
-                {
-                    "required": [
-                        "min",
-                        "max"
-                    ]
-                },
-                {
-                    "required": [
-                        "value"
-                    ]
-                },
-                {
-                    "required": [
-                        "values"
+            ],
+            "additionalProperties": false
+        },
+        "envelope_stopping": {
+            "type": "object",
+            "description": "Speed up hyperparameter search by killing off runs that appear to have lower performance than successful training runs",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "Possible values: hyperband",
+                    "enum": [
+                        "envelope"
                     ]
                 }
+            },
+            "required": [
+                "type"
             ]
         }
     },
     "required": [
-        "program"
+        "method",
+        "parameters"
     ]
 }
