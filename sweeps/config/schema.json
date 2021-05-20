@@ -106,15 +106,8 @@
                     "description": "Discrete values",
                     "items": {
                         "oneOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "number"
-                            }
+                            {"type":  "string"},
+                            {"type":  "number"}
                         ]
                     }
                 },
