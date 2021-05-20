@@ -4,9 +4,14 @@ from .config.cfg import SweepConfig
 from .run import Run
 from .params import HyperParameterSet
 
+from typing import Union
 
-def random_search_next_run(config: SweepConfig) -> Run:
-    params = HyperParameterSet.from_config(config["parameters"])
+
+def random_search_next_run(sweep_config: Union[dict, SweepConfig]) -> Run:
+    # ensure that the sweepconfig is properly formatted
+    sweep_config = SweepConfig(sweep_config)
+
+    params = HyperParameterSet.from_config(sweep_config["parameters"])
 
     for param in params:
         param.value = param.sample()

@@ -61,3 +61,15 @@ def sweep_config_2params_categorical():
             "v2": {"min": 1, "max": 10},
         },
     }
+
+
+@pytest.fixture()
+def sweep_config_invalid_violates_min_max():
+    # max is less than min
+    return {
+        "parameters": {
+            "v1": {"max": 3, "min": 5},
+            "v2": {"min": 5, "max": 6},
+            "method": "random",
+        }
+    }

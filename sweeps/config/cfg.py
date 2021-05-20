@@ -27,6 +27,18 @@ class SweepConfig(UserDict):
         for error in validator.iter_errors(dict(self)):
             schema_violation_messages.append(f"{error}")
 
+        # validate min/max - this cannot be done with jsonschema
+        # because it does not support comparing values within
+        # a json document. so we do it manually here:
+        for parameter_name, parameter_dict in self["parameters"].items():
+            if "min" in parameter_dict and "max" in parameter_dict:
+                # this comparison is type safe because the jsonschema enforces type uniformity
+                if parameter_dict["min"] >= parameter_dict["max"]:
+                    schema_violation_messages.append(
+                        f'{parameter_name}: min {parameter_dict["min"]} is not '
+                        f'less than max {parameter_dict["max"]}'
+                    )
+
         if len(schema_violation_messages) > 0:
             err_msg = "\n".join(schema_violation_messages)
             raise jsonschema.ValidationError(err_msg)
