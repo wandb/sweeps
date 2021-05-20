@@ -34,6 +34,8 @@ from __future__ import print_function
 
 # from .config import hyperopt
 
+from .cfg import SweepConfig
+
 __all__ = [
     "tune",
     "SweepConfig",

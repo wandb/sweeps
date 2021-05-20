@@ -38,6 +38,9 @@ class Run:
     history : list of dict
         Iterable of dicts containing the arguments to calls of wandb.log
         made during the run. E.g., [{"loss": 10}, {"a": 9}, {"a": 8}, {"a": 7}]
+    optimizer_info: dict
+        For runs in the proposed state, information produced by the optimizer. E.g.,
+        {'improvement_prob': 0.2}
     """
 
     name: Optional[str] = None
@@ -45,6 +48,7 @@ class Run:
     history: List[dict] = field(default_factory=lambda: [])
     config: dict = field(default_factory=lambda: {})
     state: RunState = RunState.proposed
+    optimizer_info: Optional[dict] = None
 
     def metric_history(self, metric_name: str) -> List[np.floating]:
         return [
