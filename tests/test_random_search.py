@@ -86,3 +86,44 @@ def test_rand_uniform_single():
         pred_samples, true_samples, bins
     )
     assert dist_ok
+
+
+def test_rand_normal_and_uniform():
+    # Calculates that the
+
+    v2_min = 5.0
+    v2_max = 6.0
+    n_samples = 10000
+
+    sweep_config_2params = SweepConfig(
+        {
+            "method": "random",
+            "parameters": {
+                "v1": {"distribution": "normal"},
+                "v2": {"min": v2_min, "max": v2_max},
+            },
+        }
+    )
+
+    runs = []
+    for i in range(n_samples):
+        suggestion = next_run(sweep_config_2params, runs)
+        runs.append(suggestion)
+
+    v1_pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
+    v2_pred_samples = np.asarray([run.config["v2"]["value"] for run in runs])
+
+    v1_true_samples = np.random.normal(0, 1, size=n_samples)
+    v2_true_samples = np.random.uniform(v2_min, v2_max, size=n_samples)
+
+    v1_bins = np.linspace(-2, 2, 10)
+    v2_bins = np.linspace(v2_min, v2_max, 10)
+
+    pred_samples = np.transpose(np.vstack([v1_pred_samples, v2_pred_samples]))
+    true_samples = np.transpose(np.vstack([v1_true_samples, v2_true_samples]))
+    bins = np.vstack([v1_bins, v2_bins])
+
+    dist_ok = samples_are_from_the_same_distribution_according_to_chisq_two_sample_test(
+        pred_samples, true_samples, bins
+    )
+    assert dist_ok
