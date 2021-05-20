@@ -84,10 +84,3 @@ class Run:
             self.summary_metric(metric_name)
         ]
         return cmp_func(all_metrics)
-
-
-@dataclass
-class Suggestion:
-    # run Can be none to suggest terminating the sweep.
-    run: Optional[Run]
-    reason: str = ""
