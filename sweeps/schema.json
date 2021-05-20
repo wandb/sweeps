@@ -103,7 +103,20 @@
             "properties": {
                 "values": {
                     "type": "array",
-                    "description": "Discrete values"
+                    "description": "Discrete values",
+                    "items": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "number"
+                            }
+                        ]
+                    }
                 },
                 "distribution": {
                     "enum": [
