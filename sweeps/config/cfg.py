@@ -22,7 +22,7 @@ class SweepConfig(UserDict):
 
         # ensure the data conform to the schema
         schema_violation_messages = []
-        for error in validator.iter_errors(d):
+        for error in validator.iter_errors(dict(self)):
             schema_violation_messages.append(f"{error}")
 
         if len(schema_violation_messages) > 0:
