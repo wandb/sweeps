@@ -22,7 +22,7 @@ RunState = Enum(
 
 @dataclass
 class Run:
-    """A W&B Run.
+    """Minimal representation of a W&B Run for sweeps.
 
     Attributes
     ----------
@@ -46,20 +46,19 @@ class Run:
     config: dict = field(default_factory=lambda: {})
     state: RunState = RunState.proposed
 
-    def metric_history(self, metric_name: str) -> List[float]:
-        # TODO: remove maxmimze from this func
+    def metric_history(self, metric_name: str) -> List[np.floating]:
         return [
             d[metric_name]
             for d in self.history
             if d[metric_name] is not None and np.isfinite(d[metric_name])
         ]
 
-    def summary_metric(self, metric_name: str) -> float:
+    def summary_metric(self, metric_name: str) -> np.floating:
         if metric_name not in self.summary_metrics:
             raise KeyError(f"{metric_name} is not a summary metric of this run.")
         return self.summary_metrics[metric_name]
 
-    def best_metric(self, metric_name: str, maximize: bool) -> float:
+    def best_metric(self, metric_name: str, maximize: bool) -> np.floating:
         """Extract the value of the target optimization metric from a
          specified sweep run.
 
@@ -79,7 +78,7 @@ class Run:
             The run's metric.
         """
 
-        cmp_func = max if maximize else min
+        cmp_func = np.max if maximize else np.min
         all_metrics = self.metric_history(metric_name) + [
             self.summary_metric(metric_name)
         ]
