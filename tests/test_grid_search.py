@@ -2,8 +2,7 @@ import pytest
 import itertools
 
 from typing import List
-from sweeps.run import RunState, Run
-from sweeps.grid_search import grid_search_next_run
+from sweeps.run import RunState, Run, next_run
 from sweeps.config import SweepConfig
 
 
@@ -26,14 +25,14 @@ def kernel_for_grid_search_tests(
     ]
 
     while True:
-        next_run = grid_search_next_run(runs, config, randomize_order=randomize)
-        if next_run is None:  # done
+        suggestion = next_run(config, runs, randomize_order=randomize)
+        if suggestion is None:  # done
             break
-        assert next_run.optimizer_info is None
-        assert next_run.state == RunState.proposed
-        runs.append(next_run)
+        assert suggestion.optimizer_info is None
+        assert suggestion.state == RunState.proposed
+        runs.append(suggestion)
         suggested_parameters.append(
-            (next_run.config["v1"]["value"], next_run.config["v2"]["value"])
+            (suggestion.config["v1"]["value"], suggestion.config["v2"]["value"])
         )
 
     # assert that the grid search iterates over all possible parameters and stops when

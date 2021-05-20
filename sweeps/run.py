@@ -1,8 +1,10 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from enum import Enum
 import numpy as np
 
 from dataclasses import dataclass, field
+
+from .config import SweepConfig
 
 
 RunState = Enum(
@@ -87,3 +89,30 @@ class Run:
             self.summary_metric(metric_name)
         ]
         return cmp_func(all_metrics)
+
+
+def next_run(
+    sweep_config: Union[dict, SweepConfig], runs: List[Run], **kwargs
+) -> Optional[Run]:
+    """Calculate the next run in a sweep given the Sweep config and the list of runs already in progress or finished. Returns the next run, or None if the parameter space is exhausted."""
+
+    from .grid_search import grid_search_next_run
+    from .random_search import random_search_next_run
+
+    # from .bayes_search import bayes_search_next_run
+
+    # this access is safe due to the jsonschema
+    method = sweep_config["method"]
+
+    if method == "grid":
+        return grid_search_next_run(runs, sweep_config, **kwargs)
+    elif method == "random":
+        return random_search_next_run(sweep_config)
+    elif method == "bayes":
+        # return bayes_search_next_run(runs, sweep_config, **kwargs)
+        #  TODO: implement this
+        raise NotImplementedError
+    else:
+        raise ValueError(
+            f'Invalid search type {method}, must be one of ["grid", "random", "bayes"]'
+        )
