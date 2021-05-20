@@ -1,18 +1,14 @@
 """Random Search."""
 
-from .base import Search
+from .config.cfg import SweepConfig
+from .run import Run
 from .params import HyperParameterSet
 
 
-class RandomSearch(Search):
-    def next_run(self, sweep):
-        # print(sweep)
-        if "parameters" not in sweep["config"]:
-            raise ValueError('Random search requires "parameters" section')
-        config = sweep["config"]["parameters"]
-        params = HyperParameterSet.from_config(config)
+def random_search_next_run(config: SweepConfig) -> Run:
+    params = HyperParameterSet.from_config(config["parameters"])
 
-        for param in params:
-            param.value = param.sample()
+    for param in params:
+        param.value = param.sample()
 
-        return (params.to_config(), None)
+    return Run(config=params.to_config())
