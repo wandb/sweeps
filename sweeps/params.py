@@ -7,6 +7,7 @@ import scipy.stats as stats
 
 
 class HyperParameter:
+
     CONSTANT = 0
     CATEGORICAL = 1
     INT_UNIFORM = 2
@@ -226,36 +227,8 @@ class HyperParameter:
         else:
             raise ValueError("Unsupported hyperparameter distribution type")
 
-    def sample(self):
+    def sample(self) -> float:
         return self.ppf(random.uniform(0.0, 1.0))
-        # if self.type == HyperParameter.CONSTANT:
-        #     return self.value
-        # elif self.type == HyperParameter.CATEGORICAL:
-        #     return random.choice(self.values)
-        # elif self.type == HyperParameter.INT_UNIFORM:
-        #     return random.randint(self.min, self.max)
-        # elif self.type == HyperParameter.UNIFORM:
-        #     return random.uniform(self.min, self.max)
-        # elif self.type == HyperParameter.Q_UNIFORM:
-        #     x = random.uniform(self.min, self.max)
-        #     return np.round(x / self.q) * self.q
-        # elif self.type == HyperParameter.LOG_UNIFORM:
-        #     return np.exp(random.uniform(self.min, self.max))
-        # elif self.type == HyperParameter.Q_LOG_UNIFORM:
-        #     x = random.uniform(self.min, self.max)
-        #     return np.round(np.exp(x) / self.q) * self.q
-        # elif self.type == HyperParameter.NORMAL:
-        #     return random.normal(loc=self.mu, scale=self.sigma)
-        # elif self.type == HyperParameter.Q_NORMAL:
-        #     x = random.normal(loc=self.mu, scale=self.sigma)
-        #     return np.round(x / self.q) * self.q
-        # elif self.type == HyperParameter.LOG_NORMAL:
-        #     return np.exp(self.mu + self.sigma * random.normal())
-        # elif self.type == HyperParameter.Q_LOG_NORMAL:
-        #     x = random.normal(loc=self.mu, scale=self.sigma)
-        #     return np.round(np.exp(x) / self.q) * self.q
-        # else:
-        #     raise ValueError("Unsupported hyperparameter distribution type")
 
     def to_config(self):
         config = dict(value=self.value)
@@ -306,9 +279,9 @@ class HyperParameter:
 
 
 class HyperParameterSet(list):
-    @staticmethod
-    def from_config(config):
-        hpd = HyperParameterSet(
+    @classmethod
+    def from_config(cls, config):
+        hpd = cls(
             [
                 HyperParameter(param_name, param_config)
                 for param_name, param_config in sorted(config.items())

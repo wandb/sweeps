@@ -21,7 +21,9 @@ def kernel_for_grid_search_tests(
             )
         )
     )
-    suggested_parameters = [(run.config["v1"], run.config["v2"]) for run in runs]
+    suggested_parameters = [
+        (run.config["v1"]["value"], run.config["v2"]["value"]) for run in runs
+    ]
 
     while True:
         next_run = grid_search_next_run(runs, config, randomize_order=randomize)
@@ -30,7 +32,9 @@ def kernel_for_grid_search_tests(
         assert next_run.optimizer_info is None
         assert next_run.state == RunState.proposed
         runs.append(next_run)
-        suggested_parameters.append((next_run.config["v1"], next_run.config["v2"]))
+        suggested_parameters.append(
+            (next_run.config["v1"]["value"], next_run.config["v2"]["value"])
+        )
 
     # assert that the grid search iterates over all possible parameters and stops when
     # it exhausts the list of possibilities. do not assert anything about the order
@@ -52,7 +56,10 @@ def test_grid_from_start_with_and_without_randomize(
 def test_grid_search_starting_from_in_progress(
     sweep_config_2params_grid_search, randomize
 ):
-    runs = [Run(config={"v1": 2, "v2": 4}), Run(config={"v1": 1, "v2": 5})]
+    runs = [
+        Run(config={"v1": {"value": 2}, "v2": {"value": 4}}),
+        Run(config={"v1": {"value": 1}, "v2": {"value": 5}}),
+    ]
     kernel_for_grid_search_tests(
         runs, sweep_config_2params_grid_search, randomize=randomize
     )
