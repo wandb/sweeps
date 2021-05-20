@@ -24,16 +24,6 @@ def sweep_config_2params_grid_search():
 
 
 @pytest.fixture()
-def sweep_config_dict_1param_invalid_none_grid_search():
-    return {
-        "method": "grid",
-        "parameters": {
-            "v1": {"values": [None, 2, 3]},
-        },
-    }
-
-
-@pytest.fixture()
 def sweep_config_2params_acc():
     return SweepConfig(
         {
@@ -60,16 +50,4 @@ def sweep_config_2params_categorical():
             },
             "v2": {"min": 1, "max": 10},
         },
-    }
-
-
-@pytest.fixture()
-def sweep_config_invalid_violates_min_max():
-    # max is less than min
-    return {
-        "parameters": {
-            "v1": {"max": 3, "min": 5},
-            "v2": {"min": 5, "max": 6},
-            "method": "random",
-        }
     }

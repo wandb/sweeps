@@ -8,13 +8,26 @@ from sweeps import config
 validation_violation_context = pytest.raises(jsonschema.ValidationError)
 
 
-def test_invalid_sweep_config_nonuniform_array_elements_categorical(
-    sweep_config_dict_1param_invalid_none_grid_search,
-):
+def test_invalid_sweep_config_nonuniform_array_elements_categorical():
+    invalid_config = {
+        "method": "grid",
+        "parameters": {
+            "v1": {"values": [None, 2, 3]},
+        },
+    }
+
     with validation_violation_context:
-        _ = config.SweepConfig(sweep_config_dict_1param_invalid_none_grid_search)
+        _ = config.SweepConfig(invalid_config)
 
 
-def test_min_max_validation(sweep_config_invalid_violates_min_max):
+def test_min_max_validation():
+    invalid_config = {
+        "method": "random",
+        "parameters": {
+            "v1": {"max": 3, "min": 5},
+            "v2": {"min": 5, "max": 6},
+        },
+    }
+
     with validation_violation_context:
-        _ = config.SweepConfig(sweep_config_invalid_violates_min_max)
+        _ = config.SweepConfig(invalid_config)
