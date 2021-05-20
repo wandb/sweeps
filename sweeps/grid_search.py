@@ -2,7 +2,7 @@
 
 import itertools
 import random
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from .config.cfg import SweepConfig
 from .run import Run
@@ -10,14 +10,17 @@ from .params import HyperParameter, HyperParameterSet
 
 
 def grid_search_next_run(
-    runs: List[Run], config: SweepConfig, randomize_order: bool = False
+    runs: List[Run],
+    sweep_config: Union[dict, SweepConfig],
+    randomize_order: bool = False,
 ) -> Optional[Run]:
 
     # make sure the sweep config is valid
+    sweep_config = SweepConfig(sweep_config)
 
-    if "parameters" not in config:
+    if "parameters" not in sweep_config:
         raise ValueError('Grid search requires "parameters" section')
-    params = HyperParameterSet.from_config(config["parameters"])
+    params = HyperParameterSet.from_config(sweep_config["parameters"])
 
     # Check that all parameters are categorical or constant
     for p in params:
@@ -36,7 +39,7 @@ def grid_search_next_run(
 
     all_param_values = set(itertools.product(*param_values))
     param_values_seen = set(
-        [[run.config[name] for name in param_names] for run in runs]
+        [tuple(run.config[name] for name in param_names) for run in runs]
     )
 
     # this is O(N) due to the O(1) complexity of individual hash lookups; previous implementation was O(N^2)

@@ -6,6 +6,8 @@ import yaml
 from six.moves import UserDict
 from pathlib import Path
 
+from typing import Union
+
 import jsonschema
 
 sweep_config_jsonschema_fname = Path(__file__).parent / "schema.json"
@@ -17,7 +19,7 @@ validator = jsonschema.Draft7Validator(schema=sweep_config_jsonschema)
 
 
 class SweepConfig(UserDict):
-    def __init__(self, d):
+    def __init__(self, d: Union[dict, UserDict]):
         super(SweepConfig, self).__init__(d)
 
         # ensure the data conform to the schema
