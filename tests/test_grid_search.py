@@ -10,6 +10,9 @@ from sweeps.config import SweepConfig
 def kernel_for_grid_search_tests(
     runs: List[Run], config: SweepConfig, randomize: bool
 ) -> None:
+    """This kernel assumes that sweep config has two categorical parameters
+    named v1 and v2."""
+
     answers = sorted(
         list(
             itertools.product(
