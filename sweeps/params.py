@@ -161,7 +161,7 @@ class HyperParameter:
             self.type == HyperParameter.LOG_UNIFORM
             or self.type == HyperParameter.Q_LOG_UNIFORM
         ):
-            return stats.uniform.cdf(np.log(x), self.min, self.max - self.min)
+            return stats.loguniform(self.min, self.max).cdf(x)
         elif self.type == HyperParameter.NORMAL or self.type == HyperParameter.Q_NORMAL:
             return stats.norm.cdf(x, loc=self.mu, scale=self.sigma)
         elif (
@@ -196,7 +196,7 @@ class HyperParameter:
             else:
                 return ret_val
         elif self.type == HyperParameter.LOG_UNIFORM:
-            return np.exp(stats.uniform.ppf(x, self.min, self.max - self.min))
+            return stats.loguniform(self.min, self.max).ppf(x)
         elif self.type == HyperParameter.Q_LOG_UNIFORM:
             r = np.exp(stats.uniform.ppf(x, self.min, self.max - self.min))
             ret_val = np.round(r / self.q) * self.q

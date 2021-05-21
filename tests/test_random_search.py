@@ -5,7 +5,7 @@ from sweeps.run import next_run
 from scipy.stats import chi2
 
 
-def samples_are_from_the_same_distribution_according_to_chisq_two_sample_test(
+def check_that_samples_are_from_the_same_distribution_according_to_chisq_two_sample_test(
     samples_1: npt.ArrayLike,
     samples_2: npt.ArrayLike,
     bins: npt.ArrayLike,
@@ -45,6 +45,19 @@ def samples_are_from_the_same_distribution_according_to_chisq_two_sample_test(
     return chisq < chi2.ppf(0.0000003, dof)
 
 
+def plot_two_distributions(
+    samples_1: npt.ArrayLike,
+    samples_2: npt.ArrayLike,
+    bins: npt.ArrayLike,
+):
+    import matplotlib.pyplot as plt
+
+    plt.hist(samples_1, bins=bins, histtype="stepfilled", label="set1", alpha=0.2)
+    plt.hist(samples_2, bins=bins, histtype="stepfilled", label="set2", alpha=0.2)
+    plt.legend()
+    plt.show()
+
+
 def test_rand_uniform_single():
     # Calculates that the
 
@@ -82,7 +95,7 @@ def test_rand_uniform_single():
     true_samples = np.transpose(np.vstack([v1_true_samples, v2_true_samples]))
     bins = np.vstack([v1_bins, v2_bins])
 
-    dist_ok = samples_are_from_the_same_distribution_according_to_chisq_two_sample_test(
+    dist_ok = check_that_samples_are_from_the_same_distribution_according_to_chisq_two_sample_test(
         pred_samples, true_samples, bins
     )
     assert dist_ok
@@ -123,7 +136,50 @@ def test_rand_normal_and_uniform():
     true_samples = np.transpose(np.vstack([v1_true_samples, v2_true_samples]))
     bins = np.vstack([v1_bins, v2_bins])
 
-    dist_ok = samples_are_from_the_same_distribution_according_to_chisq_two_sample_test(
+    dist_ok = check_that_samples_are_from_the_same_distribution_according_to_chisq_two_sample_test(
+        pred_samples, true_samples, bins
+    )
+    assert dist_ok
+
+
+def test_rand_lognormal_and_loguniform():
+    # Calculates that the
+
+    v2_min = 5.0
+    v2_max = 6.0
+    n_samples = 10000
+
+    sweep_config_2params = SweepConfig(
+        {
+            "method": "random",
+            "parameters": {
+                "v1": {"distribution": "log_normal"},
+                "v2": {"min": v2_min, "max": v2_max, "distribution": "log_uniform"},
+            },
+        }
+    )
+
+    runs = []
+    for i in range(n_samples):
+        suggestion = next_run(sweep_config_2params, runs)
+        runs.append(suggestion)
+
+    v1_pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
+    v2_pred_samples = np.asarray([run.config["v2"]["value"] for run in runs])
+
+    v1_true_samples = np.random.lognormal(0, 1, size=n_samples)
+    v2_true_samples = np.random.uniform(np.log(v2_min), np.log(v2_max), size=n_samples)
+    v2_true_samples = np.exp(v2_true_samples)
+
+    # the lhs needs to be >= 0 because
+    v1_bins = np.linspace(0, 2, 10)
+    v2_bins = np.logspace(np.log10(v2_min), np.log10(v2_max), 10)
+
+    pred_samples = np.transpose(np.vstack([v1_pred_samples, v2_pred_samples]))
+    true_samples = np.transpose(np.vstack([v1_true_samples, v2_true_samples]))
+    bins = np.vstack([v1_bins, v2_bins])
+
+    dist_ok = check_that_samples_are_from_the_same_distribution_according_to_chisq_two_sample_test(
         pred_samples, true_samples, bins
     )
     assert dist_ok
