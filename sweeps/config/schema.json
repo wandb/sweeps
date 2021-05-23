@@ -145,7 +145,8 @@
                 "q": {
                     "type": "number",
                     "default": 1.0,
-                    "description": "Quantization parameter for quantized distributions"
+                    "description": "Quantization parameter for quantized distributions",
+                    "minimum": 0.0
                 }
             }
         },

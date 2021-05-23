@@ -2,6 +2,16 @@ import pytest
 from sweeps.config import SweepConfig
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--plot",
+        action="store_true",
+        type=bool,
+        help="Plot true and predicted distributions "
+        "for tests involving random sampling.",
+    )
+
+
 @pytest.fixture()
 def sweep_config_grid_search_2params_with_metric():
     return SweepConfig(
