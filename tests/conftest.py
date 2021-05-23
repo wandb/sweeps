@@ -6,10 +6,14 @@ def pytest_addoption(parser):
     parser.addoption(
         "--plot",
         action="store_true",
-        type=bool,
         help="Plot true and predicted distributions "
         "for tests involving random sampling.",
     )
+
+
+@pytest.fixture
+def plot(request):
+    return request.config.getoption("--plot")
 
 
 @pytest.fixture()
