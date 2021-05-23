@@ -198,7 +198,7 @@ class HyperParameter:
         elif self.type == HyperParameter.LOG_UNIFORM:
             return stats.loguniform(self.min, self.max).ppf(x)
         elif self.type == HyperParameter.Q_LOG_UNIFORM:
-            r = np.exp(stats.uniform.ppf(x, self.min, self.max - self.min))
+            r = stats.loguniform(self.min, self.max).ppf(x)
             ret_val = np.round(r / self.q) * self.q
             if type(self.q) == int:
                 return int(ret_val)
