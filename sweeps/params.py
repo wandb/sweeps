@@ -195,6 +195,12 @@ class HyperParameter:
 
 class HyperParameterSet(list):
     def __init__(self, items):
+        for item in items:
+            if not isinstance(item, HyperParameter):
+                raise TypeError(
+                    f"each item used to initialize HyperParameterSet must be a HyperParameter, got {item}"
+                )
+
         super().__init__(items)
         self.searchable_params = [
             param for param in self if param.type != HyperParameter.CONSTANT
@@ -229,7 +235,7 @@ class HyperParameterSet(list):
                 v[jj][ii] = param.ppf(x)
         return v
 
-    def convert_runs_to_normalized_vector(self, runs: List[Run]):
+    def convert_runs_to_normalized_vector(self, runs: List[Run]) -> npt.ArrayLike:
         runs_params = [run.config or {} for run in runs]
         X = np.zeros([len(self.searchable_params), len(runs)])
 
