@@ -2,12 +2,15 @@
 
 import random
 
-from typing import Union
+from typing import Union, List
 
 import numpy as np
+import numpy.typing as npt
 import scipy.stats as stats
 
 import jsonschema
+
+from .run import Run
 from .config.schema import (
     sweep_config_jsonschema,
     dereferenced_sweep_config_jsonschema,
@@ -191,6 +194,19 @@ class HyperParameter:
 
 
 class HyperParameterSet(list):
+    def __init__(self, items):
+        super().__init__(items)
+        self.searchable_params = [
+            param for param in self if param.type != HyperParameter.CONSTANT
+        ]
+
+        self.param_names_to_index = {}
+        self.param_names_to_param = {}
+
+        for ii, param in enumerate(self.searchable_params):
+            self.param_names_to_index[param.name] = ii
+            self.param_names_to_param[param.name] = param
+
     @classmethod
     def from_config(cls, config):
         hpd = cls(
@@ -204,68 +220,7 @@ class HyperParameterSet(list):
     def to_config(self):
         return dict([param.to_config() for param in self])
 
-    def index_searchable_params(self):
-        self.searchable_params = [
-            param for param in self if param.type != HyperParameter.CONSTANT
-        ]
-
-        self.param_names_to_index = {}
-        self.param_names_to_param = {}
-
-        for ii, param in enumerate(self.searchable_params):
-            self.param_names_to_index[param.name] = ii
-            self.param_names_to_param[param.name] = param
-
-    def numeric_bounds(self):
-        """Gets a set of numeric minimums and maximums for doing ml predictions
-        on the hyperparameters."""
-        self.searchable_params = [
-            param for param in self if param.type != HyperParameter.CONSTANT
-        ]
-
-        X_bounds = [[0.0, 0.0]] * len(self.searchable_params)
-
-        self.param_names_to_index = {}
-        self.param_names_to_param = {}
-
-        for ii, param in enumerate(self.searchable_params):
-            self.param_names_to_index[param.name] = ii
-            self.param_names_to_param[param.name] = param
-            if param.type == HyperParameter.CATEGORICAL:
-                X_bounds[ii] = [0, len(param.values)]
-            elif param.type == HyperParameter.INT_UNIFORM:
-                X_bounds[ii] = [param.min, param.max]
-            elif param.type == HyperParameter.UNIFORM:
-                X_bounds[ii] = [param.min, param.max]
-            else:
-                raise ValueError("Unsupported param type")
-
-        return X_bounds
-
-    def convert_run_to_vector(self, run):
-        """Converts run parameters to vectors.
-
-        Should be able to remove.
-        """
-
-        run_params = run.config or {}
-        X = np.zeros([len(self.searchable_params)])
-
-        # we ignore keys we haven't seen in our spec
-        # we don't handle the case where a key is missing from run config
-        for key, config_value in run_params.items():
-            if key in self.param_names_to_index:
-                param = self.param_names_to_param[key]
-                bayes_opt_index = self.param_names_to_index[key]
-                if param.type == HyperParameter.CATEGORICAL:
-                    bayes_opt_value = param.value_to_int(config_value["value"])
-                else:
-                    bayes_opt_value = config_value["value"]
-
-                X[bayes_opt_index] = bayes_opt_value
-        return X
-
-    def denormalize_vector(self, X):
+    def denormalize_vector(self, X: npt.ArrayLike) -> List[List[float]]:
         """Converts a list of vectors [0,1] to values in the original space."""
         v = np.zeros(X.shape).tolist()
 
@@ -274,24 +229,7 @@ class HyperParameterSet(list):
                 v[jj][ii] = param.ppf(x)
         return v
 
-    def convert_run_to_normalized_vector(self, run):
-        """Converts run parameters to vectors with all values compressed to [0,
-        1]"""
-        run_params = run.config or {}
-        X = np.zeros([len(self.searchable_params)])
-
-        # we ignore keys we haven't seen in our spec
-        # we don't handle the case where a key is missing from run config
-        for key, config_value in run_params.items():
-            if key in self.param_names_to_index:
-                param = self.param_names_to_param[key]
-                bayes_opt_index = self.param_names_to_index[key]
-                bayes_opt_value = param.cdf(param.value_to_int(config_value["value"]))
-
-                X[bayes_opt_index] = bayes_opt_value
-        return X
-
-    def convert_runs_to_normalized_vector(self, runs):
+    def convert_runs_to_normalized_vector(self, runs: List[Run]):
         runs_params = [run.config or {} for run in runs]
         X = np.zeros([len(self.searchable_params), len(runs)])
 
