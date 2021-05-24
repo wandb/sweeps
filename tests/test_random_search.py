@@ -73,7 +73,7 @@ def test_rand_uniform(plot):
 
     v1_min = 3.0
     v1_max = 5.0
-    n_samples = 10000
+    n_samples = 1000
 
     sweep_config_2params = SweepConfig(
         {
@@ -99,10 +99,10 @@ def test_rand_uniform(plot):
     check_that_samples_are_from_the_same_distribution(pred_samples, true_samples, bins)
 
 
-def test_rand_normal():
+def test_rand_normal(plot):
     # Calculates that the
 
-    n_samples = 10000
+    n_samples = 1000
 
     sweep_config_2params = SweepConfig(
         {
@@ -122,7 +122,8 @@ def test_rand_normal():
     true_samples = np.random.normal(0, 1, size=n_samples)
     bins = np.linspace(-2, 2, 10)
 
-    plot_two_distributions(true_samples, pred_samples, bins)
+    if plot:
+        plot_two_distributions(true_samples, pred_samples, bins)
 
     check_that_samples_are_from_the_same_distribution(pred_samples, true_samples, bins)
 
@@ -130,7 +131,7 @@ def test_rand_normal():
 def test_rand_lognormal(plot):
     # Calculates that the
 
-    n_samples = 10000
+    n_samples = 1000
 
     sweep_config_2params = SweepConfig(
         {
@@ -162,7 +163,7 @@ def test_rand_loguniform(plot):
 
     v2_min = 5.0
     v2_max = 100
-    n_samples = 10000
+    n_samples = 1000
 
     sweep_config_2params = SweepConfig(
         {
@@ -197,8 +198,8 @@ def test_rand_loguniform(plot):
 @pytest.mark.parametrize("q", [0.1, 1, 10])
 def test_rand_q_lognormal(q, plot):
 
-    n_samples_true = 10000
-    n_samples_pred = 10000
+    n_samples_true = 1000
+    n_samples_pred = 1000
     sweep_config_2params = SweepConfig(
         {
             "method": "random",
@@ -234,8 +235,8 @@ def test_rand_q_lognormal(q, plot):
 @pytest.mark.parametrize("q", [0.1, 1, 10])
 def test_rand_q_normal(q, plot):
 
-    n_samples_true = 10000
-    n_samples_pred = 10000
+    n_samples_true = 1000
+    n_samples_pred = 1000
     sweep_config_2params = SweepConfig(
         {
             "method": "random",
@@ -270,8 +271,8 @@ def test_rand_q_normal(q, plot):
 @pytest.mark.parametrize("q", [0.1, 1, 10])
 def test_rand_q_uniform(q, plot):
 
-    n_samples_true = 10000
-    n_samples_pred = 10000
+    n_samples_true = 1000
+    n_samples_pred = 1000
     sweep_config_2params = SweepConfig(
         {
             "method": "random",
@@ -306,7 +307,7 @@ def test_rand_q_uniform(q, plot):
 @pytest.mark.parametrize("q", [0.1, 1, 10])
 def test_rand_q_loguniform(q, plot):
 
-    n_samples_pred = 10000
+    n_samples_pred = 1000
     sweep_config_2params = SweepConfig(
         {
             "method": "random",
@@ -322,7 +323,7 @@ def test_rand_q_loguniform(q, plot):
         runs.append(suggestion)
 
     pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
-    true_samples = np.round(stats.loguniform(0.1, 100).rvs(10000) / q) * q
+    true_samples = np.round(stats.loguniform(0.1, 100).rvs(1000) / q) * q
 
     # need the binsize to be >> q
     bins = np.logspace(-1, 2, 10)
