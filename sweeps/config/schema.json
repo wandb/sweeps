@@ -180,7 +180,8 @@
                 "sigma": {
                     "type": "number",
                     "description": "Std Dev for normal or lognormal distributions",
-                    "default": 1.0
+                    "default": 1.0,
+                    "minimum": 0.0
                 }
             }
         },
