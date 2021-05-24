@@ -5,130 +5,66 @@ import random
 import numpy as np
 import scipy.stats as stats
 
+import jsonschema
+from .config.schema import (
+    sweep_config_jsonschema,
+    dereferenced_sweep_config_jsonschema,
+    validator_factory,
+)
+
 
 class HyperParameter:
 
-    CONSTANT = 0
-    CATEGORICAL = 1
-    INT_UNIFORM = 2
-    UNIFORM = 3
-    LOG_UNIFORM = 4
-    Q_UNIFORM = 5
-    Q_LOG_UNIFORM = 6
-    NORMAL = 7
-    Q_NORMAL = 8
-    LOG_NORMAL = 9
-    Q_LOG_NORMAL = 10
+    CONSTANT = "param_single_value"
+    CATEGORICAL = "param_categorical"
+    INT_UNIFORM = "param_int_uniform"
+    UNIFORM = "param_uniform"
+    LOG_UNIFORM = "param_loguniform"
+    Q_UNIFORM = "param_quniform"
+    Q_LOG_UNIFORM = "param_qloguniform"
+    NORMAL = "param_normal"
+    Q_NORMAL = "param_qnormal"
+    LOG_NORMAL = "param_lognormal"
+    Q_LOG_NORMAL = "param_qlognormal"
 
-    def _load_parameter(self, param_config, param_name):
-        if param_name in param_config:
-            setattr(self, param_name, param_config[param_name])
-        else:
-            raise ValueError(
-                "Need to specify {} \
-                with distribution: {}.".format(
-                    param_name, param_config["distribution"]
-                )
-            )
+    def __init__(self, name: str, config: dict):
 
-    def _load_optional_parameter(self, param_config, param_name, default_value):
-        if param_name in param_config:
-            setattr(self, param_name, param_config[param_name])
-        else:
-            setattr(self, param_name, default_value)
+        self.name = name
 
-    def __init__(self, param_name, param_config):
+        # names of the parameter definitions that are allowed
+        allowed_schemas = [
+            d["$ref"]
+            for d in sweep_config_jsonschema["definitions"]["parameter"]["anyOf"]
+        ]
 
-        self.name = param_name
-        self.config = param_config.copy()
-
-        allowed_config_keys = set(
-            [
-                "distribution",
-                "value",
-                "values",
-                "min",
-                "max",
-                "q",
-                "mu",
-                "sigma",
-                "desc",
-            ]
-        )
-        for key in self.config.keys():
-            if key not in allowed_config_keys:
-                raise ValueError(
-                    "Unexpected hyperparameter configuration {}".format(key)
-                )
-
-        self.type = None
-        if "distribution" in self.config:
-            self.distribution = self.config["distribution"]
-            if self.distribution == "constant":
-                self.type = HyperParameter.CONSTANT
-                self._load_parameter(self.config, "value")
-            elif self.distribution == "categorical":
-                self.type = HyperParameter.CATEGORICAL
-                self._load_parameter(self.config, "values")
-            elif self.distribution == "int_uniform":
-                self.type = HyperParameter.INT_UNIFORM
-                self._load_parameter(self.config, "min")
-                self._load_parameter(self.config, "max")
-            elif self.distribution == "uniform":
-                self.type = HyperParameter.UNIFORM
-                self._load_parameter(self.config, "min")
-                self._load_parameter(self.config, "max")
-            elif self.distribution == "q_uniform":
-                self.type = HyperParameter.Q_UNIFORM
-                self._load_parameter(self.config, "min")
-                self._load_parameter(self.config, "max")
-                self._load_optional_parameter(self.config, "q", 1.0)
-            elif self.distribution == "log_uniform":
-                self.type = HyperParameter.LOG_UNIFORM
-                self._load_parameter(self.config, "min")
-                self._load_parameter(self.config, "max")
-            elif self.distribution == "q_log_uniform":
-                self.type = HyperParameter.Q_LOG_UNIFORM
-                self._load_parameter(self.config, "min")
-                self._load_parameter(self.config, "max")
-                self._load_optional_parameter(self.config, "q", 1.0)
-            elif self.distribution == "normal":
-                self.type = HyperParameter.NORMAL
-                self._load_optional_parameter(self.config, "mu", 0.0)
-                self._load_optional_parameter(self.config, "sigma", 1.0)
-                # need or set mean and stddev
-            elif self.distribution == "q_normal":
-                self.type = HyperParameter.Q_NORMAL
-                self._load_optional_parameter(self.config, "mu", 0.0)
-                self._load_optional_parameter(self.config, "sigma", 1.0)
-                self._load_optional_parameter(self.config, "q", 1.0)
-            elif self.distribution == "log_normal":
-                self.type = HyperParameter.LOG_NORMAL
-                self._load_optional_parameter(self.config, "mu", 0.0)
-                self._load_optional_parameter(self.config, "sigma", 1.0)
-                # need or set mean and stdev
-            elif self.distribution == "q_log_normal":
-                self.type = HyperParameter.Q_LOG_NORMAL
-                self._load_optional_parameter(self.config, "mu", 0.0)
-                self._load_optional_parameter(self.config, "sigma", 1.0)
-                self._load_optional_parameter(self.config, "q", 1.0)
-                # need or set mean and stdev
+        valid = False
+        inferred_schema = None
+        for schema in allowed_schemas:
+            # create a jsonschema object to validate against the subschema
+            subschema = dereferenced_sweep_config_jsonschema["definitions"][
+                schema
+            ].copy()
+            subschema["$schema"] = "http://json-schema.org/draft-07/schema#"
+            try:
+                jsonschema.validate(config, subschema)
+            except jsonschema.ValidationError:
+                continue
             else:
-                raise ValueError(
-                    "Unsupported distribution: {}".format(self.distribution)
-                )
+                valid = True
+                self.type = schema
+                validator = validator_factory(subschema)
 
-            if "q" in dir(self):
-                if self.q < 0.0:
-                    raise ValueError("q must be positive.")
-            if "sigma" in dir(self):
-                if self.sigma < 0.0:
-                    raise ValueError("sigma must be positive.")
-        else:
-            self._infer_distribution(self.config, param_name)
-        if "min" in dir(self) and "max" in dir(self):
-            if self.min >= self.max:
-                raise ValueError("max must be greater than min.")
+                # this sets the defaults
+                validator.validate(config)
+                self.config = config
+
+        if not valid:
+            raise jsonschema.ValidationError("invalid hyperparameter configuration")
+
+        if inferred_schema is None:
+            raise ValueError(
+                "list of allowed schemas has length zero; please provide some valid schemas"
+            )
 
     def value_to_int(self, value):
         if self.type != HyperParameter.CATEGORICAL:
@@ -181,11 +117,11 @@ class HyperParameter:
         if x < 0.0 or x > 1.0:
             raise ValueError("Can't call ppf on value outside of [0,1]")
         if self.type == HyperParameter.CONSTANT:
-            return self.value
+            return self.config["value"]
         elif self.type == HyperParameter.CATEGORICAL:
-            return self.values[int(stats.randint.ppf(x, 0, len(self.values)))]
+            return self.config["values"][int(stats.randint.ppf(x, 0, len(self.values)))]
         elif self.type == HyperParameter.INT_UNIFORM:
-            return int(stats.randint.ppf(x, self.min, self.max + 1))
+            return int(stats.randint.ppf(x, self.config["min"], self.config["max"] + 1))
         elif self.type == HyperParameter.UNIFORM:
             return stats.uniform.ppf(x, self.min, self.max - self.min)
         elif self.type == HyperParameter.Q_UNIFORM:
@@ -236,47 +172,6 @@ class HyperParameter:
         self.config.pop("values", None)
         return self.name, config
 
-    def _infer_distribution(self, config, param_name):
-        """Attempt to automatically figure out the distribution if it's not
-        specified.
-
-        1) If the values are set, assume categorical. 2) If the min and
-        max are floats, assume uniform. 3) If the min and max are ints,
-        assume int_uniform.
-        """
-        if "values" in config:
-            self.type = HyperParameter.CATEGORICAL
-            self.values = config["values"]
-        elif "min" in config:
-            if "max" not in config:
-                raise ValueError(
-                    "Need to have a max with a min or specify the distribution for parameter {}".format(
-                        param_name
-                    )
-                )
-            self.min = config["min"]
-            self.max = config["max"]
-
-            if type(config["min"]) == int and type(config["max"]) == int:
-                self.type = HyperParameter.INT_UNIFORM
-            elif type(config["min"]) in (int, float) and type(config["max"]) in (
-                int,
-                float,
-            ):
-                self.type = HyperParameter.UNIFORM
-            else:
-                raise ValueError(
-                    "Min and max must be type int or float for parameter {}".format(
-                        param_name
-                    )
-                )
-
-        elif "value" in config:
-            self.type = HyperParameter.CONSTANT
-            self.value = config["value"]
-        else:
-            raise ValueError("Bad configuration for parameter: {}".format(param_name))
-
 
 class HyperParameterSet(list):
     @classmethod
@@ -290,7 +185,7 @@ class HyperParameterSet(list):
         return hpd
 
     def to_config(self):
-        return dict([param.to_config() for param in list(self)])
+        return dict([param.to_config() for param in self])
 
     def index_searchable_params(self):
         self.searchable_params = [

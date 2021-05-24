@@ -1,21 +1,13 @@
 """Base SweepConfig classes."""
 
 import warnings
-import json
 import yaml
 from six.moves import UserDict
-from pathlib import Path
 
 from typing import Union
 
 import jsonschema
-
-sweep_config_jsonschema_fname = Path(__file__).parent / "schema.json"
-with open(sweep_config_jsonschema_fname, "r") as f:
-    sweep_config_jsonschema = json.load(f)
-
-
-validator = jsonschema.Draft7Validator(schema=sweep_config_jsonschema)
+from .schema import validator
 
 
 class SweepConfig(UserDict):
