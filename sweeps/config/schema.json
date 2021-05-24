@@ -185,14 +185,33 @@
                 }
             }
         },
-        "param_lognormal_or_normal": {
+        "param_normal": {
             "allOf": [
                 {
                     "type": "object",
                     "properties": {
                         "distribution": {
                             "enum": [
-                                "normal",
+                                "normal"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "distribution"
+                    ]
+                },
+                {
+                    "$ref": "#/definitions/param_lognormal_or_normal_base"
+                }
+            ]
+        },
+        "param_lognormal": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "distribution": {
+                            "enum": [
                                 "log_normal"
                             ]
                         }
@@ -206,7 +225,7 @@
                 }
             ]
         },
-        "param_qlognormal_or_qnormal": {
+        "param_qlognormal": {
             "allOf": [
                 {
                     "$ref": "#/definitions/param_quantized"
@@ -219,8 +238,30 @@
                     "properties": {
                         "distribution": {
                             "enum": [
-                                "q_normal",
                                 "q_log_normal"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "distribution"
+                    ]
+                }
+            ]
+        },
+        "param_qnormal": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/param_quantized"
+                },
+                {
+                    "$ref": "#/definitions/param_lognormal_or_normal_base"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "distribution": {
+                            "enum": [
+                                "q_normal"
                             ]
                         }
                     },
@@ -267,7 +308,7 @@
                 }
             ]
         },
-        "param_quniform_or_qloguniform": {
+        "param_quniform": {
             "allOf": [
                 {
                     "$ref": "#/definitions/uniform_or_loguniform_base"
@@ -280,7 +321,29 @@
                     "properties": {
                         "distribution": {
                             "enum": [
-                                "q_uniform",
+                                "q_uniform"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "distribution"
+                    ]
+                }
+            ]
+        },
+        "param_qloguniform": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/uniform_or_loguniform_base"
+                },
+                {
+                    "$ref": "#/definitions/param_quantized"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "distribution": {
+                            "enum": [
                                 "q_log_uniform"
                             ]
                         }
@@ -321,10 +384,16 @@
                     "$ref": "#/definitions/param_single_value"
                 },
                 {
-                    "$ref": "#/definitions/param_lognormal_or_normal"
+                    "$ref": "#/definitions/param_lognormal"
                 },
                 {
-                    "$ref": "#/definitions/param_qlognormal_or_qnormal"
+                    "$ref": "#/definitions/param_normal"
+                },
+                {
+                    "$ref": "#/definitions/param_qlognormal"
+                },
+                {
+                    "$ref": "#/definitions/param_qnormal"
                 },
                 {
                     "$ref": "#/definitions/param_uniform"
@@ -333,7 +402,10 @@
                     "$ref": "#/definitions/param_loguniform"
                 },
                 {
-                    "$ref": "#/definitions/param_quniform_or_qloguniform"
+                    "$ref": "#/definitions/param_quniform"
+                },
+                {
+                    "$ref": "#/definitions/param_qloguniform"
                 },
                 {
                     "$ref": "#/definitions/param_int_uniform"
