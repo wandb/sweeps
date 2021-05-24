@@ -9,7 +9,8 @@ import jsonschema
 from .config.schema import (
     sweep_config_jsonschema,
     dereferenced_sweep_config_jsonschema,
-    validator_factory,
+    DefaultFiller,
+    Draft7ValidatorWithIntFloatDiscrimination,
 )
 
 
@@ -33,35 +34,38 @@ class HyperParameter:
 
         # names of the parameter definitions that are allowed
         allowed_schemas = [
-            d["$ref"]
+            d["$ref"].split("/")[-1]
             for d in sweep_config_jsonschema["definitions"]["parameter"]["anyOf"]
         ]
 
         valid = False
-        inferred_schema = None
-        for schema in allowed_schemas:
+        for schema_name in allowed_schemas:
             # create a jsonschema object to validate against the subschema
             subschema = dereferenced_sweep_config_jsonschema["definitions"][
-                schema
+                schema_name
             ].copy()
+
+            # adding this key makes the subschema a valid jsonschema
             subschema["$schema"] = "http://json-schema.org/draft-07/schema#"
+
             try:
-                jsonschema.validate(config, subschema)
+                Draft7ValidatorWithIntFloatDiscrimination(subschema).validate(config)
             except jsonschema.ValidationError:
                 continue
             else:
-                valid = True
-                self.type = schema
-                validator = validator_factory(subschema)
+                filler = DefaultFiller(subschema)
 
                 # this sets the defaults
-                validator.validate(config)
+                filler.validate(config)
+
+                valid = True
+                self.type = schema_name
                 self.config = config
 
         if not valid:
             raise jsonschema.ValidationError("invalid hyperparameter configuration")
 
-        if inferred_schema is None:
+        if self.config is None or self.type is None:
             raise ValueError(
                 "list of allowed schemas has length zero; please provide some valid schemas"
             )

@@ -1,6 +1,5 @@
 import json
 import jsonref
-import jsonschema
 from jsonschema import Draft7Validator, validators
 
 from pathlib import Path
@@ -10,8 +9,24 @@ with open(sweep_config_jsonschema_fname, "r") as f:
     sweep_config_jsonschema = json.load(f)
 
 
-validator = jsonschema.Draft7Validator(schema=sweep_config_jsonschema)
-dereferenced_sweep_config_jsonschema = jsonref.JsonRef(sweep_config_jsonschema)
+dereferenced_sweep_config_jsonschema = jsonref.JsonRef.replace_refs(
+    sweep_config_jsonschema
+)
+
+
+def extend_with_python_int_float_type_discrimination(validator_class):
+    def is_python_int(checker, instance):
+        return isinstance(instance, int)
+
+    type_checker = validator_class.TYPE_CHECKER.redefine("integer", is_python_int)
+
+    return validators.extend(validator_class, type_checker=type_checker)
+
+
+Draft7ValidatorWithIntFloatDiscrimination = (
+    extend_with_python_int_float_type_discrimination(Draft7Validator)
+)
+validator = Draft7ValidatorWithIntFloatDiscrimination(schema=sweep_config_jsonschema)
 
 
 def extend_with_default(validator_class):
@@ -40,4 +55,4 @@ def extend_with_default(validator_class):
     )
 
 
-validator_factory = extend_with_default(Draft7Validator)
+DefaultFiller = extend_with_default(Draft7Validator)

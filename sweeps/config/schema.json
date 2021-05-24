@@ -108,7 +108,8 @@
                         "oneOf": [
                             {"type":  "string"},
                             {"type":  "number"}
-                        ]
+                        ],
+                    "uniqueItems": true
                     }
                 },
                 "distribution": {
@@ -156,11 +157,13 @@
             "properties": {
                 "min": {
                     "description": "float",
-                    "type": "number"
+                    "type": "number",
+		    "format": "float"
                 },
                 "max": {
                     "description": "float",
-                    "type": "number"
+                    "type": "number",
+		    "format": "float"
                 }
             },
             "required": [
