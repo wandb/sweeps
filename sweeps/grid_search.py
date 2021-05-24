@@ -37,7 +37,7 @@ def grid_search_next_run(
 
     # build an iterator over all combinations of param values
     param_names = [p.name for p in discrete_params]
-    param_values = [p.values for p in discrete_params]
+    param_values = [p.config["values"] for p in discrete_params]
 
     all_param_values = set(itertools.product(*param_values))
     param_values_seen = set(
