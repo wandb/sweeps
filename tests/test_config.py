@@ -3,11 +3,6 @@ import jsonschema
 from sweeps import config
 
 
-# we may change this to warning if we want to not force sweep config
-# violation to be so rigid
-validation_violation_context = pytest.raises(jsonschema.ValidationError)
-
-
 def test_invalid_sweep_config_nonuniform_array_elements_categorical():
     invalid_config = {
         "method": "grid",
@@ -16,7 +11,7 @@ def test_invalid_sweep_config_nonuniform_array_elements_categorical():
         },
     }
 
-    with validation_violation_context:
+    with pytest.raises(jsonschema.ValidationError):
         _ = config.SweepConfig(invalid_config)
 
 
@@ -29,5 +24,16 @@ def test_min_max_validation():
         },
     }
 
-    with validation_violation_context:
+    with pytest.raises(jsonschema.ValidationError):
+        _ = config.SweepConfig(invalid_config)
+
+
+def test_negative_sigma_validation():
+    invalid_config = {
+        "method": "random",
+        "parameters": {
+            "v1": {"mu": 0.1, "sigma": -0.1, "distribution": "normal"},
+        },
+    }
+    with pytest.raises(jsonschema.ValidationError):
         _ = config.SweepConfig(invalid_config)

@@ -2,6 +2,8 @@
 
 import random
 
+from typing import Union
+
 import numpy as np
 import scipy.stats as stats
 
@@ -41,12 +43,7 @@ class HyperParameter:
         valid = False
         for schema_name in allowed_schemas:
             # create a jsonschema object to validate against the subschema
-            subschema = dereferenced_sweep_config_jsonschema["definitions"][
-                schema_name
-            ].copy()
-
-            # adding this key makes the subschema a valid jsonschema
-            subschema["$schema"] = "http://json-schema.org/draft-07/schema#"
+            subschema = dereferenced_sweep_config_jsonschema["definitions"][schema_name]
 
             try:
                 Draft7ValidatorWithIntFloatDiscrimination(subschema).validate(config)
@@ -55,12 +52,12 @@ class HyperParameter:
             else:
                 filler = DefaultFiller(subschema)
 
-                # this sets the defaults
+                # this sets the defaults, modifying config inplace
                 filler.validate(config)
 
                 valid = True
                 self.type = schema_name
-                self.config = config
+                self.config = config.copy()
 
         if not valid:
             raise jsonschema.ValidationError("invalid hyperparameter configuration")
@@ -70,11 +67,13 @@ class HyperParameter:
                 "list of allowed schemas has length zero; please provide some valid schemas"
             )
 
+        self.value = None
+
     def value_to_int(self, value):
         if self.type != HyperParameter.CATEGORICAL:
             raise ValueError("Can only call value_to_int on categorical variable")
 
-        for ii, test_value in enumerate(self.values):
+        for ii, test_value in enumerate(self.config["values"]):
             if value == test_value:
                 return ii
 
@@ -90,29 +89,33 @@ class HyperParameter:
             return 0.0
         elif self.type == HyperParameter.CATEGORICAL:
             # NOTE: Indices expected for categorical parameters, not values.
-            return stats.randint.cdf(x, 0, len(self.values))
+            return stats.randint.cdf(x, 0, len(self.config["values"]))
         elif self.type == HyperParameter.INT_UNIFORM:
-            return stats.randint.cdf(x, self.min, self.max + 1)
+            return stats.randint.cdf(x, self.config["min"], self.config["max"] + 1)
         elif (
             self.type == HyperParameter.UNIFORM or self.type == HyperParameter.Q_UNIFORM
         ):
-            return stats.uniform.cdf(x, self.min, self.max - self.min)
+            return stats.uniform.cdf(
+                x, self.config["min"], self.config["max"] - self.config["min"]
+            )
         elif (
             self.type == HyperParameter.LOG_UNIFORM
             or self.type == HyperParameter.Q_LOG_UNIFORM
         ):
-            return stats.loguniform(self.min, self.max).cdf(x)
+            return stats.loguniform(self.config["min"], self.config["max"]).cdf(x)
         elif self.type == HyperParameter.NORMAL or self.type == HyperParameter.Q_NORMAL:
-            return stats.norm.cdf(x, loc=self.mu, scale=self.sigma)
+            return stats.norm.cdf(x, loc=self.config["mu"], scale=self.config["sigma"])
         elif (
             self.type == HyperParameter.LOG_NORMAL
             or self.type == HyperParameter.Q_LOG_NORMAL
         ):
-            return stats.lognorm.cdf(x, s=self.sigma, scale=np.exp(self.mu))
+            return stats.lognorm.cdf(
+                x, s=self.config["sigma"], scale=np.exp(self.config["mu"])
+            )
         else:
             raise ValueError("Unsupported hyperparameter distribution type")
 
-    def ppf(self, x):
+    def ppf(self, x) -> Union[float, int]:
         """
         Percent point function or inverse cdf
         Inputs: x: float in range [0, 1]
@@ -123,44 +126,54 @@ class HyperParameter:
         if self.type == HyperParameter.CONSTANT:
             return self.config["value"]
         elif self.type == HyperParameter.CATEGORICAL:
-            return self.config["values"][int(stats.randint.ppf(x, 0, len(self.values)))]
+            return self.config["values"][
+                int(stats.randint.ppf(x, 0, len(self.config["values"])))
+            ]
         elif self.type == HyperParameter.INT_UNIFORM:
             return int(stats.randint.ppf(x, self.config["min"], self.config["max"] + 1))
         elif self.type == HyperParameter.UNIFORM:
-            return stats.uniform.ppf(x, self.min, self.max - self.min)
+            return stats.uniform.ppf(
+                x, self.config["min"], self.config["max"] - self.config["min"]
+            )
         elif self.type == HyperParameter.Q_UNIFORM:
-            r = stats.uniform.ppf(x, self.min, self.max - self.min)
-            ret_val = np.round(r / self.q) * self.q
-            if type(self.q) == int:
+            r = stats.uniform.ppf(
+                x, self.config["min"], self.config["max"] - self.config["min"]
+            )
+            ret_val = np.round(r / self.config["q"]) * self.config["q"]
+            if isinstance(self.config["q"], int):
                 return int(ret_val)
             else:
                 return ret_val
         elif self.type == HyperParameter.LOG_UNIFORM:
-            return stats.loguniform(self.min, self.max).ppf(x)
+            return stats.loguniform(self.config["min"], self.config["max"]).ppf(x)
         elif self.type == HyperParameter.Q_LOG_UNIFORM:
-            r = stats.loguniform(self.min, self.max).ppf(x)
-            ret_val = np.round(r / self.q) * self.q
-            if type(self.q) == int:
+            r = stats.loguniform(self.config["min"], self.config["max"]).ppf(x)
+            ret_val = np.round(r / self.config["q"]) * self.config["q"]
+            if isinstance(self.config["q"], int):
                 return int(ret_val)
             else:
                 return ret_val
         elif self.type == HyperParameter.NORMAL:
-            return stats.norm.ppf(x, loc=self.mu, scale=self.sigma)
+            return stats.norm.ppf(x, loc=self.config["mu"], scale=self.config["sigma"])
         elif self.type == HyperParameter.Q_NORMAL:
-            r = stats.norm.ppf(x, loc=self.mu, scale=self.sigma)
-            ret_val = np.round(r / self.q) * self.q
-            if type(self.q) == int:
+            r = stats.norm.ppf(x, loc=self.config["mu"], scale=self.config["sigma"])
+            ret_val = np.round(r / self.config["q"]) * self.config["q"]
+            if isinstance(self.config["q"], int):
                 return int(ret_val)
             else:
                 return ret_val
         elif self.type == HyperParameter.LOG_NORMAL:
             # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html
-            return stats.lognorm.ppf(x, s=self.sigma, scale=np.exp(self.mu))
+            return stats.lognorm.ppf(
+                x, s=self.config["sigma"], scale=np.exp(self.config["mu"])
+            )
         elif self.type == HyperParameter.Q_LOG_NORMAL:
-            r = stats.lognorm.ppf(x, s=self.sigma, scale=np.exp(self.mu))
-            ret_val = np.round(r / self.q) * self.q
+            r = stats.lognorm.ppf(
+                x, s=self.config["sigma"], scale=np.exp(self.config["mu"])
+            )
+            ret_val = np.round(r / self.config["q"]) * self.config["q"]
 
-            if type(self.q) == int:
+            if isinstance(self.config["q"], int):
                 return int(ret_val)
             else:
                 return ret_val

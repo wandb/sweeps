@@ -55,4 +55,4 @@ def extend_with_default(validator_class):
     )
 
 
-DefaultFiller = extend_with_default(Draft7Validator)
+DefaultFiller = extend_with_default(Draft7ValidatorWithIntFloatDiscrimination)
