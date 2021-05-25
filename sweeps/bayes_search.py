@@ -7,13 +7,19 @@ We do bayesian optimization and handle the cases where some X values are integer
 as well as the case where X is very large.
 """
 
-import math
 import numpy as np
 
-from .base import Search
+from typing import List
+
+from .config.cfg import SweepConfig
+from .run import Run, RunState
 from .params import HyperParameter, HyperParameterSet
 from sklearn import gaussian_process as sklearn_gaussian
+from sklearn.impute import SimpleImputer
 from scipy import stats as scipy_stats
+
+
+NUGGET = 1e-10
 
 
 def fit_normalized_gaussian_process(X, y, nu=1.5):
@@ -25,7 +31,7 @@ def fit_normalized_gaussian_process(X, y, nu=1.5):
     gp = sklearn_gaussian.GaussianProcessRegressor(
         kernel=sklearn_gaussian.kernels.Matern(nu=nu),
         n_restarts_optimizer=2,
-        alpha=0.0000001,
+        alpha=NUGGET,
         random_state=2,
     )
     if len(y) == 1:
@@ -34,7 +40,7 @@ def fit_normalized_gaussian_process(X, y, nu=1.5):
         y_stddev = 1
     else:
         y_mean = np.mean(y)
-        y_stddev = np.std(y) + 0.0001
+        y_stddev = np.std(y) + NUGGET
     y_norm = (y - y_mean) / y_stddev
     gp.fit(X, y_norm)
     return gp, y_mean, y_stddev
@@ -296,7 +302,6 @@ def next_sample(
     # best value of y we've seen so far.  i.e. y*
     min_unnorm_y = np.min(filtered_y)
     # hack for dealing with predicted std of 0
-    epsilon = 0.00000001
     if opt_func == "probability_of_improvement":
         # might remove the norm_improvement at some point
         # find best chance of an improvement by "at least norm improvement"
@@ -304,18 +309,19 @@ def next_sample(
         # improvment over the best result observerd so far.
         # norm_improvement = improvement / y_stddev
         min_norm_y = (min_unnorm_y - y_mean) / y_stddev - improvement
-        std_dev_distance = (y_pred - min_norm_y) / (y_pred_std + epsilon)
+        std_dev_distance = (y_pred - min_norm_y) / (y_pred_std + NUGGET)
         prob_of_improve = sigmoid(-std_dev_distance)
         best_test_X_index = np.argmax(prob_of_improve)
     elif opt_func == "expected_improvement":
         min_norm_y = (min_unnorm_y - y_mean) / y_stddev
-        Z = -(y_pred - min_norm_y) / (y_pred_std + epsilon)
+        Z = -(y_pred - min_norm_y) / (y_pred_std + NUGGET)
         prob_of_improve = scipy_stats.norm.cdf(Z)
         e_i = -(y_pred - min_norm_y) * scipy_stats.norm.cdf(
             Z
         ) + y_pred_std * scipy_stats.norm.pdf(Z)
         best_test_X_index = np.argmax(e_i)
     # TODO: support expected improvement per time by dividing e_i by runtime
+
     suggested_X = test_X[best_test_X_index]
     suggested_X_prob_of_improvement = prob_of_improve[best_test_X_index]
     suggested_X_predicted_y = y_pred[best_test_X_index] * y_stddev + y_mean
@@ -334,129 +340,103 @@ def next_sample(
     )
 
 
-def target(x):
-    return np.exp(-((x - 2) ** 2)) + np.exp(-((x - 6) ** 2) / 10) + 1 / (x ** 2 + 1)
+def bayes_search_next_run(
+    runs: List[Run], config: SweepConfig, minimum_improvement: float = 0.1
+) -> Run:
 
+    if "metric" not in config:
+        raise ValueError('Bayesian search requires "metric" section')
 
-class BayesianSearch(Search):
-    def __init__(self, minimum_improvement=0.1):
-        self.minimum_improvement = minimum_improvement
+    goal = config["metric"]["goal"]
+    metric_name = config["metric"]["name"]
+    worst_func = min if goal == "maximize" else max
+    params = HyperParameterSet.from_config(config["parameters"])
 
-    def next_run(self, sweep):
-        if "parameters" not in sweep["config"]:
-            raise ValueError('Bayesian search requires "parameters" section')
-        if "metric" not in sweep["config"]:
-            raise ValueError('Bayesian search requires "metric" section')
+    sample_X = []
+    current_X = []
+    y = []
 
-        config = sweep["config"]["parameters"]
-        params = HyperParameterSet.from_config(config)
+    X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
 
-        sample_X = []
-        current_X = []
-        y = []
-
-        params.index_searchable_params()
-
-        # X_bounds = [[0., 1.]] * len(self.searchable_params)
-        # params.numeric_bounds()
-        X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
-
-        runs = sweep["runs"]
-
-        # we calc the max metric to put as the metric for failed runs
-        # so that our bayesian search stays away from them
-        max_metric = 0.0
-        if any(run.state == "finished" for run in runs):
-            # for run in runs:
-            #    print("DEBUG0", run)
-            max_metric = max(
-                [
-                    self._metric_from_run(sweep["config"], run, default=0.0)
-                    for run in runs
-                    if run.state == "finished"
-                ]
+    # we calc the max metric to put as the metric for failed runs
+    # so that our bayesian search stays away from them
+    worst_metric = 0.0
+    for run in runs:
+        if run.state == RunState.finished:
+            run_extremum = run.metric_extremum(
+                metric_name, kind="minimum" if goal == "maximize" else "maximum"
             )
+            worst_metric = worst_func(worst_metric, run_extremum)
 
-        X_norms = params.convert_runs_to_normalized_vector(runs)
-        for i in range(len(runs)):
-            run = runs[i]
-            X_norm = X_norms[i]
-            if run.state == "finished":
-                # run is complete
-                # print("DEBUG0.1", run)
-                metric = self._metric_from_run(sweep["config"], run, default=max_metric)
-                if math.isnan(metric):
-                    metric = max_metric
-                y.append(metric)
-                sample_X.append(X_norm)
-            elif run.state == "running":
-                # run is in progress
-                # we wont use the metric, but we should pass it into our optimizer to
-                # account for the fact that it is running
-                current_X.append(X_norm)
-            elif (
-                run.state == "failed" or run.state == "crashed" or run.state == "killed"
-            ):
-                # run failed, but we're still going to use it
-                # maybe we should be smarter about this
-                y.append(max_metric)
-                sample_X.append(X_norm)
-            else:
-                raise ValueError("Run is in unknown state")
-
-        if len(sample_X) == 0:
-            sample_X = np.empty([0, 0])
-
-        if len(current_X) == 0:
-            current_X = None
+    X_norms = params.convert_runs_to_normalized_vector(runs)
+    for run, X_norm in zip(runs, X_norms):
+        if run.state == RunState.finished:
+            metric = run.metric_extremum(
+                metric_name, kind="maximum" if goal == "maximize" else "minimum"
+            )
+            y.append(metric)
+            sample_X.append(X_norm)
+        elif run.state == RunState.running:
+            # run is in progress
+            # we wont use the metric, but we should pass it into our optimizer to
+            # account for the fact that it is running
+            current_X.append(X_norm)
+        elif run.state in [RunState.failed, RunState.crashed, RunState.killed]:
+            # run failed, but we're still going to use it
+            # maybe we should be smarter about this
+            y.append(worst_metric)
+            sample_X.append(X_norm)
         else:
-            np.array(current_X)
-        (
-            try_params,
-            success_prob,
-            pred,
-            test_X,
-            y_pred,
-            y_pred_std,
-            prob_of_improve,
-            prob_of_failure,
-            expected_runtime,
-        ) = next_sample(
-            np.array(sample_X),
-            np.array(y),
-            X_bounds,
-            current_X=current_X,
-            improvement=self.minimum_improvement,
-        )
+            raise ValueError("Run is in unknown state")
 
-        # convert the parameters from vector of [0,1] values
-        # to the original ranges
+    if len(sample_X) == 0:
+        sample_X = np.empty([0, 0])
+    else:
+        sample_X = np.asarray(sample_X)
 
-        for param in params:
-            if param.type == HyperParameter.CONSTANT:
-                continue
+    if len(current_X) > 0:
+        current_X = np.array(current_X)
 
-            # try_value = try_params[params.param_names_to_index[param.name]]
-            # if param.type == HyperParameter.CATEGORICAL:
-            #     param.value = param.values[int(try_value)]
-            # elif param.type == HyperParameter.INT_UNIFORM:
-            #     param.value = int(try_value)
-            # elif param.type == HyperParameter.UNIFORM:
-            #     param.value = try_value
-            try_value = try_params[params.param_names_to_index[param.name]]
-            param.value = param.ppf(try_value)
+    # impute bad metric values from y
+    y = SimpleImputer(strategy="constant", fill_value=worst_metric).transform(y)
 
-        metric_name = sweep["config"]["metric"]["name"]
+    (
+        try_params,
+        success_prob,
+        pred,
+        test_X,
+        y_pred,
+        y_pred_std,
+        prob_of_improve,
+        prob_of_failure,
+        expected_runtime,
+    ) = next_sample(
+        sample_X,
+        y,
+        X_bounds,
+        current_X=current_X if len(current_X) > 0 else None,
+        improvement=minimum_improvement,
+    )
 
-        ret_dict = params.to_config()
-        info = {}
-        info["predictions"] = {metric_name: pred}
-        info["success_probability"] = success_prob
-        if test_X is not None:
-            info["acq_func"] = {}
-            info["acq_func"]["sample_x"] = params.denormalize_vector(test_X)
-            info["acq_func"]["y_pred"] = y_pred
-            info["acq_func"]["y_pred_std"] = y_pred_std
-            info["acq_func"]["score"] = prob_of_improve
+    # convert the parameters from vector of [0,1] values
+    # to the original ranges
 
-        return ret_dict, info
+    for param in params:
+        if param.type == HyperParameter.CONSTANT:
+            continue
+        try_value = try_params[params.param_names_to_index[param.name]]
+        param.value = param.ppf(try_value)
+
+    ret_dict = params.to_config()
+
+    info = {}
+    info["predictions"] = {metric_name: pred}
+    info["success_probability"] = success_prob
+    if test_X is not None:
+        info["acq_func"] = {}
+        info["acq_func"]["sample_x"] = params.denormalize_vector(test_X)
+        info["acq_func"]["y_pred"] = y_pred
+        info["acq_func"]["y_pred_std"] = y_pred_std
+        info["acq_func"]["score"] = prob_of_improve
+
+    return Run(config=ret_dict, optimizer_info=info)

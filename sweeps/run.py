@@ -64,7 +64,7 @@ class Run:
             raise KeyError(f"{metric_name} is not a summary metric of this run.")
         return self.summary_metrics[metric_name]
 
-    def best_metric(self, metric_name: str, maximize: bool) -> np.floating:
+    def metric_extremum(self, metric_name: str, kind: str) -> np.floating:
         """Extract the value of the target optimization metric from a
          specified sweep run.
 
@@ -84,7 +84,7 @@ class Run:
             The run's metric.
         """
 
-        cmp_func = np.max if maximize else np.min
+        cmp_func = np.max if kind == "maximum" else np.min
         all_metrics = self.metric_history(metric_name) + [
             self.summary_metric(metric_name)
         ]

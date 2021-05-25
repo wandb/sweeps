@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 import sweeps
-from .conftest import Run
+from sweeps.run import Run
 from sweeps import bayes_search as bayes
 
 
@@ -167,17 +167,17 @@ def test_iterations_squiggle_chunked():
 
 
 # search with 0 runs - hardcoded results
-def test_runs_bayes(sweep_config_2params):
+def test_runs_bayes(sweep_config_grid_search_2params_with_metric):
     np.random.seed(73)
     bs = sweeps.BayesianSearch()
     runs = []
-    sweep = {"config": sweep_config_2params, "runs": runs}
+    sweep = {"config": sweep_config_grid_search_2params_with_metric, "runs": runs}
     params, info = bs.next_run(sweep)
     assert params["v1"]["value"] == 7 and params["v2"]["value"] == 6
 
 
 # search with 2 finished runs - hardcoded results
-def test_runs_bayes_runs2(sweep_config_2params):
+def test_runs_bayes_runs2(sweep_config_grid_search_2params_with_metric):
     np.random.seed(73)
     bs = sweeps.BayesianSearch()
     r1 = Run(
@@ -194,20 +194,20 @@ def test_runs_bayes_runs2(sweep_config_2params):
     )
     # need two (non running) runs before we get a new set of parameters
     runs = [r1, r2]
-    sweep = {"config": sweep_config_2params, "runs": runs}
+    sweep = {"config": sweep_config_grid_search_2params_with_metric, "runs": runs}
     params, info = bs.next_run(sweep)
     assert params["v1"]["value"] == 2 and params["v2"]["value"] == 9
 
 
 # search with 2 finished runs - hardcoded results - missing metric
-def test_runs_bayes_runs2_missingmetric(sweep_config_2params):
+def test_runs_bayes_runs2_missingmetric(sweep_config_grid_search_2params_with_metric):
     np.random.seed(73)
     bs = sweeps.BayesianSearch()
     r1 = Run(
         "b", "finished", {"v1": {"value": 7}, "v2": {"value": 5}}, {"xloss": 0.2}, []
     )
     runs = [r1, r1]
-    sweep = {"config": sweep_config_2params, "runs": runs}
+    sweep = {"config": sweep_config_grid_search_2params_with_metric, "runs": runs}
     params, info = bs.next_run(sweep)
     assert params["v1"]["value"] == 1 and params["v2"]["value"] == 1
 
@@ -229,7 +229,7 @@ def test_runs_bayes_runs2_missingmetric_acc(sweep_config_2params_acc):
     platform.system() == "Darwin",
     reason="problem with test on mac, TODO: look into this",
 )
-def test_runs_bayes_nan(sweep_config_2params):
+def test_runs_bayes_nan(sweep_config_grid_search_2params_with_metric):
     np.random.seed(73)
     bs = sweeps.BayesianSearch()
     r1 = Run(
@@ -262,7 +262,7 @@ def test_runs_bayes_nan(sweep_config_2params):
     )
     # need two (non running) runs before we get a new set of parameters
     runs = [r1, r2, r3, r4]
-    sweep = {"config": sweep_config_2params, "runs": runs}
+    sweep = {"config": sweep_config_grid_search_2params_with_metric, "runs": runs}
     params, info = bs.next_run(sweep)
     assert params["v1"]["value"] == 10 and params["v2"]["value"] == 2
 
