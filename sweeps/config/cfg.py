@@ -3,8 +3,9 @@
 import warnings
 import yaml
 from six.moves import UserDict
+from pathlib import Path
 
-from typing import Union
+from typing import Union, Dict
 
 import jsonschema
 from .schema import validator
@@ -36,26 +37,23 @@ class SweepConfig(UserDict):
                 err_msg = "\n".join(schema_violation_messages)
                 raise jsonschema.ValidationError(err_msg)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return yaml.safe_dump(self.data)
 
-    def save(self, filename):
+    def save(self, filename: Union[Path, str]) -> None:
         with open(filename, "w") as outfile:
             yaml.safe_dump(self.data, outfile, default_flow_style=False)
 
-    def set_local(self):
+    def set_local(self) -> None:
         self.data.update(dict(controller=dict(type="local")))
-        return self
 
-    def set_name(self, name):
+    def set_name(self, name: str) -> None:
         self.data.update(dict(name=name))
-        return self
 
-    def set_settings(self, settings):
+    def set_settings(self, settings: Dict) -> None:
         self.data.update(dict(settings=settings))
-        return self
 
-    def set(self, **kwargs):
+    def set(self, **kwargs) -> None:
         local = kwargs.pop("local", None)
         name = kwargs.pop("name", None)
         settings = kwargs.pop("settings", None)
@@ -63,13 +61,12 @@ class SweepConfig(UserDict):
             self.set_local()
         if name:
             self.set_name(name)
-        if name:
+        if settings:
             self.set_settings(settings)
         for k in kwargs.keys():
             warnings.warn(
                 "Unsupported parameter passed to SweepConfig set(): {}".format(k)
             )
-        return self
 
 
 """
