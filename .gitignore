@@ -130,3 +130,6 @@ dmypy.json
 
 # jetbrains
 .idea/
+
+test_results/
+*.pkl

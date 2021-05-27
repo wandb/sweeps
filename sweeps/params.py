@@ -2,7 +2,7 @@
 
 import random
 
-from typing import Union, List
+from typing import Union, List, Tuple, Dict
 
 import numpy as np
 import numpy.typing as npt
@@ -10,7 +10,7 @@ import scipy.stats as stats
 
 import jsonschema
 
-from .run import Run
+from .sweeprun import SweepRun
 from .config.schema import (
     sweep_config_jsonschema,
     dereferenced_sweep_config_jsonschema,
@@ -72,7 +72,7 @@ class HyperParameter:
 
         self.value = None
 
-    def value_to_int(self, value):
+    def value_to_int(self, value: Union[str, float, np.floating, int]) -> int:
         if self.type != HyperParameter.CATEGORICAL:
             raise ValueError("Can only call value_to_int on categorical variable")
 
@@ -82,7 +82,7 @@ class HyperParameter:
 
         raise ValueError("Couldn't find {}".format(value))
 
-    def cdf(self, x):
+    def cdf(self, x: npt.ArrayLike) -> npt.ArrayLike:
         """
         Cumulative distribution function
         Inputs: sample from selected distribution at the xth percentile.
@@ -118,7 +118,7 @@ class HyperParameter:
         else:
             raise ValueError("Unsupported hyperparameter distribution type")
 
-    def ppf(self, x) -> Union[float, int]:
+    def ppf(self, x: npt.ArrayLike) -> Union[float, np.floating, int, str]:
         """
         Percent point function or inverse cdf
         Inputs: x: float in range [0, 1]
@@ -183,10 +183,10 @@ class HyperParameter:
         else:
             raise ValueError("Unsupported hyperparameter distribution type")
 
-    def sample(self) -> float:
+    def sample(self) -> Union[float, int, np.floating, str]:
         return self.ppf(random.uniform(0.0, 1.0))
 
-    def to_config(self):
+    def to_config(self) -> Tuple[str, Dict]:
         config = dict(value=self.value)
         # Remove values list if we have picked a value for this parameter
         self.config.pop("values", None)
@@ -194,7 +194,7 @@ class HyperParameter:
 
 
 class HyperParameterSet(list):
-    def __init__(self, items):
+    def __init__(self, items: List[HyperParameter]):
         for item in items:
             if not isinstance(item, HyperParameter):
                 raise TypeError(
@@ -214,7 +214,7 @@ class HyperParameterSet(list):
             self.param_names_to_param[param.name] = param
 
     @classmethod
-    def from_config(cls, config):
+    def from_config(cls, config: Dict):
         hpd = cls(
             [
                 HyperParameter(param_name, param_config)
@@ -223,7 +223,7 @@ class HyperParameterSet(list):
         )
         return hpd
 
-    def to_config(self):
+    def to_config(self) -> dict:
         return dict([param.to_config() for param in self])
 
     def denormalize_vector(self, X: npt.ArrayLike) -> List[List[float]]:
@@ -235,7 +235,7 @@ class HyperParameterSet(list):
                 v[jj][ii] = param.ppf(x)
         return v
 
-    def convert_runs_to_normalized_vector(self, runs: List[Run]) -> npt.ArrayLike:
+    def convert_runs_to_normalized_vector(self, runs: List[SweepRun]) -> npt.ArrayLike:
         runs_params = [run.config or {} for run in runs]
         X = np.zeros([len(self.searchable_params), len(runs)])
 

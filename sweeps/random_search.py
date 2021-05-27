@@ -1,13 +1,13 @@
 """Random Search."""
 
 from .config.cfg import SweepConfig
-from .run import Run
+from .sweeprun import SweepRun
 from .params import HyperParameterSet
 
 from typing import Union
 
 
-def random_search_next_run(sweep_config: Union[dict, SweepConfig]) -> Run:
+def random_search_next_run(sweep_config: Union[dict, SweepConfig]) -> SweepRun:
     # ensure that the sweepconfig is properly formatted
     sweep_config = SweepConfig(sweep_config)
 
@@ -16,4 +16,4 @@ def random_search_next_run(sweep_config: Union[dict, SweepConfig]) -> Run:
     for param in params:
         param.value = param.sample()
 
-    return Run(config=params.to_config())
+    return SweepRun(config=params.to_config())

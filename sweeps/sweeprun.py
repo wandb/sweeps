@@ -23,7 +23,7 @@ RunState = Enum(
 
 
 @dataclass
-class Run:
+class SweepRun:
     """Minimal representation of a W&B Run for sweeps.
 
     Attributes
@@ -73,7 +73,7 @@ class Run:
         sweep_config: SweepConfig or dict
             The sweep configuration, where the name of the target metric
             is specified.
-        run: Run
+        run: SweepRun
             The run to extract the value of the metric from.
         default: float, optional, default None
             The default value to use if no metric is found.
@@ -92,14 +92,13 @@ class Run:
 
 
 def next_run(
-    sweep_config: Union[dict, SweepConfig], runs: List[Run], **kwargs
-) -> Optional[Run]:
+    sweep_config: Union[dict, SweepConfig], runs: List[SweepRun], **kwargs
+) -> Optional[SweepRun]:
     """Calculate the next run in a sweep given the Sweep config and the list of runs already in progress or finished. Returns the next run, or None if the parameter space is exhausted."""
 
     from .grid_search import grid_search_next_run
     from .random_search import random_search_next_run
-
-    # from .bayes_search import bayes_search_next_run
+    from .bayes_search import bayes_search_next_run
 
     # this access is safe due to the jsonschema
     method = sweep_config["method"]
@@ -109,9 +108,7 @@ def next_run(
     elif method == "random":
         return random_search_next_run(sweep_config)
     elif method == "bayes":
-        # return bayes_search_next_run(runs, sweep_config, **kwargs)
-        #  TODO: implement this
-        raise NotImplementedError
+        return bayes_search_next_run(runs, sweep_config, **kwargs)
     else:
         raise ValueError(
             f'Invalid search type {method}, must be one of ["grid", "random", "bayes"]'

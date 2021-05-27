@@ -2,12 +2,12 @@ import pytest
 import itertools
 
 from typing import List
-from sweeps.run import RunState, Run, next_run
+from sweeps.sweeprun import RunState, SweepRun, next_run
 from sweeps.config import SweepConfig
 
 
 def kernel_for_grid_search_tests(
-    runs: List[Run], config: SweepConfig, randomize: bool
+    runs: List[SweepRun], config: SweepConfig, randomize: bool
 ) -> None:
     """This kernel assumes that sweep config has two categorical parameters
     named v1 and v2."""
@@ -56,8 +56,8 @@ def test_grid_search_starting_from_in_progress(
     sweep_config_2params_grid_search, randomize
 ):
     runs = [
-        Run(config={"v1": {"value": 2}, "v2": {"value": 4}}),
-        Run(config={"v1": {"value": 1}, "v2": {"value": 5}}),
+        SweepRun(config={"v1": {"value": 2}, "v2": {"value": 4}}),
+        SweepRun(config={"v1": {"value": 1}, "v2": {"value": 5}}),
     ]
     kernel_for_grid_search_tests(
         runs, sweep_config_2params_grid_search, randomize=randomize

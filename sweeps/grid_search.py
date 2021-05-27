@@ -5,15 +5,15 @@ import random
 from typing import List, Optional, Union
 
 from .config.cfg import SweepConfig
-from .run import Run
+from .sweeprun import SweepRun
 from .params import HyperParameter, HyperParameterSet
 
 
 def grid_search_next_run(
-    runs: List[Run],
+    runs: List[SweepRun],
     sweep_config: Union[dict, SweepConfig],
     randomize_order: bool = False,
-) -> Optional[Run]:
+) -> Optional[SweepRun]:
 
     # make sure the sweep config is valid
     sweep_config = SweepConfig(sweep_config)
@@ -57,4 +57,4 @@ def grid_search_next_run(
     for param, value in zip(discrete_params, remaining_params[0]):
         param.value = value
 
-    return Run(config=discrete_params.to_config())
+    return SweepRun(config=discrete_params.to_config())

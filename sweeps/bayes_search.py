@@ -8,21 +8,24 @@ as well as the case where X is very large.
 """
 
 import numpy as np
+import numpy.typing as npt
 
-from typing import List
+from typing import List, Tuple, Optional, Union
 
 from .config.cfg import SweepConfig
-from .run import Run, RunState
+from .sweeprun import SweepRun, RunState
 from .params import HyperParameter, HyperParameterSet
 from sklearn import gaussian_process as sklearn_gaussian
-from sklearn.impute import SimpleImputer
 from scipy import stats as scipy_stats
 
+from .types import floating, integer
 
 NUGGET = 1e-10
 
 
-def fit_normalized_gaussian_process(X, y, nu=1.5):
+def fit_normalized_gaussian_process(
+    X: npt.ArrayLike, y: npt.ArrayLike, nu: floating = 1.5
+) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
     """We fit a gaussian process but first subtract the mean and divide by
     stddev.
 
@@ -46,11 +49,11 @@ def fit_normalized_gaussian_process(X, y, nu=1.5):
     return gp, y_mean, y_stddev
 
 
-def sigmoid(x):
+def sigmoid(x: npt.ArrayLike) -> npt.ArrayLike:
     return np.exp(-np.logaddexp(0, -x))
 
 
-def random_sample(X_bounds, num_test_samples):
+def random_sample(X_bounds: npt.ArrayLike, num_test_samples: integer) -> npt.ArrayLike:
     num_hyperparameters = len(X_bounds)
     test_X = np.empty((num_test_samples, num_hyperparameters))
     for ii in range(num_test_samples):
@@ -66,7 +69,9 @@ def random_sample(X_bounds, num_test_samples):
     return test_X
 
 
-def predict(X, y, test_X, nu=1.5):
+def predict(
+    X: npt.ArrayLike, y: npt.ArrayLike, test_X: npt.ArrayLike, nu: floating = 1.5
+) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
     gp, norm_mean, norm_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
     y_pred, y_std = gp.predict([test_X], return_std=True)
     y_std_norm = y_std * norm_stddev
@@ -74,7 +79,11 @@ def predict(X, y, test_X, nu=1.5):
     return y_pred_norm[0], y_std_norm[0]
 
 
-def train_runtime_model(sample_X, runtimes, X_bounds):
+def train_runtime_model(
+    sample_X: npt.ArrayLike,
+    runtimes: npt.ArrayLike,
+    X_bounds: Optional[npt.ArrayLike] = None,
+) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
     if sample_X.shape[0] != runtimes.shape[0]:
         raise ValueError("Sample X and runtimes must be the same length")
 
@@ -82,8 +91,13 @@ def train_runtime_model(sample_X, runtimes, X_bounds):
 
 
 def train_gaussian_process(
-    sample_X, sample_y, X_bounds, current_X=None, nu=1.5, max_samples=100
-):
+    sample_X: npt.ArrayLike,
+    sample_y: npt.ArrayLike,
+    X_bounds: Optional[npt.ArrayLike] = None,
+    current_X: npt.ArrayLike = None,
+    nu: floating = 1.5,
+    max_samples: integer = 100,
+) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
     """Trains a Gaussian Process function from sample_X, sample_y data.
 
     Handles the case where there are other training runs in flight (current_X)
@@ -151,7 +165,7 @@ def train_gaussian_process(
     return gp, y_mean, y_stddev
 
 
-def filter_weird_values(sample_X, sample_y):
+def filter_nans(sample_X: npt.ArrayLike, sample_y: npt.ArrayLike) -> npt.ArrayLike:
     is_row_finite = ~(np.isnan(sample_X).any(axis=1) | np.isnan(sample_y))
     sample_X = sample_X[is_row_finite, :]
     sample_y = sample_y[is_row_finite]
@@ -159,19 +173,29 @@ def filter_weird_values(sample_X, sample_y):
 
 
 def next_sample(
-    sample_X,
-    sample_y,
-    X_bounds=None,
-    runtimes=None,
-    failures=None,
-    current_X=None,
-    nu=1.5,
-    max_samples_for_gp=100,
-    improvement=0.01,
-    num_points_to_try=1000,
-    opt_func="expected_improvement",
-    test_X=None,
-):
+    sample_X: npt.ArrayLike,
+    sample_y: npt.ArrayLike,
+    X_bounds: Optional[npt.ArrayLike] = None,
+    runtimes: Optional[npt.ArrayLike] = None,
+    failures: Optional[npt.ArrayLike] = None,
+    current_X: Optional[npt.ArrayLike] = None,
+    nu: floating = 1.5,
+    max_samples_for_gp: integer = 100,
+    improvement: floating = 0.01,
+    num_points_to_try: integer = 1000,
+    opt_func: str = "expected_improvement",
+    test_X: Optional[npt.ArrayLike] = None,
+) -> Tuple[
+    npt.ArrayLike,
+    npt.ArrayLike,
+    npt.ArrayLike,
+    npt.ArrayLike,
+    npt.ArrayLike,
+    npt.ArrayLike,
+    npt.ArrayLike,
+    npt.ArrayLike,
+    npt.ArrayLike,
+]:
     """Calculates the best next sample to look at via bayesian optimization.
 
     Check out https://arxiv.org/pdf/1206.2944.pdf
@@ -236,14 +260,12 @@ def next_sample(
         if X_bounds is None:
             raise ValueError("Must pass in test_X or X_bounds")
 
-    filtered_X, filtered_y = filter_weird_values(sample_X, sample_y)
+    filtered_X, filtered_y = filter_nans(sample_X, sample_y)
     # We train our runtime prediction model on *filtered_X* throwing out the sample points with
     # NaN values because they might break our runtime predictor
     runtime_model = None
     if runtimes is not None:
-        runtime_filtered_X, runtime_filtered_runtimes = filter_weird_values(
-            sample_X, runtimes
-        )
+        runtime_filtered_X, runtime_filtered_runtimes = filter_nans(sample_X, runtimes)
         if runtime_filtered_X.shape[0] >= 2:
             (
                 runtime_model,
@@ -254,9 +276,7 @@ def next_sample(
     # This is *different* than the runtime model.
     failure_model = None
     if failures is not None and sample_X.shape[0] >= 2:
-        failure_filtered_X, failure_filtered_runtimes = filter_weird_values(
-            sample_X, failures
-        )
+        failure_filtered_X, failure_filtered_runtimes = filter_nans(sample_X, failures)
         if failure_filtered_X.shape[0] >= 2:
             (
                 failure_model,
@@ -282,10 +302,9 @@ def next_sample(
     gp, y_mean, y_stddev, = train_gaussian_process(
         filtered_X, filtered_y, X_bounds, current_X, nu, max_samples_for_gp
     )
-    num_test_samples = 1000
     # Look for the minimum value of our fitted-target-function + (kappa * fitted-target-std_dev)
     if test_X is None:  # this is the usual case
-        test_X = random_sample(X_bounds, num_test_samples)
+        test_X = random_sample(X_bounds, num_points_to_try)
     y_pred, y_pred_std = gp.predict(test_X, return_std=True)
     if failure_model is None:
         prob_of_failure = [0.0] * len(test_X)
@@ -320,8 +339,12 @@ def next_sample(
             Z
         ) + y_pred_std * scipy_stats.norm.pdf(Z)
         best_test_X_index = np.argmax(e_i)
-    # TODO: support expected improvement per time by dividing e_i by runtime
+    else:
+        raise ValueError(
+            f'Invalid opt_func {opt_func}, should be either "probability_of_improvement" or "expected_improvement"'
+        )
 
+    # TODO: support expected improvement per time by dividing e_i by runtimen
     suggested_X = test_X[best_test_X_index]
     suggested_X_prob_of_improvement = prob_of_improve[best_test_X_index]
     suggested_X_predicted_y = y_pred[best_test_X_index] * y_stddev + y_mean
@@ -341,8 +364,12 @@ def next_sample(
 
 
 def bayes_search_next_run(
-    runs: List[Run], config: SweepConfig, minimum_improvement: float = 0.1
-) -> Run:
+    runs: List[SweepRun],
+    config: Union[dict, SweepConfig],
+    minimum_improvement: float = 0.1,
+) -> SweepRun:
+
+    config = SweepConfig(config)
 
     if "metric" not in config:
         raise ValueError('Bayesian search requires "metric" section')
@@ -398,7 +425,12 @@ def bayes_search_next_run(
         current_X = np.array(current_X)
 
     # impute bad metric values from y
-    y = SimpleImputer(strategy="constant", fill_value=worst_metric).transform(y)
+    if len(y) > 0:
+        y[~np.isfinite(y)] = worst_metric
+
+    # next_sample is a minimizer, so if we are trying to
+    # maximize, we need to negate y
+    y *= -1 if goal == "maximize" else 1
 
     (
         try_params,
@@ -420,7 +452,6 @@ def bayes_search_next_run(
 
     # convert the parameters from vector of [0,1] values
     # to the original ranges
-
     for param in params:
         if param.type == HyperParameter.CONSTANT:
             continue
@@ -428,7 +459,6 @@ def bayes_search_next_run(
         param.value = param.ppf(try_value)
 
     ret_dict = params.to_config()
-
     info = {}
     info["predictions"] = {metric_name: pred}
     info["success_probability"] = success_prob
@@ -439,4 +469,4 @@ def bayes_search_next_run(
         info["acq_func"]["y_pred_std"] = y_pred_std
         info["acq_func"]["score"] = prob_of_improve
 
-    return Run(config=ret_dict, optimizer_info=info)
+    return SweepRun(config=ret_dict, optimizer_info=info)

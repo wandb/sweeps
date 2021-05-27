@@ -17,12 +17,12 @@ def plot(request):
 
 
 @pytest.fixture()
-def sweep_config_grid_search_2params_with_metric():
+def sweep_config_bayes_search_2params_with_metric():
     return SweepConfig(
         {
-            "metric": {"name": "loss"},
-            "method": "grid",
-            "parameters": {"v1": {"min": 1, "max": 10}, "v2": {"min": 1, "max": 10}},
+            "metric": {"name": "loss", "goal": "minimize"},
+            "method": "bayes",
+            "parameters": {"v1": {"min": 1, "max": 10}, "v2": {"min": 1.0, "max": 10}},
         }
     )
 
