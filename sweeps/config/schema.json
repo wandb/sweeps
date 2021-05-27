@@ -423,12 +423,13 @@
                     ]
                 },
                 "max_iter": {
-                    "type": "number",
+                    "type": "integer",
                     "description": "Set the last epoch to finish trimming runs, and hyperband will automatically calculate the prior epochs to trim runs"
                 },
                 "min_iter": {
-                    "type": "number",
-                    "description": "Set the first epoch to start trimming runs, and hyperband will automatically calculate the subsequent epochs to trim runs"
+                    "type": "integer",
+                    "description": "Set the first epoch to start trimming runs, and hyperband will automatically calculate the subsequent epochs to trim runs",
+                    "minimum": 1
                 },
                 "s": {
                     "type": "number",
@@ -436,7 +437,9 @@
                 },
                 "eta": {
                     "type": "number",
-                    "description": "At every eta^n steps, hyperband continues running the top 1/eta runs and stops all other runs"
+                    "description": "At every eta^n steps, hyperband continues running the top 1/eta runs and stops all other runs",
+                    "minimum": 1.0,
+                    "default": 3.0
                 }
             },
             "allOf": [
