@@ -2,7 +2,7 @@
 
 import random
 
-from typing import Union, List, Tuple, Dict
+from typing import List, Tuple, Dict, Any
 
 import numpy as np
 import numpy.typing as npt
@@ -72,7 +72,7 @@ class HyperParameter:
 
         self.value = None
 
-    def value_to_int(self, value: Union[str, float, np.floating, int]) -> int:
+    def value_to_int(self, value: Any) -> int:
         if self.type != HyperParameter.CATEGORICAL:
             raise ValueError("Can only call value_to_int on categorical variable")
 
@@ -118,7 +118,7 @@ class HyperParameter:
         else:
             raise ValueError("Unsupported hyperparameter distribution type")
 
-    def ppf(self, x: npt.ArrayLike) -> Union[float, np.floating, int, str]:
+    def ppf(self, x: npt.ArrayLike) -> Any:
         """
         Percent point function or inverse cdf
         Inputs: x: float in range [0, 1]
@@ -183,7 +183,7 @@ class HyperParameter:
         else:
             raise ValueError("Unsupported hyperparameter distribution type")
 
-    def sample(self) -> Union[float, int, np.floating, str]:
+    def sample(self) -> Any:
         return self.ppf(random.uniform(0.0, 1.0))
 
     def to_config(self) -> Tuple[str, Dict]:
@@ -226,7 +226,7 @@ class HyperParameterSet(list):
     def to_config(self) -> dict:
         return dict([param.to_config() for param in self])
 
-    def denormalize_vector(self, X: npt.ArrayLike) -> List[List[float]]:
+    def denormalize_vector(self, X: npt.ArrayLike) -> List[List[Any]]:
         """Converts a list of vectors [0,1] to values in the original space."""
         v = np.zeros(X.shape).tolist()
 
@@ -236,7 +236,7 @@ class HyperParameterSet(list):
         return v
 
     def convert_runs_to_normalized_vector(self, runs: List[SweepRun]) -> npt.ArrayLike:
-        runs_params = [run.config or {} for run in runs]
+        runs_params = [run.config for run in runs]
         X = np.zeros([len(self.searchable_params), len(runs)])
 
         for key, bayes_opt_index in self.param_names_to_index.items():
@@ -249,12 +249,13 @@ class HyperParameterSet(list):
                         else config[key]["value"]
                     )
                     if key in config
-                    else float("nan")
+                    # filter out incorrectly specified runs
+                    else np.nan
                     for config in runs_params
                 ]
             )
-            X_row = param.cdf(row)
 
+            X_row = param.cdf(row)
             # only use values where input wasn't nan
             non_nan = row == row
             X[bayes_opt_index, non_nan] = X_row[non_nan]

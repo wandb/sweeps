@@ -105,11 +105,7 @@
                     "type": "array",
                     "description": "Discrete values",
                     "items": {
-                        "oneOf": [
-                            {"type":  "string"},
-                            {"type":  "number"}
-                        ],
-                    "uniqueItems": true
+                        "uniqueItems": true
                     }
                 },
                 "distribution": {
