@@ -116,6 +116,9 @@ def next_run(
     from .random_search import random_search_next_run
     from .bayes_search import bayes_search_next_run
 
+    # validate the sweep config
+    sweep_config = SweepConfig(sweep_config)
+
     # this access is safe due to the jsonschema
     method = sweep_config["method"]
 
@@ -128,4 +131,31 @@ def next_run(
     else:
         raise ValueError(
             f'Invalid search type {method}, must be one of ["grid", "random", "bayes"]'
+        )
+
+
+def stop_runs(
+    sweep_config: Union[dict, SweepConfig],
+    runs: List[SweepRun],
+) -> List[SweepRun]:
+
+    from .hyperband_stopping import hyperband_stop_runs
+
+    # validate the sweep config
+    sweep_config = SweepConfig(sweep_config)
+
+    if "metric" not in sweep_config:
+        raise ValueError('Hyperband stopping requires "metric" section')
+
+    if "early_terminate" not in sweep_config:
+        raise ValueError('Hyperband stopping requires "early_terminate" section.')
+    et_type = sweep_config["early_terminate"]["type"]
+
+    if et_type == "hyperband":
+        return hyperband_stop_runs(runs, sweep_config)
+    elif et_type == "envelope":
+        raise NotImplementedError("not implemented yet")
+    else:
+        raise ValueError(
+            f'Invalid early stopping type {et_type}, must be one of ["hyperband", "envelope"]'
         )

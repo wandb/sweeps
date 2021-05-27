@@ -8,7 +8,7 @@ from .config import SweepConfig
 from .sweeprun import SweepRun
 
 
-def stop_runs_hyperband(
+def hyperband_stop_runs(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
 ) -> List[SweepRun]:
@@ -33,14 +33,13 @@ def stop_runs_hyperband(
         raise ValueError('Hyperband stopping requires "early_terminate" section.')
     et_config = config["early_terminate"]
 
-    if "hyperband_stopping" not in et_config:
+    if et_config["type"] != "hyperband":
         raise ValueError("Sweep config is not configured for hyperband stopping")
-    hb_config = et_config["hyperband_stopping"]
 
-    if "max_iter" in hb_config:
-        max_iter = hb_config["max_iter"]
-        s = hb_config["s"]
-        eta = hb_config["eta"]
+    if "max_iter" in et_config:
+        max_iter = et_config["max_iter"]
+        s = et_config["s"]
+        eta = et_config["eta"]
 
         band = max_iter
         bands = []
@@ -52,9 +51,9 @@ def stop_runs_hyperband(
         bands = sorted(bands)
 
     # another way of defining hyperband with min_iter and possibly eta
-    elif "min_iter" in hb_config:
-        min_iter = hb_config["min_iter"]
-        eta = hb_config["eta"]
+    elif "min_iter" in et_config:
+        min_iter = et_config["min_iter"]
+        eta = et_config["eta"]
 
         band = min_iter
         bands = []
