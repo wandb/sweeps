@@ -275,7 +275,6 @@ def test_runs_bayes_runs2_missingmetric(sweep_config_bayes_search_2params_with_m
     )
 
 
-# search with 2 finished runs - hardcoded results - missing metric
 def test_runs_bayes_runs2_missingmetric_acc():
 
     config = SweepConfig(
@@ -321,49 +320,57 @@ def test_runs_bayes_runs2_missingmetric_acc():
     )
 
 
-"""
-@pytest.mark.skipif(
-    platform.system() == "Darwin",
-    reason="problem with test on mac, TODO: look into this",
-)
 def test_runs_bayes_nan(sweep_config_bayes_search_2params_with_metric):
-    np.random.seed(73)
-    bs = sweeps.BayesianSearch()
     r1 = SweepRun(
-        "b",
-        "finished",
-        {"v1": {"value": 7}, "v2": {"value": 6}},
-        {},
-        [
+        name="b",
+        state=RunState.finished,
+        config={"v1": {"value": 7}, "v2": {"value": 6}},
+        summary_metrics={},
+        history=[
             {"loss": float("NaN")},
         ],
     )
     r2 = SweepRun(
-        "b",
-        "finished",
-        {"v1": {"value": 1}, "v2": {"value": 8}},
-        {"loss": float("NaN")},
-        [],
+        name="b",
+        state=RunState.finished,
+        config={"v1": {"value": 1}, "v2": {"value": 8}},
+        summary_metrics={"loss": float("NaN")},
+        history=[],
     )
     r3 = SweepRun(
-        "b",
-        "finished",
-        {"v1": {"value": 2}, "v2": {"value": 3}},
-        {},
-        [
+        name="b",
+        state=RunState.finished,
+        config={"v1": {"value": 2}, "v2": {"value": 3}},
+        summary_metrics={},
+        history=[
             {"loss": "NaN"},
         ],
     )
     r4 = SweepRun(
-        "b", "finished", {"v1": {"value": 4}, "v2": {"value": 5}}, {"loss": "NaN"}, []
+        name="b",
+        state=RunState.finished,
+        config={"v1": {"value": 4}, "v2": {"value": 5}},
+        summary_metrics={"loss": "NaN"},
+        history=[],
     )
     # need two (non running) runs before we get a new set of parameters
     runs = [r1, r2, r3, r4]
-    sweep = {"config": sweep_config_bayes_search_2params_with_metric, "runs": runs}
-    params, info = bs.next_run(sweep)
-    assert params["v1"]["value"] == 10 and params["v2"]["value"] == 2
+
+    for _ in range(200):
+        suggestion = next_run(sweep_config_bayes_search_2params_with_metric, runs)
+        suggestion.state = RunState.finished
+        runs.append(suggestion)
+
+    # should just choose random runs in this case as they are all imputed with the same value (zero)
+    # for the loss function
+    check_that_samples_are_from_the_same_distribution(
+        [run.config["v2"]["value"] for run in runs],
+        np.random.uniform(1, 10, 202),
+        np.linspace(1, 10, 11),
+    )
 
 
+"""
 def test_runs_bayes_categorical_list(sweep_config_2params_categorical):
     np.random.seed(73)
     bs = sweeps.BayesianSearch()

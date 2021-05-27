@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any
 from enum import Enum
 import numpy as np
 
@@ -55,13 +55,7 @@ class SweepRun:
     optimizer_info: Optional[dict] = None
 
     def metric_history(self, metric_name: str) -> List[floating]:
-        return [
-            d[metric_name]
-            for d in self.history
-            if metric_name in d
-            and d[metric_name] is not None
-            and np.isfinite(d[metric_name])
-        ]
+        return [d[metric_name] for d in self.history if metric_name in d]
 
     def summary_metric(self, metric_name: str) -> floating:
         if metric_name not in self.summary_metrics:
@@ -94,8 +88,23 @@ class SweepRun:
         except KeyError:
             summary_metric = []
         all_metrics = self.metric_history(metric_name) + summary_metric
+
         if len(all_metrics) == 0:
             raise ValueError(f"Cannot extract metric {metric_name} from run")
+
+        def filter_func(x: Any) -> bool:
+            if x is None:
+                return False
+            try:
+                return np.isfinite(x)
+            except TypeError:
+                return False
+
+        all_metrics = list(filter(filter_func, all_metrics))
+
+        if len(all_metrics) == 0:
+            raise ValueError("Run does not have any finite metric values")
+
         return cmp_func(all_metrics)
 
 
