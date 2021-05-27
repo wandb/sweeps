@@ -5,8 +5,8 @@ import numpy.typing as npt
 
 from sweeps import bayes_search as bayes
 from sweeps.types import integer, floating
+from sweeps import SweepRun, RunState, next_run, SweepConfig
 
-from sweeps import SweepRun, RunState, next_run
 from .test_random_search import check_that_samples_are_from_the_same_distribution
 
 
@@ -275,21 +275,53 @@ def test_runs_bayes_runs2_missingmetric(sweep_config_bayes_search_2params_with_m
     )
 
 
-"""
 # search with 2 finished runs - hardcoded results - missing metric
-def test_runs_bayes_runs2_missingmetric_acc(sweep_config_2params_acc):
-    np.random.seed(73)
-    bs = sweeps.BayesianSearch()
-    r1 = SweepRun(
-        "b", "finished", {"v1": {"value": 7}, "v2": {"value": 5}}, {"xloss": 0.2}, []
+def test_runs_bayes_runs2_missingmetric_acc():
+
+    config = SweepConfig(
+        {
+            "method": "bayes",
+            "metric": {
+                "name": "acc",
+                "goal": "maximize",
+            },
+            "parameters": {"v1": {"min": 1, "max": 10}, "v2": {"min": 1, "max": 10}},
+        }
     )
-    runs = [r1, r1]
-    sweep = {"config": sweep_config_2params_acc, "runs": runs}
-    params, info = bs.next_run(sweep)
-    assert params["v1"]["value"] == 1 and params["v2"]["value"] == 1
+
+    r1 = SweepRun(
+        name="b",
+        state=RunState.finished,
+        history=[
+            {"xloss": 5.0},
+        ],
+        config={"v1": {"value": 7}, "v2": {"value": 6}},
+        summary_metrics={"zloss": 1.2},
+    )
+    r2 = SweepRun(
+        name="b2",
+        state=RunState.finished,
+        config={"v1": {"value": 1}, "v2": {"value": 8}},
+        summary_metrics={"xloss": 52.0},
+        history=[],
+    )
+
+    runs = [r1, r2]
+    for _ in range(200):
+        suggestion = next_run(config, runs)
+        suggestion.state = RunState.finished
+        runs.append(suggestion)
+
+    # should just choose random runs in this case as they are all imputed with the same value (zero)
+    # for the loss function
+    check_that_samples_are_from_the_same_distribution(
+        [run.config["v2"]["value"] for run in runs],
+        np.random.uniform(1, 10, 202),
+        np.linspace(1, 10, 11),
+    )
 
 
-
+"""
 @pytest.mark.skipif(
     platform.system() == "Darwin",
     reason="problem with test on mac, TODO: look into this",

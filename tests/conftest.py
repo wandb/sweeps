@@ -38,19 +38,6 @@ def sweep_config_2params_grid_search():
 
 
 @pytest.fixture()
-def sweep_config_2params_acc():
-    return SweepConfig(
-        {
-            "metric": {
-                "name": "acc",
-                "goal": "maximize",
-            },
-            "parameters": {"v1": {"min": 1, "max": 10}, "v2": {"min": 1, "max": 10}},
-        }
-    )
-
-
-@pytest.fixture()
 def sweep_config_2params_categorical():
     return {
         "metric": {
