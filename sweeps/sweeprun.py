@@ -56,7 +56,9 @@ class SweepRun:
         return [
             d[metric_name]
             for d in self.history
-            if d[metric_name] is not None and np.isfinite(d[metric_name])
+            if metric_name in d
+            and d[metric_name] is not None
+            and np.isfinite(d[metric_name])
         ]
 
     def summary_metric(self, metric_name: str) -> np.floating:
@@ -85,9 +87,13 @@ class SweepRun:
         """
 
         cmp_func = np.max if kind == "maximum" else np.min
-        all_metrics = self.metric_history(metric_name) + [
-            self.summary_metric(metric_name)
-        ]
+        try:
+            summary_metric = [self.summary_metric(metric_name)]
+        except KeyError:
+            summary_metric = []
+        all_metrics = self.metric_history(metric_name) + summary_metric
+        if len(all_metrics) == 0:
+            raise ValueError(f"Cannot extract metric {metric_name} from run")
         return cmp_func(all_metrics)
 
 

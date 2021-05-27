@@ -34,7 +34,7 @@ def fit_normalized_gaussian_process(
     gp = sklearn_gaussian.GaussianProcessRegressor(
         kernel=sklearn_gaussian.kernels.Matern(nu=nu),
         n_restarts_optimizer=2,
-        alpha=NUGGET,
+        alpha=0.0000001,
         random_state=2,
     )
     if len(y) == 1:
@@ -43,7 +43,7 @@ def fit_normalized_gaussian_process(
         y_stddev = 1
     else:
         y_mean = np.mean(y)
-        y_stddev = np.std(y) + NUGGET
+        y_stddev = np.std(y) + 0.0001
     y_norm = (y - y_mean) / y_stddev
     gp.fit(X, y_norm)
     return gp, y_mean, y_stddev
@@ -321,6 +321,7 @@ def next_sample(
     # best value of y we've seen so far.  i.e. y*
     min_unnorm_y = np.min(filtered_y)
     # hack for dealing with predicted std of 0
+    epsilon = 0.00000001
     if opt_func == "probability_of_improvement":
         # might remove the norm_improvement at some point
         # find best chance of an improvement by "at least norm improvement"
@@ -328,12 +329,12 @@ def next_sample(
         # improvment over the best result observerd so far.
         # norm_improvement = improvement / y_stddev
         min_norm_y = (min_unnorm_y - y_mean) / y_stddev - improvement
-        std_dev_distance = (y_pred - min_norm_y) / (y_pred_std + NUGGET)
+        std_dev_distance = (y_pred - min_norm_y) / (y_pred_std + epsilon)
         prob_of_improve = sigmoid(-std_dev_distance)
         best_test_X_index = np.argmax(prob_of_improve)
     elif opt_func == "expected_improvement":
         min_norm_y = (min_unnorm_y - y_mean) / y_stddev
-        Z = -(y_pred - min_norm_y) / (y_pred_std + NUGGET)
+        Z = -(y_pred - min_norm_y) / (y_pred_std + epsilon)
         prob_of_improve = scipy_stats.norm.cdf(Z)
         e_i = -(y_pred - min_norm_y) * scipy_stats.norm.cdf(
             Z
@@ -390,17 +391,23 @@ def bayes_search_next_run(
     worst_metric = 0.0
     for run in runs:
         if run.state == RunState.finished:
-            run_extremum = run.metric_extremum(
-                metric_name, kind="minimum" if goal == "maximize" else "maximum"
-            )
+            try:
+                run_extremum = run.metric_extremum(
+                    metric_name, kind="minimum" if goal == "maximize" else "maximum"
+                )
+            except ValueError:
+                run_extremum = 0.0  # default
             worst_metric = worst_func(worst_metric, run_extremum)
 
     X_norms = params.convert_runs_to_normalized_vector(runs)
     for run, X_norm in zip(runs, X_norms):
         if run.state == RunState.finished:
-            metric = run.metric_extremum(
-                metric_name, kind="maximum" if goal == "maximize" else "minimum"
-            )
+            try:
+                metric = run.metric_extremum(
+                    metric_name, kind="maximum" if goal == "maximize" else "minimum"
+                )
+            except ValueError:
+                metric = 0.0  # default
             y.append(metric)
             sample_X.append(X_norm)
         elif run.state == RunState.running:
@@ -425,6 +432,7 @@ def bayes_search_next_run(
         current_X = np.array(current_X)
 
     # impute bad metric values from y
+    y = np.asarray(y)
     if len(y) > 0:
         y[~np.isfinite(y)] = worst_metric
 
