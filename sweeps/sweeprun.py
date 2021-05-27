@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 
 from .config import SweepConfig
 
+from .types import floating
+
 
 RunState = Enum(
     "run_states",
@@ -52,7 +54,7 @@ class SweepRun:
     state: RunState = RunState.proposed
     optimizer_info: Optional[dict] = None
 
-    def metric_history(self, metric_name: str) -> List[np.floating]:
+    def metric_history(self, metric_name: str) -> List[floating]:
         return [
             d[metric_name]
             for d in self.history
@@ -61,12 +63,12 @@ class SweepRun:
             and np.isfinite(d[metric_name])
         ]
 
-    def summary_metric(self, metric_name: str) -> np.floating:
+    def summary_metric(self, metric_name: str) -> floating:
         if metric_name not in self.summary_metrics:
             raise KeyError(f"{metric_name} is not a summary metric of this run.")
         return self.summary_metrics[metric_name]
 
-    def metric_extremum(self, metric_name: str, kind: str) -> np.floating:
+    def metric_extremum(self, metric_name: str, kind: str) -> floating:
         """Extract the value of the target optimization metric from a
          specified sweep run.
 
