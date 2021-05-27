@@ -370,18 +370,59 @@ def test_runs_bayes_nan(sweep_config_bayes_search_2params_with_metric):
     )
 
 
-"""
-def test_runs_bayes_categorical_list(sweep_config_2params_categorical):
-    np.random.seed(73)
-    bs = sweeps.BayesianSearch()
+def test_runs_bayes_categorical_list():
+
+    v2_min = 1
+    v2_max = 10
+
+    config = {
+        "method": "bayes",
+        "metric": {
+            "name": "acc",
+            "goal": "maximize",
+        },
+        "parameters": {
+            "v1": {
+                "distribution": "categorical",
+                "values": [(2, 3), [3, 4], ["5", "6"], [(7, 8), ["9", [10, 11]]]],
+            },
+            "v2": {"min": v2_min, "max": v2_max},
+        },
+    }
+
+    def loss_func(x: SweepRun) -> floating:
+        v2_acc = 0.5 * (x.config["v2"]["value"] - v2_min) / (v2_max - v2_min)
+        v1_acc = [0.1, 0.2, 0.5, 0.1][
+            config["parameters"]["v1"]["values"].index(x.config["v1"]["value"])
+        ]
+        return v1_acc + v2_acc
+
     r1 = SweepRun(
-        "b", "finished", {"v1": {"value": [3, 4]}, "v2": {"value": 5}}, {"acc": 0.2}, []
+        name="b",
+        state=RunState.finished,
+        config={"v1": {"value": [3, 4]}, "v2": {"value": 5}},
+        history=[],
     )
-    runs = [r1, r1]
-    sweep = {"config": sweep_config_2params_categorical, "runs": runs}
-    params, info = bs.next_run(sweep)
-    assert (
-        params["v1"]["value"] == [(7, 8), ["9", [10, 11]]]
-        and params["v2"]["value"] == 1
+    r1.summary_metrics = {"acc": loss_func(r1)}
+
+    r2 = SweepRun(
+        name="b",
+        state=RunState.finished,
+        config={"v1": {"value": (2, 3)}, "v2": {"value": 5}},
+        history=[],
     )
-"""
+    r2.summary_metrics = {"acc": loss_func(r2)}
+
+    runs = [r1, r2]
+    for _ in range(200):
+        suggestion = next_run(config, runs)
+        metric = {"acc": loss_func(suggestion)}
+        suggestion.history = [metric]
+        suggestion.state = RunState.finished
+        runs.append(suggestion)
+
+    best_run = max(runs, key=lambda r: r.metric_extremum("acc", "maximum"))
+    best_x = [best_run.config["v1"]["value"], best_run.config["v2"]["value"]]
+
+    assert best_x[0] == ["5", "6"]
+    assert np.abs(best_x[1] - 10) < 0.2

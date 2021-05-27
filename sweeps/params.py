@@ -7,6 +7,7 @@ from typing import List, Tuple, Dict, Any
 import numpy as np
 import numpy.typing as npt
 import scipy.stats as stats
+from copy import deepcopy
 
 import jsonschema
 
@@ -60,7 +61,7 @@ class HyperParameter:
 
                 valid = True
                 self.type = schema_name
-                self.config = config.copy()
+                self.config = deepcopy(config)
 
         if not valid:
             raise jsonschema.ValidationError("invalid hyperparameter configuration")
@@ -189,7 +190,7 @@ class HyperParameter:
     def to_config(self) -> Tuple[str, Dict]:
         config = dict(value=self.value)
         # Remove values list if we have picked a value for this parameter
-        self.config.pop("values", None)
+        # self.config.pop("values", None)
         return self.name, config
 
 
@@ -257,7 +258,7 @@ class HyperParameterSet(list):
 
             X_row = param.cdf(row)
             # only use values where input wasn't nan
-            non_nan = row == row
+            non_nan = ~np.isnan(row)
             X[bayes_opt_index, non_nan] = X_row[non_nan]
 
         return np.transpose(X)
