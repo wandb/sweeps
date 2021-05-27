@@ -93,10 +93,8 @@ class SweepRun:
             raise ValueError(f"Cannot extract metric {metric_name} from run")
 
         def filter_func(x: Any) -> bool:
-            if x is None:
-                return False
             try:
-                return np.isfinite(x)
+                return np.isscalar(x) and np.isfinite(x)
             except TypeError:
                 return False
 
