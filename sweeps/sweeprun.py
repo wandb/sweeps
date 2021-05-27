@@ -102,7 +102,8 @@ class SweepRun:
 def next_run(
     sweep_config: Union[dict, SweepConfig], runs: List[SweepRun], **kwargs
 ) -> Optional[SweepRun]:
-    """Calculate the next run in a sweep given the Sweep config and the list of runs already in progress or finished. Returns the next run, or None if the parameter space is exhausted."""
+    """Calculate the next run in a sweep given the Sweep config and the list of runs already in
+    progress or finished. Returns the next run, or None if the parameter space is exhausted."""
 
     from .grid_search import grid_search_next_run
     from .random_search import random_search_next_run
