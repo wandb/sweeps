@@ -18,7 +18,7 @@ def histories_for_top_n(
     histories: npt.ArrayLike, metrics: npt.ArrayLike, n: integer = 3
 ) -> npt.ArrayLike:
     metrics = np.array(metrics)
-    histories = np.array(histories)
+    histories = np.asarray(histories)
     indices = np.argpartition(-metrics, -n)[-n:]
     top_n_histories = []
     for index in indices:
