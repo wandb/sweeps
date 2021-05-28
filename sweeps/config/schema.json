@@ -105,9 +105,7 @@
                 "values": {
                     "type": "array",
                     "description": "Discrete values",
-                    "items": {
-                        "uniqueItems": true
-                    }
+                    "uniqueItems": true
                 },
                 "distribution": {
                     "enum": [
