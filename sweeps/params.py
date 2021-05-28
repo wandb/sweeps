@@ -11,7 +11,7 @@ from copy import deepcopy
 
 import jsonschema
 
-from .sweeprun import SweepRun
+from .run import SweepRun
 from .config.schema import (
     sweep_config_jsonschema,
     dereferenced_sweep_config_jsonschema,

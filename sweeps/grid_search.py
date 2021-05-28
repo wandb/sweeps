@@ -5,7 +5,7 @@ import random
 from typing import List, Optional, Union
 
 from .config.cfg import SweepConfig
-from .sweeprun import SweepRun
+from .run import SweepRun
 from .params import HyperParameter, HyperParameterSet
 
 

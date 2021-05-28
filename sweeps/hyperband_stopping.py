@@ -5,7 +5,7 @@ from typing import List, Union, Dict, Any
 import numpy as np
 
 from .config import SweepConfig
-from .sweeprun import SweepRun, RunState
+from .run import SweepRun, RunState
 
 
 def hyperband_stop_runs(
@@ -141,6 +141,6 @@ def hyperband_stop_runs(
             run_info["lines"].append(
                 "Run: %s Step: %d%s%s" % (run.name, len(history), bandstr, termstr)
             )
-            run.optimizer_info = run_info
+            run.early_terminate_info = run_info
 
     return terminate_runs

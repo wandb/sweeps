@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Any
+from typing import List, Optional, Union, Any, Dict
 from enum import Enum
 import numpy as np
 
@@ -42,7 +42,10 @@ class SweepRun:
     history : list of dict
         Iterable of dicts containing the arguments to calls of wandb.log
         made during the run. E.g., [{"loss": 10}, {"a": 9}, {"a": 8}, {"a": 7}]
-    optimizer_info: dict
+    search_info: dict
+        For runs in the proposed state, information produced by the optimizer. E.g.,
+        {'improvement_prob': 0.2}
+    early_terminate_info: dict
         For runs in the proposed state, information produced by the optimizer. E.g.,
         {'improvement_prob': 0.2}
     """
@@ -52,7 +55,8 @@ class SweepRun:
     history: List[dict] = field(default_factory=lambda: [])
     config: dict = field(default_factory=lambda: {})
     state: RunState = RunState.proposed
-    optimizer_info: Optional[dict] = None
+    search_info: Optional[Dict] = None
+    early_terminate_info: Optional[Dict] = None
 
     def metric_history(self, metric_name: str) -> List[floating]:
         return [d[metric_name] for d in self.history if metric_name in d]

@@ -1,7 +1,7 @@
 """Random Search."""
 
 from .config.cfg import SweepConfig
-from .sweeprun import SweepRun
+from .run import SweepRun
 from .params import HyperParameterSet
 
 from typing import Union

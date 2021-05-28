@@ -13,7 +13,7 @@ import numpy.typing as npt
 from typing import List, Tuple, Optional, Union
 
 from .config.cfg import SweepConfig
-from .sweeprun import SweepRun, RunState
+from .run import SweepRun, RunState
 from .params import HyperParameter, HyperParameterSet
 from sklearn import gaussian_process as sklearn_gaussian
 from scipy import stats as scipy_stats
@@ -477,4 +477,4 @@ def bayes_search_next_run(
         info["acq_func"]["y_pred_std"] = y_pred_std
         info["acq_func"]["score"] = prob_of_improve
 
-    return SweepRun(config=ret_dict, optimizer_info=info)
+    return SweepRun(config=ret_dict, search_info=info)

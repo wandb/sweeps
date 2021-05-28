@@ -2,7 +2,7 @@ import pytest
 import itertools
 
 from typing import List
-from sweeps.sweeprun import RunState, SweepRun, next_run
+from sweeps.run import RunState, SweepRun, next_run
 from sweeps.config import SweepConfig
 
 
@@ -28,7 +28,7 @@ def kernel_for_grid_search_tests(
         suggestion = next_run(config, runs, randomize_order=randomize)
         if suggestion is None:  # done
             break
-        assert suggestion.optimizer_info is None
+        assert suggestion.search_info is None
         assert suggestion.state == RunState.proposed
         runs.append(suggestion)
         suggested_parameters.append(

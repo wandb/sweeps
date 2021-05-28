@@ -3,7 +3,7 @@ import pytest
 from sweeps.config import SweepConfig
 import numpy as np
 from numpy import typing as npt
-from sweeps.sweeprun import next_run
+from sweeps.run import next_run
 import os
 from scipy import stats
 

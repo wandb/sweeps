@@ -14,12 +14,6 @@ def synthetic_loss(start, asympt, decay, noise, length):
     return history
 
 
-def synthetic_loss_random():
-    return synthetic_loss(
-        uniform(4, 20), uniform(1, 2), uniform(0.05, 0.4), 0.5, randint(10, 20)
-    )
-
-
 def synthetic_loss_family(num):
     histories = []
     for ii in range(num):

@@ -22,7 +22,7 @@ def test_hyperband_min_iter_bands():
     to_stop = stop_runs(sweep_config, [run, run2])
 
     assert to_stop[0] is run
-    assert to_stop[0].optimizer_info["bands"][:3] == [3, 9, 27]
+    assert to_stop[0].early_terminate_info["bands"][:3] == [3, 9, 27]
 
 
 def test_hyperband_min_iter_bands_max():
@@ -46,7 +46,7 @@ def test_hyperband_min_iter_bands_max():
     to_stop = stop_runs(sweep_config, [run, run2])
 
     assert to_stop[0] is run
-    assert to_stop[0].optimizer_info["bands"][:3] == [3, 9, 27]
+    assert to_stop[0].early_terminate_info["bands"][:3] == [3, 9, 27]
 
 
 def test_hyperband_max_iter_bands():
@@ -71,7 +71,7 @@ def test_hyperband_max_iter_bands():
     to_stop = stop_runs(sweep_config, [run, run2])
 
     assert to_stop[0] is run
-    assert to_stop[0].optimizer_info["bands"][:3] == [3, 9, 27]
+    assert to_stop[0].early_terminate_info["bands"][:3] == [3, 9, 27]
 
 
 def test_init_from_max_iter():
@@ -96,7 +96,7 @@ def test_init_from_max_iter():
     to_stop = stop_runs(sweep_config, [run, run2])
 
     assert to_stop[0] is run
-    assert to_stop[0].optimizer_info["bands"] == [2, 6]
+    assert to_stop[0].early_terminate_info["bands"] == [2, 6]
 
 
 def test_single_run():
