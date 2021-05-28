@@ -71,7 +71,8 @@
                 }
             },
             "required": [
-                "name"
+                "name",
+                "goal"
             ],
             "additionalProperties": false
         },
