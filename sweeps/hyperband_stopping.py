@@ -1,11 +1,11 @@
 """Hyperband Early Terminate."""
 
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Any
 
 import numpy as np
 
 from .config import SweepConfig
-from .sweeprun import SweepRun
+from .sweeprun import SweepRun, RunState
 
 
 def hyperband_stop_runs(
@@ -93,7 +93,7 @@ def hyperband_stop_runs(
             threshold = sorted(band_values)[int((r) * len(band_values))]
         thresholds.append(threshold)
 
-    info: Dict[str, List] = {}
+    info: Dict[str, Any] = {}
     info["lines"] = []
     info["lines"].append(
         "Bands: %s"
@@ -107,8 +107,11 @@ def hyperband_stop_runs(
         )
     )
 
+    info["bands"] = bands
+    info["thresholds"] = thresholds
+
     for run in runs:
-        if run.state == "running":
+        if run.state == RunState.running:
             history = run.metric_history(metric_name)
             if config["metric"]["goal"] == "maximize":
                 history = list(map(lambda x: -x, history))
