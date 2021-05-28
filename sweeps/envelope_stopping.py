@@ -8,12 +8,15 @@ up an envelope where we stop jobs where the metric doesn't get better
 from typing import Union, List
 
 import numpy as np
+import numpy.typing as npt
 
 from . import SweepRun, SweepConfig, RunState
 from .types import integer, floating
 
 
-def histories_for_top_n(histories, metrics, n=3):
+def histories_for_top_n(
+    histories: npt.ArrayLike, metrics: npt.ArrayLike, n: integer = 3
+) -> npt.ArrayLike:
     metrics = np.array(metrics)
     histories = np.array(histories)
     indices = np.argpartition(-metrics, -n)[-n:]
@@ -23,7 +26,9 @@ def histories_for_top_n(histories, metrics, n=3):
     return top_n_histories
 
 
-def envelope_from_histories(histories, envelope_len):
+def envelope_from_histories(
+    histories: npt.ArrayLike, envelope_len: integer
+) -> npt.ArrayLike:
     envelope = []
     cum_min_hs = []
     for h in histories:
@@ -42,7 +47,9 @@ def envelope_from_histories(histories, envelope_len):
     return envelope
 
 
-def is_inside_envelope(history, envelope, ignore_first_n_iters=0):
+def is_inside_envelope(
+    history: npt.ArrayLike, envelope: npt.ArrayLike, ignore_first_n_iters: integer = 0
+) -> bool:
     if len(history) <= ignore_first_n_iters:
         return True
 
