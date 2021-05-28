@@ -1,10 +1,21 @@
+from typing import List
+
+import numpy.typing as npt
 from numpy.random import randint
 from numpy.random import uniform
 
-from sweeps import envelope_stopping
+
+from sweeps import envelope_stopping, stop_runs, SweepRun, RunState
+from sweeps.types import integer, floating
 
 
-def synthetic_loss(start, asympt, decay, noise, length):
+def synthetic_loss(
+    start: npt.ArrayLike,
+    asympt: npt.ArrayLike,
+    decay: npt.ArrayLike,
+    noise: npt.ArrayLike,
+    length: integer,
+) -> List[floating]:
     val = start
     history = []
     for ii in range(length):
@@ -14,7 +25,7 @@ def synthetic_loss(start, asympt, decay, noise, length):
     return history
 
 
-def synthetic_loss_family(num):
+def synthetic_loss_family(num: integer) -> List[List[floating]]:
     histories = []
     for ii in range(num):
         history = synthetic_loss(
@@ -24,7 +35,7 @@ def synthetic_loss_family(num):
     return histories
 
 
-def test_envelope_terminate():
+def test_envelope_terminate_modules():
     hs = synthetic_loss_family(20)
     m = []
     for h in hs:
@@ -44,3 +55,44 @@ def test_envelope_terminate():
         print(new_history)
         print(envelope)
         assert envelope_stopping.is_inside_envelope(new_history, envelope)
+
+
+def test_envelope_terminate_end2end():
+
+    sweep_config = {
+        "method": "grid",
+        "metric": {"name": "loss", "goal": "minimize"},
+        "early_terminate": {
+            "type": "envelope",
+        },
+        "parameters": {"a": {"values": [1, 2, 3]}},
+    }
+
+    hs = synthetic_loss_family(20)
+    runs = []
+
+    for h in hs:
+        history = [{"loss": loss} for loss in h]
+        run = SweepRun(
+            history=history,
+            summary_metrics=min(history, key=lambda x: x["loss"]),
+            state=RunState.finished,
+        )
+        runs.append(run)
+
+    new_history = [
+        {"loss": loss}
+        for loss in synthetic_loss(
+            20 + uniform(4, 20), 20.0, uniform(0.05, 0.4), 0.5, randint(10, 40)
+        )
+    ]
+
+    run = SweepRun(
+        history=new_history,
+        summary_metrics=min(new_history, key=lambda x: x["loss"]),
+        state=RunState.running,
+    )
+
+    to_stop = stop_runs(sweep_config, runs + [run])
+    assert len(to_stop) == 1
+    assert to_stop[0] is run
