@@ -201,25 +201,39 @@ def next_sample(
     Check out https://arxiv.org/pdf/1206.2944.pdf
      for explanation of bayesian optimization
 
-    Arguments:
-        sample_X - 2d array of already evaluated sets of hyperparameters
-        sample_y - 1d array of already evaluated loss function values
-        X_bounds - 2d array minimum and maximum values for every dimension of X
+    Arguments
+    ---------
+    sample_X: ArrayLike, shape (N_runs, N_params)
+        2d array of already evaluated sets of hyperparameters
+    sample_y: ArrayLike, shape (N_runs,)
+        1d array of already evaluated loss function values
+    X_bounds: ArrayLike, optional, shape (N_params, 2), default None
+        2d array minimum and maximum values for every dimension of X
+    runtimes: ArrayLike, optional, shape (N_runs,) default None
+        the time taken to train each model in sample X
+    failures: ArrayLike, optional, shape (N_runs), default None
+        should be True for models where training failed and False where
+        training succeeded.  This model will throw out NaNs and Infs so
+        if you want it to avaoid failure values for X, use this failure
+        vector.
+    current_X: ArrayLike, optional, shape (N_runs_in_flight, N_params), default None
+        hyperparameters currently being explored
+    nu: floating, optional, default = 1.5
+        input to the Matern function, higher numbers make it smoother. 0.5,
+        1.5, 2.5 are good values  see
 
-        runtimes - vector of length sample_y - should be the time taken to train each model in sample X
-        failures - vector of length sample_y - should be True for models where training failed and False where
-            training succeeded.  This model will throw out NaNs and Infs so if you want it to avaoid
-            failure values for X, use this failure vector.
+           http://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.Matern.html
 
-        current_X - hyperparameters currently being explored
-        nu - input to the Matern function, higher numbers make it smoother 0.5, 1.5, 2.5 are good values
-         see http://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.Matern.html
-
-        max_samples_for_gp - maximum samples to consider (since algo is O(n^3)) for performance, but also adds some randomness
-        improvement - amount of improvement to optimize for -- higher means take more exploratory risks
-        num_points_to_try - number of X values to try when looking for value with highest
-                    expected probability of improvement
-        opt_func - one of {"expected_improvement", "prob_of_improvement"} - whether to optimize expected
+    max_samples_for_gp: integer, optional, default 100
+        maximum samples to consider (since algo is O(n^3)) for performance,
+        but also adds some randomness. this number of samples will be chosen
+        randomly from the sample_X and used to train the GP.
+    improvement: floating, optional, default 0.1
+        amount of improvement to optimize for -- higher means take more exploratory risks
+    num_points_to_try: integer, optional, default 1000
+        number of X values to try when looking for value with highest expected probability
+        of improvement
+    opt_func - one of {"expected_improvement", "prob_of_improvement"} - whether to optimize expected
             improvement of probability of improvement.  Expected improvement is generally better - may want
             to remove probability of improvement at some point.  (But I think prboability of improvement
             is a little easier to calculate)
@@ -369,6 +383,21 @@ def bayes_search_next_run(
     config: Union[dict, SweepConfig],
     minimum_improvement: float = 0.1,
 ) -> SweepRun:
+    """
+
+
+    Arguments
+    ---------
+    config: Union[dict, SweepConfig]
+        The configuration of the sweep.
+    runs: List[SweepRun]
+        The runs associated with the sweep.
+
+    Returns
+    -------
+    next_run: SweepRun
+        Next suggested run.
+    """
 
     config = SweepConfig(config)
 
