@@ -48,7 +48,7 @@
       "required": [
         "distribution"
       ],
-      "description": "A lognormally or normally distributed parameter (they share a schema).",
+      "description": "A normally distributed parameter.",
       "properties": {
         "distribution": {
           "enum": [
@@ -74,7 +74,7 @@
       "required": [
         "distribution"
       ],
-      "description": "A lognormally or normally distributed parameter (they share a schema).",
+      "description": "A lognormally distributed parameter.",
       "properties": {
         "distribution": {
           "enum": [
@@ -97,7 +97,7 @@
     },
     "param_qlognormal": {
       "type": "object",
-      "description": "A parameter with a distribution that is quantized",
+      "description": "quantized log normal distribution.",
       "required": [
         "distribution"
       ],
@@ -129,7 +129,7 @@
     },
     "param_qnormal": {
       "type": "object",
-      "description": "A parameter with a distribution that is quantized",
+      "description": "quantized normal distribution",
       "required": [
         "distribution"
       ],
@@ -161,7 +161,7 @@
     },
     "param_uniform": {
       "type": "object",
-      "description": "A parameter with a distribution function.",
+      "description": "uniform distribution on real numbers",
       "required": [
         "min",
         "max"
@@ -187,7 +187,7 @@
     },
     "param_loguniform": {
       "type": "object",
-      "description": "A parameter with a distribution function.",
+      "description": "log uniform distribution.",
       "required": [
         "distribution",
         "max",
@@ -214,7 +214,7 @@
     },
     "param_quniform": {
       "type": "object",
-      "description": "A parameter with a distribution function.",
+      "description": "quantized uniform distribution function.",
       "required": [
         "distribution",
         "max",
@@ -247,7 +247,7 @@
     },
     "param_qloguniform": {
       "type": "object",
-      "description": "A parameter with a distribution function.",
+      "description": "quantized log uniform distribution",
       "required": [
         "distribution",
         "max",
@@ -326,7 +326,7 @@
     },
     "param_qbeta": {
       "type": "object",
-      "description": "A parameter with a distribution that is quantized",
+      "description": "quantized beta distribution",
       "properties": {
         "a": {
           "type": "number",
