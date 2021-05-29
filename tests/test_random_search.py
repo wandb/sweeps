@@ -372,3 +372,32 @@ def test_rand_q_beta(q, plot):
     # when pred_samples == 0, pred_samples % q = q, so need to test for both remainder = q and
     # remainder = 0 under modular division
     assert np.all(np.isclose(remainder, 0) | np.isclose(remainder, q))
+
+
+def test_rand_beta(plot):
+
+    n_samples_pred = 1000
+    sweep_config_2params = SweepConfig(
+        {
+            "method": "random",
+            "parameters": {
+                "v1": {"distribution": "beta", "a": 2, "b": 5},
+            },
+        }
+    )
+
+    runs = []
+    for i in range(n_samples_pred):
+        suggestion = next_run(sweep_config_2params, runs)
+        runs.append(suggestion)
+
+    pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
+    true_samples = np.random.beta(2, 5, 1000)
+
+    # need the binsize to be >> q
+    bins = np.linspace(0, 1, 10)
+
+    if plot:
+        plot_two_distributions(true_samples, pred_samples, bins)
+
+    check_that_samples_are_from_the_same_distribution(pred_samples, true_samples, bins)
