@@ -373,6 +373,56 @@
                 "max"
             ]
         },
+        "param_beta_base": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0.0,
+                    "default": 1.0
+                },
+                "b": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0.0,
+                    "default": 1.0
+                }
+            }
+        },
+        "param_beta": {
+            "allOf": [
+                {"$ref": "#/definitions/param_beta_base"},
+                {
+                    "type":  "object",
+                    "description": "beta distribution",
+                    "properties": {
+                        "distribution": {
+                            "enum": ["beta"]
+                        }
+                    }
+                }
+            ]
+        },
+        "param_qbeta": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/param_beta_base"
+                },
+                {
+                    "$ref": "#/definitions/param_quantized"
+                },
+                {
+                    "type":  "object",
+                    "description": "quantized beta distribution",
+                    "properties": {
+                        "distribution": {
+                            "enum": ["q_beta"]
+                        }
+                    }
+                }
+            ]
+        },
         "parameter": {
             "anyOf": [
                 {
@@ -407,6 +457,12 @@
                 },
                 {
                     "$ref": "#/definitions/param_int_uniform"
+                },
+                {
+                    "$ref": "#/definitions/param_beta"
+                },
+                {
+                    "$ref": "#/definitions/param_qbeta"
                 }
             ]
         },

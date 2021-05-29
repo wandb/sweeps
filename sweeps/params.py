@@ -33,6 +33,8 @@ class HyperParameter:
     Q_NORMAL = "param_qnormal"
     LOG_NORMAL = "param_lognormal"
     Q_LOG_NORMAL = "param_qlognormal"
+    BETA = "param_beta"
+    Q_BETA = "param_qbeta"
 
     def __init__(self, name: str, config: dict):
 
@@ -116,6 +118,8 @@ class HyperParameter:
             return stats.lognorm.cdf(
                 x, s=self.config["sigma"], scale=np.exp(self.config["mu"])
             )
+        elif self.type == HyperParameter.BETA or self.type == HyperParameter.Q_BETA:
+            return stats.beta.cdf(x, a=self.config["a"], b=self.config["b"])
         else:
             raise ValueError("Unsupported hyperparameter distribution type")
 
@@ -177,6 +181,16 @@ class HyperParameter:
             )
             ret_val = np.round(r / self.config["q"]) * self.config["q"]
 
+            if isinstance(self.config["q"], int):
+                return int(ret_val)
+            else:
+                return ret_val
+
+        elif self.type == HyperParameter.BETA:
+            return stats.beta.ppf(x, a=self.config["a"], b=self.config["b"])
+        elif self.type == HyperParameter.Q_BETA:
+            r = stats.beta.ppf(x, a=self.config["a"], b=self.config["b"])
+            ret_val = np.round(r / self.config["q"]) * self.config["q"]
             if isinstance(self.config["q"], int):
                 return int(ret_val)
             else:
