@@ -16,7 +16,7 @@ from .config.schema import (
     sweep_config_jsonschema,
     dereferenced_sweep_config_jsonschema,
     DefaultFiller,
-    Draft7ValidatorWithIntFloatDiscrimination,
+    format_checker,
 )
 
 
@@ -52,11 +52,13 @@ class HyperParameter:
             subschema = dereferenced_sweep_config_jsonschema["definitions"][schema_name]
 
             try:
-                Draft7ValidatorWithIntFloatDiscrimination(subschema).validate(config)
+                jsonschema.Draft7Validator(
+                    subschema, format_checker=format_checker
+                ).validate(config)
             except jsonschema.ValidationError:
                 continue
             else:
-                filler = DefaultFiller(subschema)
+                filler = DefaultFiller(subschema, format_checker=format_checker)
 
                 # this sets the defaults, modifying config inplace
                 filler.validate(config)

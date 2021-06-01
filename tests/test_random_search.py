@@ -27,7 +27,12 @@ def check_that_samples_are_from_the_same_distribution(
     err_true = np.sqrt(n_true)
 
     # less than 5 sigma different
-    sigma_diff = np.abs(n_pred - n_true) / np.sqrt(err_pred ** 2 + err_true ** 2)
+
+    # if denom is zero, then both bins have zero counts, to set to 1 to
+    # avoid division by zero error (no effect on answer)
+    denom = np.sqrt(err_pred ** 2 + err_true ** 2)
+    denom[np.isclose(denom, 0)] = 1
+    sigma_diff = np.abs(n_pred - n_true) / denom
     sigma_diff[~np.isfinite(sigma_diff)] = 0
 
     np.testing.assert_array_less(sigma_diff, 5)

@@ -196,13 +196,11 @@
       "properties": {
         "min": {
           "description": "float",
-          "type": "number",
-          "format": "float"
+          "type": "number"
         },
         "max": {
           "description": "float",
-          "type": "number",
-          "format": "float"
+          "type": "number"
         },
         "distribution": {
           "enum": [
@@ -223,13 +221,11 @@
       "properties": {
         "min": {
           "description": "float",
-          "type": "number",
-          "format": "float"
+          "type": "number"
         },
         "max": {
           "description": "float",
-          "type": "number",
-          "format": "float"
+          "type": "number"
         },
         "q": {
           "type": "number",
@@ -255,14 +251,10 @@
       ],
       "properties": {
         "min": {
-          "description": "float",
-          "type": "number",
-          "format": "float"
+          "type": "number"
         },
         "max": {
-          "description": "float",
-          "type": "number",
-          "format": "float"
+          "type": "number"
         },
         "q": {
           "type": "number",
@@ -287,10 +279,12 @@
       ],
       "properties": {
         "max": {
-          "type": "integer"
+          "type": "integer",
+          "format": "integer"
         },
         "min": {
-          "type": "integer"
+          "type": "integer",
+          "format": "integer"
         },
         "distribution": {
           "enum": [
@@ -306,13 +300,11 @@
       "properties": {
         "a": {
           "type": "number",
-          "format": "float",
           "minimum": 0,
           "default": 1
         },
         "b": {
           "type": "number",
-          "format": "float",
           "minimum": 0,
           "default": 1
         },
@@ -330,13 +322,11 @@
       "properties": {
         "a": {
           "type": "number",
-          "format": "float",
           "minimum": 0,
           "default": 1
         },
         "b": {
           "type": "number",
-          "format": "float",
           "minimum": 0,
           "default": 1
         },

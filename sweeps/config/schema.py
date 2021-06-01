@@ -1,5 +1,6 @@
 import json
 import jsonref
+import jsonschema
 from jsonschema import Draft7Validator, validators
 
 from pathlib import Path
@@ -13,25 +14,22 @@ dereferenced_sweep_config_jsonschema = jsonref.JsonRef.replace_refs(
     sweep_config_jsonschema
 )
 
-
-def extend_with_python_int_float_type_discrimination(validator_class):
-    # inspired by https://python-jsonschema.readthedocs.io/en/stable/faq/#why-doesn-t-my-schema-s-default-property-set-the-default-on-my-instance
-    def is_python_int(checker, instance):
-        return isinstance(instance, int)
-
-    def is_python_float(checker, instance):
-        return isinstance(instance, float)
-
-    type_checker = validator_class.TYPE_CHECKER.redefine("integer", is_python_int)
-    type_checker = type_checker.redefine("number", is_python_float)
-
-    return validators.extend(validator_class, type_checker=type_checker)
+format_checker = jsonschema.FormatChecker()
 
 
-Draft7ValidatorWithIntFloatDiscrimination = (
-    extend_with_python_int_float_type_discrimination(Draft7Validator)
+@format_checker.checks("float")
+def float_checker(value):
+    return isinstance(value, float)
+
+
+@format_checker.checks("integer")
+def int_checker(value):
+    return isinstance(value, int)
+
+
+validator = Draft7Validator(
+    schema=sweep_config_jsonschema, format_checker=format_checker
 )
-validator = Draft7ValidatorWithIntFloatDiscrimination(schema=sweep_config_jsonschema)
 
 
 def extend_with_default(validator_class):
@@ -61,4 +59,7 @@ def extend_with_default(validator_class):
     )
 
 
-DefaultFiller = extend_with_default(Draft7ValidatorWithIntFloatDiscrimination)
+DefaultFiller = extend_with_default(Draft7Validator)
+default_filler = DefaultFiller(
+    schema=sweep_config_jsonschema, format_checker=format_checker
+)
