@@ -22,7 +22,10 @@ def sweep_config_bayes_search_2params_with_metric():
         {
             "metric": {"name": "loss", "goal": "minimize"},
             "method": "bayes",
-            "parameters": {"v1": {"min": 1, "max": 10}, "v2": {"min": 1.0, "max": 10}},
+            "parameters": {
+                "v1": {"min": 1, "max": 10},
+                "v2": {"min": 1.0, "max": 10.0},
+            },
         }
     )
 
