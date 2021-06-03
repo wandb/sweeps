@@ -9,3 +9,4 @@ marshmallow==3.11.1
 marshmallow_enum==1.5.1
 jsonschema==3.2.0
 jsonref>=0.2
+pydantic>=1.8.2

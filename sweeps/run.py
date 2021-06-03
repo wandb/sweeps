@@ -2,30 +2,26 @@ from typing import List, Optional, Union, Any, Dict
 from enum import Enum
 import numpy as np
 
-from dataclasses import dataclass, field
+from dataclasses import field
+from pydantic import BaseModel, Field
 
 from .config import SweepConfig
 
 from .types import floating
 
 
-RunState = Enum(
-    "run_states",
-    (
-        "proposed",
-        "running",
-        "finished",
-        "killed",
-        "crashed",
-        "failed",
-        "preempted",
-        "preempting",
-    ),
-)
+class RunState(str, Enum):
+    proposed = "PROPOSED"
+    running = "RUNNING"
+    finished = "FINISHED"
+    killed = "KILLED"
+    crashed = "CRASHED"
+    failed = "FAILED"
+    preempted = "PREEMPTED"
+    preempting = "PREEMPTING"
 
 
-@dataclass
-class SweepRun:
+class SweepRun(BaseModel):
     """Minimal representation of a W&B Run for sweeps.
 
     Attributes
@@ -51,12 +47,15 @@ class SweepRun:
     """
 
     name: Optional[str] = None
-    summary_metrics: dict = field(default_factory=lambda: {})
-    history: List[dict] = field(default_factory=lambda: [])
-    config: dict = field(default_factory=lambda: {})
+    summary_metrics: dict = Field(default_factory=lambda: {})
+    history: List[dict] = Field(default_factory=lambda: [])
+    config: dict = Field(default_factory=lambda: {})
     state: RunState = RunState.proposed
     search_info: Optional[Dict] = None
     early_terminate_info: Optional[Dict] = None
+
+    class Config:
+        use_enum_values = True
 
     def metric_history(self, metric_name: str) -> List[floating]:
         return [d[metric_name] for d in self.history if metric_name in d]
@@ -108,7 +107,6 @@ class SweepRun:
             raise ValueError("Run does not have any finite metric values")
 
         return cmp_func(all_metrics)
-
 
 def next_run(
     sweep_config: Union[dict, SweepConfig], runs: List[SweepRun], **kwargs
