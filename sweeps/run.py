@@ -2,23 +2,20 @@ from typing import List, Optional, Union, Any, Dict
 from enum import Enum
 import numpy as np
 
-from dataclasses import field
 from pydantic import BaseModel, Field
-
 from .config import SweepConfig
-
 from .types import floating
 
 
 class RunState(str, Enum):
-    proposed = "PROPOSED"
-    running = "RUNNING"
-    finished = "FINISHED"
-    killed = "KILLED"
-    crashed = "CRASHED"
-    failed = "FAILED"
-    preempted = "PREEMPTED"
-    preempting = "PREEMPTING"
+    proposed = "proposed"
+    running = "running"
+    finished = "finished"
+    killed = "killed"
+    crashed = "crashed"
+    failed = "failed"
+    preempted = "preempted"
+    preempting = "preempting"
 
 
 class SweepRun(BaseModel):
@@ -107,6 +104,7 @@ class SweepRun(BaseModel):
             raise ValueError("Run does not have any finite metric values")
 
         return cmp_func(all_metrics)
+
 
 def next_run(
     sweep_config: Union[dict, SweepConfig], runs: List[SweepRun], **kwargs
