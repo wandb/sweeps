@@ -1,4 +1,4 @@
-from sweeps import SweepRun, RunState
+from .. import SweepRun, RunState
 
 
 def test_skipped_steps():

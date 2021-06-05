@@ -1,4 +1,4 @@
-from sweeps.params import HyperParameter
+from ..params import HyperParameter
 
 
 def test_json_type_inference_int_uniform():

@@ -2,8 +2,8 @@ import pytest
 import itertools
 
 from typing import List
-from sweeps.run import RunState, SweepRun, next_run
-from sweeps.config import SweepConfig
+from ..run import RunState, SweepRun, next_run
+from ..config import SweepConfig
 
 
 def kernel_for_grid_search_tests(

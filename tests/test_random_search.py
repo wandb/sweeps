@@ -1,9 +1,9 @@
 import pytest
 
-from sweeps.config import SweepConfig
+from ..config import SweepConfig
 import numpy as np
 from numpy import typing as npt
-from sweeps.run import next_run
+from ..run import next_run
 import os
 from scipy import stats
 

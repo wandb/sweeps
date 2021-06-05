@@ -4,7 +4,7 @@ import numpy as np
 
 from pydantic import BaseModel, Field
 from .config import SweepConfig
-from .types import floating
+from ._types import floating
 
 
 class RunState(str, Enum):

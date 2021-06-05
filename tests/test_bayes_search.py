@@ -3,9 +3,9 @@ from typing import Callable, Optional, Tuple
 import numpy as np
 import numpy.typing as npt
 
-from sweeps import bayes_search as bayes
-from sweeps.types import integer, floating
-from sweeps import SweepRun, RunState, next_run, SweepConfig
+from .. import bayes_search as bayes
+from .._types import integer, floating
+from .. import SweepRun, RunState, next_run, SweepConfig
 
 from .test_random_search import check_that_samples_are_from_the_same_distribution
 

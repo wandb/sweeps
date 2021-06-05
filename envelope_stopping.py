@@ -11,7 +11,7 @@ import numpy as np
 import numpy.typing as npt
 
 from . import SweepRun, SweepConfig, RunState
-from .types import integer, floating
+from ._types import integer, floating
 
 
 def histories_for_top_n(

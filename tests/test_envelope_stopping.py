@@ -5,8 +5,8 @@ from numpy.random import randint
 from numpy.random import uniform
 
 
-from sweeps import envelope_stopping, stop_runs, SweepRun, RunState
-from sweeps.types import integer, floating
+from .. import envelope_stopping, stop_runs, SweepRun, RunState
+from .._types import integer, floating
 
 
 def synthetic_loss(

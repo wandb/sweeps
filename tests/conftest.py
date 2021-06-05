@@ -1,5 +1,5 @@
 import pytest
-from sweeps.config import SweepConfig
+from ..config import SweepConfig
 
 
 def pytest_addoption(parser):

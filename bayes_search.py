@@ -18,7 +18,7 @@ from .params import HyperParameter, HyperParameterSet
 from sklearn import gaussian_process as sklearn_gaussian
 from scipy import stats as scipy_stats
 
-from .types import floating, integer
+from ._types import floating, integer
 
 NUGGET = 1e-10
 
