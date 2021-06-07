@@ -137,11 +137,9 @@ def next_run(
 def stop_runs(
     sweep_config: Union[dict, SweepConfig],
     runs: List[SweepRun],
-    **kwargs,
 ) -> List[SweepRun]:
 
     from .hyperband_stopping import hyperband_stop_runs
-    from .envelope_stopping import envelope_stop_runs
 
     # validate the sweep config
     sweep_config = SweepConfig(sweep_config)
@@ -155,8 +153,6 @@ def stop_runs(
 
     if et_type == "hyperband":
         return hyperband_stop_runs(runs, sweep_config)
-    elif et_type == "envelope":
-        return envelope_stop_runs(runs, sweep_config, **kwargs)
     else:
         raise ValueError(
             f'Invalid early stopping type {et_type}, must be one of ["hyperband", "envelope"]'
