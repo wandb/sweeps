@@ -194,8 +194,8 @@ def next_sample(
     npt.ArrayLike,
     npt.ArrayLike,
     npt.ArrayLike,
-    npt.ArrayLike,
-    npt.ArrayLike,
+    # npt.ArrayLike,
+    # npt.ArrayLike,
 ]:
     """Calculates the best next sample to look at via bayesian optimization.
 
@@ -210,13 +210,6 @@ def next_sample(
         1d array of already evaluated loss function values
     X_bounds: ArrayLike, optional, shape (N_params, 2), default None
         2d array minimum and maximum values for every dimension of X
-    runtimes: ArrayLike, optional, shape (N_runs,) default None
-        the time taken to train each model in sample X
-    failures: ArrayLike, optional, shape (N_runs), default None
-        should be True for models where training failed and False where
-        training succeeded.  This model will throw out NaNs and Infs so
-        if you want it to avaoid failure values for X, use this failure
-        vector.
     current_X: ArrayLike, optional, shape (N_runs_in_flight, N_params), default None
         hyperparameters currently being explored
     nu: floating, optional, default = 1.5
@@ -276,6 +269,8 @@ def next_sample(
             raise ValueError("Must pass in test_X or X_bounds")
 
     filtered_X, filtered_y = filter_nans(sample_X, sample_y)
+
+    """
     # We train our runtime prediction model on *filtered_X* throwing out the sample points with
     # NaN values because they might break our runtime predictor
     runtime_model = None
@@ -298,6 +293,8 @@ def next_sample(
                 failure_model_mean,
                 failure_model_stddev,
             ) = train_runtime_model(failure_filtered_X, failure_filtered_runtimes)
+    """
+
     # we can't run this algothim with less than two sample points, so we'll
     # just return a random point
     if filtered_X.shape[0] < 2:
@@ -311,7 +308,15 @@ def next_sample(
             prediction = 0.0
         else:
             prediction = filtered_y[0]
-        return X, 1.0, prediction, None, None, None, None, None, None
+        return (
+            X,
+            1.0,
+            prediction,
+            None,
+            None,
+            None,
+            None,
+        )  # None, None
 
     # build the acquisition function
     gp, y_mean, y_stddev, = train_gaussian_process(
@@ -321,6 +326,8 @@ def next_sample(
     if test_X is None:  # this is the usual case
         test_X = random_sample(X_bounds, num_points_to_try)
     y_pred, y_pred_std = gp.predict(test_X, return_std=True)
+
+    """
     if failure_model is None:
         prob_of_failure = [0.0] * len(test_X)
     else:
@@ -333,6 +340,8 @@ def next_sample(
         expected_runtime = (
             runtime_model.predict(test_X) * runtime_model_stddev + runtime_model_mean
         )
+    """
+
     # best value of y we've seen so far.  i.e. y*
     min_unnorm_y = np.min(filtered_y)
     # hack for dealing with predicted std of 0
@@ -374,8 +383,8 @@ def next_sample(
         unnorm_y_pred,
         unnorm_y_pred_std,
         prob_of_improve,
-        prob_of_failure,
-        expected_runtime,
+        # prob_of_failure,
+        # expected_runtime,
     )
 
 
@@ -478,8 +487,8 @@ def bayes_search_next_run(
         y_pred,
         y_pred_std,
         prob_of_improve,
-        prob_of_failure,
-        expected_runtime,
+        # prob_of_failure,
+        # expected_runtime,
     ) = next_sample(
         sample_X=sample_X,
         sample_y=y,

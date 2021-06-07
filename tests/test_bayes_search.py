@@ -53,10 +53,12 @@ def run_iterations(
                 vals,
                 stds,
                 sample_probs,
-                prob_of_fail,
-                pred_runtimes,
             ) = bayes.next_sample(
-                X, y, bounds, current_X=sample_X, improvement=improvement
+                sample_X=X,
+                sample_y=y,
+                X_bounds=bounds,
+                current_X=sample_X,
+                improvement=improvement,
             )
             if sample_X is None:
                 sample_X = np.array([sample])
@@ -85,17 +87,9 @@ def test_squiggle_explores_parameter_space():
     # we sample a ton of positive examples, ignoring the negative side
     X = np.random.uniform(0, 5, 200)[:, None]
     Y = squiggle(X.ravel())
-    (
-        sample,
-        prob,
-        pred,
-        samples,
-        vals,
-        stds,
-        sample_probs,
-        prob_of_fail,
-        pred_runtimes,
-    ) = bayes.next_sample(X, Y, [[-5.0, 5.0]], improvement=1.0)
+    (sample, prob, pred, samples, vals, stds, sample_probs,) = bayes.next_sample(
+        sample_X=X, sample_y=Y, X_bounds=[[-5.0, 5.0]], improvement=1.0
+    )
     assert sample[0] < 0.0, "Greater than 0 {}".format(sample[0])
     # we sample missing a big chunk between 1 and 3
     X = np.vstack(
@@ -110,9 +104,7 @@ def test_squiggle_explores_parameter_space():
         vals,
         stds,
         sample_probs,
-        prob_of_fail,
-        pred_runtimes,
-    ) = bayes.next_sample(X, Y, [[0.0, 5.0]])
+    ) = bayes.next_sample(sample_X=X, sample_y=Y, X_bounds=[[0.0, 5.0]])
     assert (
         sample[0] > 1.0 and sample[0] < 4.0
     ), "Sample outside of 1-3 range: {}".format(sample[0])
@@ -145,7 +137,6 @@ def test_nans():
     new_x, new_y = run_iterations(f, [[-10, 10]], 1, X)
     assert new_x[-1][0] < 10.0
     assert np.isnan(new_y[-1])
-    print(new_x)
 
 
 def test_squiggle_int():
