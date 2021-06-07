@@ -173,6 +173,7 @@ def filter_nans(sample_X: npt.ArrayLike, sample_y: npt.ArrayLike) -> npt.ArrayLi
 
 
 def next_sample(
+    *,
     sample_X: npt.ArrayLike,
     sample_y: npt.ArrayLike,
     X_bounds: Optional[npt.ArrayLike] = None,
@@ -480,9 +481,9 @@ def bayes_search_next_run(
         prob_of_failure,
         expected_runtime,
     ) = next_sample(
-        sample_X,
-        y,
-        X_bounds,
+        sample_X=sample_X,
+        sample_y=y,
+        X_bounds=X_bounds,
         current_X=current_X if len(current_X) > 0 else None,
         improvement=minimum_improvement,
     )
