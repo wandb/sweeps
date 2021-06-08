@@ -145,10 +145,10 @@ def stop_runs(
     sweep_config = SweepConfig(sweep_config)
 
     if "metric" not in sweep_config:
-        raise ValueError('Hyperband stopping requires "metric" section')
+        raise ValueError('early terminate requires "metric" section')
 
     if "early_terminate" not in sweep_config:
-        raise ValueError('Hyperband stopping requires "early_terminate" section.')
+        raise ValueError('early terminate requires "early_terminate" section.')
     et_type = sweep_config["early_terminate"]["type"]
 
     if et_type == "hyperband":
