@@ -409,22 +409,6 @@
           "default": 3
         }
       }
-    },
-    "envelope_stopping": {
-      "type": "object",
-      "description": "Speed up hyperparameter search by killing off runs that appear to have lower performance than successful training runs",
-      "required": [
-        "type"
-      ],
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "Possible values: hyperband",
-          "enum": [
-            "envelope"
-          ]
-        }
-      }
     }
   },
   "required": [
@@ -505,8 +489,7 @@
     },
     "early_terminate": {
       "oneOf": [
-        {"$ref":  "#/definitions/hyperband_stopping"},
-        {"$ref":  "#/definitions/envelope_stopping"}
+        {"$ref":  "#/definitions/hyperband_stopping"}
       ]
     },
     "parameters": {
