@@ -331,14 +331,16 @@ def bayes_search_next_run(
 ) -> SweepRun:
     """Suggest runs using Bayesian optimization.
 
-    >>> suggestion = bayes_search_next_run({
+    >>> suggestion = bayes_search_next_run([], {
     ...    'method': 'bayes',
     ...    'parameters': {'a': {'min': 1., 'max': 2.}},
     ...    'metric': {'name': 'loss', 'goal': 'maximize'}
     ... })
 
     Args:
-        sweep_config: The sweep's config.
+        runs: The runs in the sweep.
+        config: The sweep's config.
+        minimum_improvement: The minimium improvement to optimize for. Higher means take more exploratory risks.
 
     Returns:
         The suggested run.

@@ -103,7 +103,7 @@ def next_run(
     ...    'method': 'grid',
     ...    'parameters': {'a': {'values': [1, 2, 3]}}
     ... }, [])
-    >>> assert suggested_run.config['a'] == 1
+    >>> assert suggested_run.config['a']['value'] == 1
 
     Args:
         sweep_config: The config for the sweep.

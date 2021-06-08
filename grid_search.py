@@ -1,5 +1,3 @@
-"""Grid Search."""
-
 import itertools
 import random
 from typing import List, Optional, Union
@@ -14,9 +12,25 @@ def grid_search_next_run(
     sweep_config: Union[dict, SweepConfig],
     randomize_order: bool = False,
 ) -> Optional[SweepRun]:
+    """Suggest runs with Hyperparameters drawn from a grid.
+
+    >>> suggestion = grid_search_next_run([], {'method': 'grid', 'parameters': {'a': {'values': [1, 2, 3]}}})
+    >>> assert suggestion.config['a']['value'] == 1
+
+    Args:
+        runs: The runs in the sweep.
+        sweep_config: The sweep's config.
+        randomize_order: Whether to randomize the order of the grid search.
+
+    Returns:
+        The suggested run.
+    """
 
     # make sure the sweep config is valid
     sweep_config = SweepConfig(sweep_config)
+
+    if sweep_config["method"] != "grid":
+        raise ValueError("Invalid sweep configuration for grid_search_next_run.")
 
     if "parameters" not in sweep_config:
         raise ValueError('Grid search requires "parameters" section')
