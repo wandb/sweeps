@@ -19,6 +19,8 @@ jobs:
           command: pytest --cov=./ --cov-report=xml
       - codecov/upload:
           file: coverage.xml
+      - store_artifacts:
+          path: prof/
     resource_class: xlarge
   linters:
     executor:
