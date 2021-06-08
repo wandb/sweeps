@@ -141,6 +141,63 @@ def stop_runs(
 ) -> List[SweepRun]:
     """Calculate the runs in a sweep to stop by early termination.
 
+    >>> to_stop = stop_runs({
+    ...    "method": "grid",
+    ...    "metric": {"name": "loss", "goal": "minimize"},
+    ...    "early_terminate": {
+    ...        "type": "hyperband",
+    ...        "max_iter": 5,
+    ...        "eta": 2,
+    ...        "s": 2,
+    ...    },
+    ...    "parameters": {"a": {"values": [1, 2, 3]}},
+    ... }, [
+    ...    SweepRun(
+    ...        name="a",
+    ...        state=RunState.finished,  # This is already stopped
+    ...        history=[
+    ...            {"loss": 10},
+    ...            {"loss": 9},
+    ...        ],
+    ...    ),
+    ...    SweepRun(
+    ...        name="b",
+    ...        state=RunState.running,  # This should be stopped
+    ...        history=[
+    ...            {"loss": 10},
+    ...            {"loss": 10},
+    ...        ],
+    ...    ),
+    ...    SweepRun(
+    ...        name="c",
+    ...        state=RunState.running,  # This passes band 1 but not band 2
+    ...        history=[
+    ...            {"loss": 10},
+    ...            {"loss": 8},
+    ...            {"loss": 8},
+    ...        ],
+    ...    ),
+    ...    SweepRun(
+    ...        name="d",
+    ...        state=RunState.running,
+    ...        history=[
+    ...            {"loss": 10},
+    ...            {"loss": 7},
+    ...            {"loss": 7},
+    ...        ],
+    ...    ),
+    ...    SweepRun(
+    ...        name="e",
+    ...        state=RunState.finished,
+    ...        history=[
+    ...            {"loss": 10},
+    ...            {"loss": 6},
+    ...            {"loss": 6},
+    ...        ],
+    ...    ),
+    ...])
+
+
     Args:
         sweep_config: The config for the sweep.
         runs: List of runs in the sweep.

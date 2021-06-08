@@ -1,5 +1,3 @@
-"""Hyperband Early Terminate."""
-
 from typing import List, Union, Dict, Any
 
 import numpy as np
@@ -13,14 +11,73 @@ def hyperband_stop_runs(
     config: Union[dict, SweepConfig],
 ) -> List[SweepRun]:
     """
-    Implementation of the Hyperband algorithm from
-      Hyperband: A Novel Bandit-Based Approach to Hyperparameter Optimization
+    Suggest sweep runs to terminate early using Hyperband: A Novel Bandit-Based Approach to Hyperparameter Optimization
       https://arxiv.org/pdf/1603.06560.pdf
 
-    Arguments
-    bands - Array of iterations to potentially early terminate algorithms
-    r - float in [0, 1] - fraction of runs to allow to pass through a band
-        r=1 means let all runs through and r=0 means let no runs through
+
+    >>> to_stop = hyperband_stop_runs(
+    ...    [SweepRun(
+    ...        name="a",
+    ...        state=RunState.finished,  # This is already stopped
+    ...        history=[
+    ...            {"loss": 10},
+    ...            {"loss": 9},
+    ...        ],
+    ...    ),
+    ...    SweepRun(
+    ...        name="b",
+    ...        state=RunState.running,  # This should be stopped
+    ...        history=[
+    ...            {"loss": 10},
+    ...            {"loss": 10},
+    ...        ],
+    ...    ),
+    ...    SweepRun(
+    ...        name="c",
+    ...        state=RunState.running,  # This passes band 1 but not band 2
+    ...        history=[
+    ...            {"loss": 10},
+    ...            {"loss": 8},
+    ...            {"loss": 8},
+    ...        ],
+    ...    ),
+    ...    SweepRun(
+    ...        name="d",
+    ...        state=RunState.running,
+    ...        history=[
+    ...            {"loss": 10},
+    ...            {"loss": 7},
+    ...            {"loss": 7},
+    ...        ],
+    ...    ),
+    ...    SweepRun(
+    ...        name="e",
+    ...        state=RunState.finished,
+    ...        history=[
+    ...            {"loss": 10},
+    ...            {"loss": 6},
+    ...            {"loss": 6},
+    ...        ],
+    ...    ),
+    ... ],
+    ... {
+    ...    "method": "grid",
+    ...    "metric": {"name": "loss", "goal": "minimize"},
+    ...    "early_terminate": {
+    ...        "type": "hyperband",
+    ...        "max_iter": 5,
+    ...        "eta": 2,
+    ...        "s": 2,
+    ...    },
+    ...    "parameters": {"a": {"values": [1, 2, 3]}},
+    ... })
+
+    Args:
+        runs: The runs in the sweep.
+        config: The sweep's config.
+
+    Returns:
+        List of runs to stop early.
     """
 
     # validate config and fill in defaults
