@@ -19,28 +19,22 @@ class RunState(str, Enum):
 
 
 class SweepRun(BaseModel):
-    """Minimal representation of a W&B Run for sweeps.
+    """A wandb Run that is part of a Sweep.
 
-    Attributes
-    ----------
-    name : str
-        Name of the run.
-    state : {'running', 'finished', 'killed', 'crashed', 'failed', 'preempting', 'preempted', 'proposed'}
-        State of the run.
-    config : dict
-        dict representation of the run's wandb.config. E.g.,
-        `{'config_variable_1': 1, 'config_variable_2': 2, 'optimizer': 'sgd'}`
-    summaryMetrics : dict
-        dict of summary statistics for the run. E.g., `{'loss': 0.5, 'accuracy': 0.9}`.
-    history : list of dict
-        Iterable of dicts containing the arguments to calls of wandb.log
-        made during the run. E.g., [{"loss": 10}, {"a": 9}, {"a": 8}, {"a": 7}]
-    search_info: dict
-        For runs in the proposed state, information produced by the optimizer. E.g.,
-        {'improvement_prob': 0.2}
-    early_terminate_info: dict
-        For runs in the proposed state, information produced by the optimizer. E.g.,
-        {'improvement_prob': 0.2}
+    >>> run = SweepRun(
+    ...   name="my_run",
+    ...   state=RunState.running,
+    ...   config={"a": {"value": 1}},
+    ... )
+
+    Args:
+        name: Name of the run.
+        state: State of the run.
+        config: `dict` representation of the run's wandb.config.
+        summaryMetrics: `dict` of summary statistics for the run.
+        history: List of dicts containing the arguments to calls of wandb.log made during the run.
+        search_info: Dict containing information produced by the search algorithm.
+        early_terminate_info: Dict containing information produced by the early terminate algorithm.
     """
 
     name: Optional[str] = None
@@ -63,23 +57,17 @@ class SweepRun(BaseModel):
         return self.summary_metrics[metric_name]
 
     def metric_extremum(self, metric_name: str, kind: str) -> floating:
-        """Extract the value of the target optimization metric from a
-         specified sweep run.
+        """Calculate the maximum or minimum value of a specified metric.
 
-        Parameters
-        ----------
-        sweep_config: SweepConfig or dict
-            The sweep configuration, where the name of the target metric
-            is specified.
-        run: SweepRun
-            The run to extract the value of the metric from.
-        default: float, optional, default None
-            The default value to use if no metric is found.
+        >>> run = SweepRun(history=[{'a': 1}, {'b': 3}, {'a': 2, 'b': 4}], summary_metrics={'a': 50})
+        >>> assert run.metric_extremum('a', 'maximum') == 50
 
-        Returns
-        -------
-        metric: float
-            The run's metric.
+        Args:
+            metric_name: The name of the target metric.
+            kind: What kind of extremum to get (either "maximum" or "minimum").
+
+        Returns:
+            The maximum or minimum metric.
         """
 
         cmp_func = np.max if kind == "maximum" else np.min
@@ -109,8 +97,21 @@ class SweepRun(BaseModel):
 def next_run(
     sweep_config: Union[dict, SweepConfig], runs: List[SweepRun], **kwargs
 ) -> Optional[SweepRun]:
-    """Calculate the next run in a sweep given the Sweep config and the list of runs already in
-    progress or finished. Returns the next run, or None if the parameter space is exhausted."""
+    """Calculate the next run in a sweep.
+
+    >>> suggested_run = next_run({
+    ...    'method': 'grid',
+    ...    'parameters': {'a': {'values': [1, 2, 3]}}
+    ... }, [])
+    >>> assert suggested_run.config['a'] == 1
+
+    Args:
+        sweep_config: The config for the sweep.
+        runs: List of runs in the sweep.
+
+    Returns:
+        The suggested run.
+    """
 
     from .grid_search import grid_search_next_run
     from .random_search import random_search_next_run
@@ -138,6 +139,15 @@ def stop_runs(
     sweep_config: Union[dict, SweepConfig],
     runs: List[SweepRun],
 ) -> List[SweepRun]:
+    """Calculate the runs in a sweep to stop by early termination.
+
+    Args:
+        sweep_config: The config for the sweep.
+        runs: List of runs in the sweep.
+
+    Returns:
+        A list of the runs to stop.
+    """
 
     from .hyperband_stopping import hyperband_stop_runs
 
