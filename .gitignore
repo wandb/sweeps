@@ -134,3 +134,4 @@ dmypy.json
 test_results/
 *.pkl
 prof/
+result.xml

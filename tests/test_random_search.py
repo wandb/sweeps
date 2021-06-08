@@ -174,7 +174,11 @@ def test_rand_loguniform(plot):
         {
             "method": "random",
             "parameters": {
-                "v2": {"min": v2_min, "max": v2_max, "distribution": "log_uniform"},
+                "v2": {
+                    "min": np.log(v2_min),
+                    "max": np.log(v2_max),
+                    "distribution": "log_uniform",
+                },
             },
         }
     )
@@ -317,7 +321,12 @@ def test_rand_q_loguniform(q, plot):
         {
             "method": "random",
             "parameters": {
-                "v1": {"distribution": "q_log_uniform", "min": 0.1, "max": 100, "q": q},
+                "v1": {
+                    "distribution": "q_log_uniform",
+                    "min": np.log(0.1),
+                    "max": np.log(100),
+                    "q": q,
+                },
             },
         }
     )
