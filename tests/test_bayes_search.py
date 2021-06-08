@@ -149,15 +149,15 @@ def test_squiggle_int():
 
 
 def test_iterations_rosenbrock():
-    dimensions = 4
+    dimensions = 3
     # x_init = np.random.uniform(0, 2, size=(1, dimensions))
     x_init = np.zeros((1, dimensions))
     run_iterations(
         rosenbrock,
         [[0.0, 2.0]] * dimensions,
-        400,
+        300,
         x_init,
-        optimium=[1, 1, 1, 1],
+        optimium=[1, 1, 1],
         atol=0.2,
         improvement=0.1,
     )
@@ -232,7 +232,17 @@ def test_runs_bayes_runs2(sweep_config_bayes_search_2params_with_metric):
 
 
 # search with 2 finished runs - hardcoded results - missing metric
-def test_runs_bayes_runs2_missingmetric(sweep_config_bayes_search_2params_with_metric):
+def test_runs_bayes_runs2_missingmetric():
+
+    config = SweepConfig(
+        {
+            "metric": {"name": "loss", "goal": "minimize"},
+            "method": "bayes",
+            "parameters": {
+                "v2": {"min": 1, "max": 10},
+            },
+        }
+    )
 
     r1 = SweepRun(
         name="b",
@@ -240,20 +250,20 @@ def test_runs_bayes_runs2_missingmetric(sweep_config_bayes_search_2params_with_m
         history=[
             {"xloss": 5.0},
         ],
-        config={"v1": {"value": 7}, "v2": {"value": 6}},
+        config={"v2": {"value": 6}},
         summary_metrics={"zloss": 1.2},
     )
     r2 = SweepRun(
         name="b2",
         state=RunState.finished,
-        config={"v1": {"value": 1}, "v2": {"value": 8}},
+        config={"v2": {"value": 8}},
         summary_metrics={"xloss": 52.0},
         history=[],
     )
 
     runs = [r1, r2]
     for _ in range(200):
-        suggestion = next_run(sweep_config_bayes_search_2params_with_metric, runs)
+        suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
 
