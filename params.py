@@ -94,7 +94,7 @@ class HyperParameter:
         Ouputs: float in the range [0, 1]
         """
         if self.type == HyperParameter.CONSTANT:
-            return 0.0
+            return np.zeros_like(x)
         elif self.type == HyperParameter.CATEGORICAL:
             # NOTE: Indices expected for categorical parameters, not values.
             return stats.randint.cdf(x, 0, len(self.config["values"]))
@@ -131,16 +131,26 @@ class HyperParameter:
         Inputs: x: float in range [0, 1]
         Ouputs: sample from selected distribution at the xth percentile.
         """
-        if x < 0.0 or x > 1.0:
+        if np.any((x < 0.0) | (x > 1.0)):
             raise ValueError("Can't call ppf on value outside of [0,1]")
         if self.type == HyperParameter.CONSTANT:
             return self.config["value"]
         elif self.type == HyperParameter.CATEGORICAL:
-            return self.config["values"][
-                int(stats.randint.ppf(x, 0, len(self.config["values"])))
+            retval = [
+                self.config["values"][i]
+                for i in np.atleast_1d(
+                    stats.randint.ppf(x, 0, len(self.config["values"])).astype(int)
+                ).tolist()
             ]
+            if np.isscalar(x):
+                return retval[0]
+            return retval
         elif self.type == HyperParameter.INT_UNIFORM:
-            return int(stats.randint.ppf(x, self.config["min"], self.config["max"] + 1))
+            return (
+                stats.randint.ppf(x, self.config["min"], self.config["max"] + 1)
+                .astype(int)
+                .tolist()
+            )
         elif self.type == HyperParameter.UNIFORM:
             return stats.uniform.ppf(
                 x, self.config["min"], self.config["max"] - self.config["min"]
@@ -151,7 +161,7 @@ class HyperParameter:
             )
             ret_val = np.round(r / self.config["q"]) * self.config["q"]
             if isinstance(self.config["q"], int):
-                return int(ret_val)
+                return ret_val.astype(int)
             else:
                 return ret_val
         elif self.type == HyperParameter.LOG_UNIFORM:
@@ -160,7 +170,7 @@ class HyperParameter:
             r = stats.loguniform(self.config["min"], self.config["max"]).ppf(x)
             ret_val = np.round(r / self.config["q"]) * self.config["q"]
             if isinstance(self.config["q"], int):
-                return int(ret_val)
+                return ret_val.astype(int)
             else:
                 return ret_val
         elif self.type == HyperParameter.NORMAL:
@@ -169,7 +179,7 @@ class HyperParameter:
             r = stats.norm.ppf(x, loc=self.config["mu"], scale=self.config["sigma"])
             ret_val = np.round(r / self.config["q"]) * self.config["q"]
             if isinstance(self.config["q"], int):
-                return int(ret_val)
+                return ret_val.astype(int)
             else:
                 return ret_val
         elif self.type == HyperParameter.LOG_NORMAL:
@@ -184,7 +194,7 @@ class HyperParameter:
             ret_val = np.round(r / self.config["q"]) * self.config["q"]
 
             if isinstance(self.config["q"], int):
-                return int(ret_val)
+                return ret_val.astype(int)
             else:
                 return ret_val
 
@@ -194,7 +204,7 @@ class HyperParameter:
             r = stats.beta.ppf(x, a=self.config["a"], b=self.config["b"])
             ret_val = np.round(r / self.config["q"]) * self.config["q"]
             if isinstance(self.config["q"], int):
-                return int(ret_val)
+                return ret_val.astype(int)
             else:
                 return ret_val
         else:
@@ -245,12 +255,15 @@ class HyperParameterSet(list):
 
     def denormalize_vector(self, X: npt.ArrayLike) -> List[List[Any]]:
         """Converts a list of vectors [0,1] to values in the original space."""
-        v = np.zeros(X.shape).tolist()
-
+        columns = []
         for ii, param in enumerate(self.searchable_params):
-            for jj, x in enumerate(X[:, ii]):
-                v[jj][ii] = param.ppf(x)
-        return v
+            vec = param.ppf(X[:, ii])
+            try:
+                vec = vec.tolist()
+            except AttributeError:
+                pass
+            columns.append(vec)
+        return [list(row) for row in zip(*columns)]
 
     def convert_runs_to_normalized_vector(self, runs: List[SweepRun]) -> npt.ArrayLike:
         runs_params = [run.config for run in runs]

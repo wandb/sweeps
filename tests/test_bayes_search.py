@@ -155,7 +155,7 @@ def test_iterations_rosenbrock():
     run_iterations(
         rosenbrock,
         [[0.0, 2.0]] * dimensions,
-        200,
+        400,
         x_init,
         optimium=[1, 1, 1, 1],
         atol=0.2,
