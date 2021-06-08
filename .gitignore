@@ -135,3 +135,4 @@ test_results/
 *.pkl
 prof/
 result.xml
+wandb/

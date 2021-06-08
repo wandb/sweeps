@@ -37,6 +37,17 @@ class HyperParameter:
     Q_BETA = "param_qbeta"
 
     def __init__(self, name: str, config: dict):
+        """A hyperparameter to optimize.
+
+        >>> parameter = HyperParameter('int_unif_distributed', {'min': 1, 'max': 10})
+        >>> assert parameter.config['min'] == 1
+        >>> parameter = HyperParameter('normally_distributed', {'distribution': 'normal'})
+        >>> assert np.isclose(parameter.config['mu'], 0)
+
+        Args:
+            name: The name of the hyperparameter.
+            config: Hyperparameter config dict.
+        """
 
         self.name = name
 
@@ -78,6 +89,18 @@ class HyperParameter:
         self.value = None
 
     def value_to_int(self, value: Any) -> int:
+        """Get the index of the value of a categorically distributed HyperParameter.
+
+        >>> parameter = HyperParameter('a', {'values': [1, 2, 3]})
+        >>> assert parameter.value_to_int(2) == 1
+
+        Args:
+             value: The value to look up.
+
+        Returns:
+            The index of the value.
+        """
+
         if self.type != HyperParameter.CATEGORICAL:
             raise ValueError("Can only call value_to_int on categorical variable")
 
@@ -88,10 +111,16 @@ class HyperParameter:
         raise ValueError("Couldn't find {}".format(value))
 
     def cdf(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        """
-        Cumulative distribution function
-        Inputs: sample from selected distribution at the xth percentile.
-        Ouputs: float in the range [0, 1]
+        """Cumulative distribution function (CDF).
+
+        In probability theory and statistics, the cumulative distribution function
+        (CDF) of a real-valued random variable X, is the probability that X will
+        take a value less than or equal to x.
+
+        Args:
+             x: Parameter values to calculate the CDF for. Can be scalar or 1-d.
+        Returns:
+            Probability that a random sample of this hyperparameter will be less than x.
         """
         if self.type == HyperParameter.CONSTANT:
             return np.zeros_like(x)
@@ -128,10 +157,16 @@ class HyperParameter:
             raise ValueError("Unsupported hyperparameter distribution type")
 
     def ppf(self, x: npt.ArrayLike) -> Any:
-        """
-        Percent point function or inverse cdf
-        Inputs: x: float in range [0, 1]
-        Ouputs: sample from selected distribution at the xth percentile.
+        """Percentage point function (PPF).
+
+        In probability theory and statistics, the percentage point function is
+        the inverse of the CDF: it returns the value of a random variable at the
+        xth percentile.
+
+        Args:
+             x: Percentiles of the random variable. Can be scalar or 1-d.
+        Returns:
+            Value of the random variable at the specified percentile.
         """
         if np.any((x < 0.0) | (x > 1.0)):
             raise ValueError("Can't call ppf on value outside of [0,1]")
@@ -221,17 +256,26 @@ class HyperParameter:
             raise ValueError("Unsupported hyperparameter distribution type")
 
     def sample(self) -> Any:
+        """Randomly sample a value from the distribution of this HyperParameter."""
         return self.ppf(random.uniform(0.0, 1.0))
 
-    def to_config(self) -> Tuple[str, Dict]:
+    def _to_config(self) -> Tuple[str, Dict]:
         config = dict(value=self.value)
-        # Remove values list if we have picked a value for this parameter
-        # self.config.pop("values", None)
         return self.name, config
 
 
 class HyperParameterSet(list):
     def __init__(self, items: List[HyperParameter]):
+        """A set of HyperParameters.
+
+        >>> hp1 = HyperParameter('a', {'values': [1, 2, 3]})
+        >>> hp2 = HyperParameter('b', {'distribution': 'normal'})
+        >>> HyperParameterSet([hp1, hp2])
+
+        Args:
+            items: A list of HyperParameters to construct the set from.
+        """
+
         for item in items:
             if not isinstance(item, HyperParameter):
                 raise TypeError(
@@ -252,6 +296,14 @@ class HyperParameterSet(list):
 
     @classmethod
     def from_config(cls, config: Dict):
+        """Instantiate a HyperParameterSet based the parameters section of a SweepConfig.
+
+        >>> sweep_config = {'method': 'grid', 'parameters': {'a': {'values': [1, 2, 3]}}}
+        >>> hps = HyperParameterSet.from_config(sweep_config['parameters'])
+
+        Args:
+            config: The parameters section of a SweepConfig.
+        """
         hpd = cls(
             [
                 HyperParameter(param_name, param_config)
@@ -260,11 +312,19 @@ class HyperParameterSet(list):
         )
         return hpd
 
-    def to_config(self) -> dict:
-        return dict([param.to_config() for param in self])
+    def to_config(self) -> Dict:
+        """Convert a HyperParameterSet to a SweepRun config."""
+        return dict([param._to_config() for param in self])
 
     def denormalize_vector(self, X: npt.ArrayLike) -> List[List[Any]]:
-        """Converts a list of vectors [0,1] to values in the original space."""
+        """Converts a list of vectors [0,1] to values in the original space.
+
+        Args:
+            X: 2-d array-like. Array of normalized parameter values. Rows are instances,
+            columns are parameters.
+        Returns:
+            List of denormalized instances (lists) of parameter vectors.
+        """
         columns = []
         for ii, param in enumerate(self.searchable_params):
             vec = param.ppf(X[:, ii])
@@ -276,6 +336,15 @@ class HyperParameterSet(list):
         return [list(row) for row in zip(*columns)]
 
     def convert_runs_to_normalized_vector(self, runs: List[SweepRun]) -> npt.ArrayLike:
+        """Converts a list of SweepRuns to an array of normalized parameter vectors.
+
+        Args:
+            runs: List of runs to convert.
+
+        Returns:
+            A 2d array of normalized parameter vectors.
+        """
+
         runs_params = [run.config for run in runs]
         X = np.zeros([len(self.searchable_params), len(runs)])
 
