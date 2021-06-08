@@ -12,6 +12,9 @@ def random_search_next_run(sweep_config: Union[dict, SweepConfig]) -> SweepRun:
 
     Args:
         sweep_config: The sweep's config.
+
+    Returns:
+        The suggested run.
     """
 
     # ensure that the sweepconfig is properly formatted

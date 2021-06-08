@@ -1,12 +1,3 @@
-"""Bayesian Search.
-
-Check out https://arxiv.org/pdf/1206.2944.pdf
- for explanation of bayesian optimization
-
-We do bayesian optimization and handle the cases where some X values are integers
-as well as the case where X is very large.
-"""
-
 import numpy as np
 import numpy.typing as npt
 
@@ -26,11 +17,6 @@ NUGGET = 1e-10
 def fit_normalized_gaussian_process(
     X: npt.ArrayLike, y: npt.ArrayLike, nu: floating = 1.5
 ) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
-    """We fit a gaussian process but first subtract the mean and divide by
-    stddev.
-
-    To undo at prediction tim, call y_pred = gp.predict(X) * y_stddev + y_mean
-    """
     gp = sklearn_gaussian.GaussianProcessRegressor(
         kernel=sklearn_gaussian.kernels.Matern(nu=nu),
         n_restarts_optimizer=2,
@@ -102,21 +88,21 @@ def train_gaussian_process(
 
     Handles the case where there are other training runs in flight (current_X)
 
-        Arguments:
-            sample_X - vector of already evaluated sets of hyperparameters
-            sample_y - vector of already evaluated loss function values
-            X_bounds - minimum and maximum values for every dimension of X
-            current_X - hyperparameters currently being explored
-            nu - input to the Matern function, higher numbers make it smoother 0.5, 1.5, 2.5 are good values
-             see http://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.Matern.html
+    Arguments:
+        sample_X: vector of already evaluated sets of hyperparameters
+        sample_y: vector of already evaluated loss function values
+        X_bounds: minimum and maximum values for every dimension of X
+        current_X: hyperparameters currently being explored
+        nu: input to the Matern function, higher numbers make it smoother 0.5, 1.5, 2.5 are good values
+         see http://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.Matern.html
 
-        Returns:
-            gp - the gaussian process function
-            y_mean - mean
-            y_stddev - stddev
+    Returns:
+        gp: the gaussian process function
+        y_mean: mean
+        y_stddev: stddev
 
-            To make a prediction with gp on real world data X, need to call:
-            (gp.predict(X) * y_stddev) + y_mean
+        To make a prediction with gp on real world data X, need to call:
+        (gp.predict(X) * y_stddev) + y_mean
     """
     if current_X is not None:
         current_X = np.array(current_X)
@@ -177,8 +163,6 @@ def next_sample(
     sample_X: npt.ArrayLike,
     sample_y: npt.ArrayLike,
     X_bounds: Optional[npt.ArrayLike] = None,
-    runtimes: Optional[npt.ArrayLike] = None,
-    failures: Optional[npt.ArrayLike] = None,
     current_X: Optional[npt.ArrayLike] = None,
     nu: floating = 1.5,
     max_samples_for_gp: integer = 100,
@@ -194,55 +178,49 @@ def next_sample(
     npt.ArrayLike,
     npt.ArrayLike,
     npt.ArrayLike,
-    # npt.ArrayLike,
-    # npt.ArrayLike,
 ]:
     """Calculates the best next sample to look at via bayesian optimization.
 
-    Check out https://arxiv.org/pdf/1206.2944.pdf
-     for explanation of bayesian optimization
+    Args:
+        sample_X: ArrayLike, shape (N_runs, N_params)
+            2d array of already evaluated sets of hyperparameters
+        sample_y: ArrayLike, shape (N_runs,)
+            1d array of already evaluated loss function values
+        X_bounds: ArrayLike, optional, shape (N_params, 2), default None
+            2d array minimum and maximum values for every dimension of X
+        current_X: ArrayLike, optional, shape (N_runs_in_flight, N_params), default None
+            hyperparameters currently being explored
+        nu: floating, optional, default = 1.5
+            input to the Matern function, higher numbers make it smoother. 0.5,
+            1.5, 2.5 are good values  see
 
-    Arguments
-    ---------
-    sample_X: ArrayLike, shape (N_runs, N_params)
-        2d array of already evaluated sets of hyperparameters
-    sample_y: ArrayLike, shape (N_runs,)
-        1d array of already evaluated loss function values
-    X_bounds: ArrayLike, optional, shape (N_params, 2), default None
-        2d array minimum and maximum values for every dimension of X
-    current_X: ArrayLike, optional, shape (N_runs_in_flight, N_params), default None
-        hyperparameters currently being explored
-    nu: floating, optional, default = 1.5
-        input to the Matern function, higher numbers make it smoother. 0.5,
-        1.5, 2.5 are good values  see
+               http://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.Matern.html
 
-           http://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.kernels.Matern.html
-
-    max_samples_for_gp: integer, optional, default 100
-        maximum samples to consider (since algo is O(n^3)) for performance,
-        but also adds some randomness. this number of samples will be chosen
-        randomly from the sample_X and used to train the GP.
-    improvement: floating, optional, default 0.1
-        amount of improvement to optimize for -- higher means take more exploratory risks
-    num_points_to_try: integer, optional, default 1000
-        number of X values to try when looking for value with highest expected probability
-        of improvement
-    opt_func - one of {"expected_improvement", "prob_of_improvement"} - whether to optimize expected
-            improvement of probability of improvement.  Expected improvement is generally better - may want
-            to remove probability of improvement at some point.  (But I think prboability of improvement
-            is a little easier to calculate)
-        test_X - X values to test when looking for the best values to try
+        max_samples_for_gp: integer, optional, default 100
+            maximum samples to consider (since algo is O(n^3)) for performance,
+            but also adds some randomness. this number of samples will be chosen
+            randomly from the sample_X and used to train the GP.
+        improvement: floating, optional, default 0.1
+            amount of improvement to optimize for -- higher means take more exploratory risks
+        num_points_to_try: integer, optional, default 1000
+            number of X values to try when looking for value with highest expected probability
+            of improvement
+        opt_func: one of {"expected_improvement", "prob_of_improvement"} - whether to optimize expected
+                improvement of probability of improvement.  Expected improvement is generally better - may want
+                to remove probability of improvement at some point.  (But I think prboability of improvement
+                is a little easier to calculate)
+        test_X: X values to test when looking for the best values to try
 
     Returns:
-        suggested_X - X vector to try running next
-        suggested_X_prob_of_improvement - probability of the X vector beating the current best
-        suggested_X_predicted_y - predicted output of the X vector
-        test_X - 2d array of length num_points_to_try by num features: tested X values
-        y_pred - 1d array of length num_points_to_try: predicted values for test_X
-        y_pred_std - 1d array of length num_points_to_try: predicted std deviation for test_X
-        prob_of_improve 1d array of lenth num_points_to_try: predicted porbability of improvement
-        prob_of_failure 1d array of predicted probabilites of failure
-        expected_runtime 1d array of expected runtimes
+        suggested_X: X vector to try running next
+        suggested_X_prob_of_improvement: probability of the X vector beating the current best
+        suggested_X_predicted_y: predicted output of the X vector
+        test_X: 2d array of length num_points_to_try by num features: tested X values
+        y_pred: 1d array of length num_points_to_try: predicted values for test_X
+        y_pred_std: 1d array of length num_points_to_try: predicted std deviation for test_X
+        prob_of_improve: 1d array of lenth num_points_to_try: predicted porbability of improvement
+        prob_of_failure: 1d array of predicted probabilites of failure
+        expected_runtime: 1d array of expected runtimes
     """
     # Sanity check the data
     sample_X = np.array(sample_X)
@@ -270,31 +248,6 @@ def next_sample(
 
     filtered_X, filtered_y = filter_nans(sample_X, sample_y)
 
-    """
-    # We train our runtime prediction model on *filtered_X* throwing out the sample points with
-    # NaN values because they might break our runtime predictor
-    runtime_model = None
-    if runtimes is not None:
-        runtime_filtered_X, runtime_filtered_runtimes = filter_nans(sample_X, runtimes)
-        if runtime_filtered_X.shape[0] >= 2:
-            (
-                runtime_model,
-                runtime_model_mean,
-                runtime_model_stddev,
-            ) = train_runtime_model(runtime_filtered_X, runtime_filtered_runtimes)
-    # We train our failure model on *sample_X*, all the data including NaNs
-    # This is *different* than the runtime model.
-    failure_model = None
-    if failures is not None and sample_X.shape[0] >= 2:
-        failure_filtered_X, failure_filtered_runtimes = filter_nans(sample_X, failures)
-        if failure_filtered_X.shape[0] >= 2:
-            (
-                failure_model,
-                failure_model_mean,
-                failure_model_stddev,
-            ) = train_runtime_model(failure_filtered_X, failure_filtered_runtimes)
-    """
-
     # we can't run this algothim with less than two sample points, so we'll
     # just return a random point
     if filtered_X.shape[0] < 2:
@@ -316,7 +269,7 @@ def next_sample(
             None,
             None,
             None,
-        )  # None, None
+        )
 
     # build the acquisition function
     gp, y_mean, y_stddev, = train_gaussian_process(
@@ -326,21 +279,6 @@ def next_sample(
     if test_X is None:  # this is the usual case
         test_X = random_sample(X_bounds, num_points_to_try)
     y_pred, y_pred_std = gp.predict(test_X, return_std=True)
-
-    """
-    if failure_model is None:
-        prob_of_failure = [0.0] * len(test_X)
-    else:
-        prob_of_failure = (
-            failure_model.predict(test_X) * failure_model_stddev + failure_model_mean
-        )
-    if runtime_model is None:
-        expected_runtime = [0.0] * len(test_X)
-    else:
-        expected_runtime = (
-            runtime_model.predict(test_X) * runtime_model_stddev + runtime_model_mean
-        )
-    """
 
     # best value of y we've seen so far.  i.e. y*
     min_unnorm_y = np.min(filtered_y)
@@ -383,8 +321,6 @@ def next_sample(
         unnorm_y_pred,
         unnorm_y_pred_std,
         prob_of_improve,
-        # prob_of_failure,
-        # expected_runtime,
     )
 
 
@@ -393,26 +329,28 @@ def bayes_search_next_run(
     config: Union[dict, SweepConfig],
     minimum_improvement: float = 0.1,
 ) -> SweepRun:
-    """
+    """Suggest runs using Bayesian optimization.
 
+    >>> suggestion = bayes_search_next_run({
+    ...    'method': 'bayes',
+    ...    'parameters': {'a': {'min': 1., 'max': 2.}},
+    ...    'metric': {'name': 'loss', 'goal': 'maximize'}
+    ... })
 
-    Arguments
-    ---------
-    config: Union[dict, SweepConfig]
-        The configuration of the sweep.
-    runs: List[SweepRun]
-        The runs associated with the sweep.
+    Args:
+        sweep_config: The sweep's config.
 
-    Returns
-    -------
-    next_run: SweepRun
-        Next suggested run.
+    Returns:
+        The suggested run.
     """
 
     config = SweepConfig(config)
 
     if "metric" not in config:
         raise ValueError('Bayesian search requires "metric" section')
+
+    if config["method"] != "bayes":
+        raise ValueError("Invalid sweep configuration for bayes_search_next_run.")
 
     goal = config["metric"]["goal"]
     metric_name = config["metric"]["name"]
