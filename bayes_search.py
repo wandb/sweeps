@@ -159,15 +159,7 @@ def next_sample(
     num_points_to_try: integer = 1000,
     opt_func: str = "expected_improvement",
     test_X: Optional[npt.ArrayLike] = None,
-) -> Tuple[
-    npt.ArrayLike,
-    npt.ArrayLike,
-    npt.ArrayLike,
-    npt.ArrayLike,
-    npt.ArrayLike,
-    npt.ArrayLike,
-    npt.ArrayLike,
-]:
+) -> Tuple[npt.ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
     """Calculates the best next sample to look at via bayesian optimization.
 
     Args:
@@ -201,15 +193,11 @@ def next_sample(
         test_X: X values to test when looking for the best values to try
 
     Returns:
-        suggested_X: X vector to try running next
-        suggested_X_prob_of_improvement: probability of the X vector beating the current best
-        suggested_X_predicted_y: predicted output of the X vector
-        test_X: 2d array of length num_points_to_try by num features: tested X values
-        y_pred: 1d array of length num_points_to_try: predicted values for test_X
-        y_pred_std: 1d array of length num_points_to_try: predicted std deviation for test_X
-        prob_of_improve: 1d array of lenth num_points_to_try: predicted porbability of improvement
-        prob_of_failure: 1d array of predicted probabilites of failure
-        expected_runtime: 1d array of expected runtimes
+        suggested_X: optimal X value to try
+        prob_of_improvement: probability of an improvement
+        predicted_y: predicted value
+        predicted_std: stddev of predicted value
+        expected_improvement: expected improvement
     """
     # Sanity check the data
     sample_X = np.array(sample_X)
@@ -256,8 +244,6 @@ def next_sample(
             prediction,
             None,
             None,
-            None,
-            None,
         )
 
     # build the acquisition function
@@ -273,43 +259,47 @@ def next_sample(
     min_unnorm_y = np.min(filtered_y)
     # hack for dealing with predicted std of 0
     epsilon = 0.00000001
-    if opt_func == "probability_of_improvement":
-        # might remove the norm_improvement at some point
-        # find best chance of an improvement by "at least norm improvement"
-        # so if norm_improvement is zero, we are looking for best chance of any
-        # improvment over the best result observerd so far.
-        # norm_improvement = improvement / y_stddev
-        min_norm_y = (min_unnorm_y - y_mean) / y_stddev - improvement
-        std_dev_distance = (y_pred - min_norm_y) / (y_pred_std + epsilon)
-        prob_of_improve = sigmoid(-std_dev_distance)
-        best_test_X_index = np.argmax(prob_of_improve)
-    elif opt_func == "expected_improvement":
-        min_norm_y = (min_unnorm_y - y_mean) / y_stddev
-        Z = -(y_pred - min_norm_y) / (y_pred_std + epsilon)
-        prob_of_improve = scipy_stats.norm.cdf(Z)
-        e_i = -(y_pred - min_norm_y) * scipy_stats.norm.cdf(
-            Z
-        ) + y_pred_std * scipy_stats.norm.pdf(Z)
-        best_test_X_index = np.argmax(e_i)
-    else:
-        raise ValueError(
-            f'Invalid opt_func {opt_func}, should be either "probability_of_improvement" or "expected_improvement"'
-        )
 
-    # TODO: support expected improvement per time by dividing e_i by runtimen
+    if opt_func == "probability_of_improvement":
+        min_norm_y = (min_unnorm_y - y_mean) / y_stddev - improvement
+    else:
+        min_norm_y = (min_unnorm_y - y_mean) / y_stddev
+
+    Z = -(y_pred - min_norm_y) / (y_pred_std + epsilon)
+    prob_of_improve: np.ndarray = scipy_stats.norm.cdf(Z)
+    e_i = -(y_pred - min_norm_y) * scipy_stats.norm.cdf(
+        Z
+    ) + y_pred_std * scipy_stats.norm.pdf(Z)
+
+    if opt_func == "probability_of_improvement":
+        best_test_X_index = np.argmax(prob_of_improve)
+    else:
+        best_test_X_index = np.argmax(e_i)
+
     suggested_X = test_X[best_test_X_index]
     suggested_X_prob_of_improvement = prob_of_improve[best_test_X_index]
     suggested_X_predicted_y = y_pred[best_test_X_index] * y_stddev + y_mean
-    unnorm_y_pred = y_pred * y_stddev + y_mean
-    unnorm_y_pred_std = y_pred_std * y_stddev
+    suggested_X_predicted_std = y_pred_std[best_test_X_index] * y_stddev
+
+    # recalculate expected improvement
+    min_norm_y = (min_unnorm_y - y_mean) / y_stddev
+    z_best = -(y_pred[best_test_X_index] - min_norm_y) / (
+        y_pred_std[best_test_X_index] + epsilon
+    )
+    suggested_X_expected_improvement = -(
+        y_pred[best_test_X_index] - min_norm_y
+    ) * scipy_stats.norm.cdf(z_best) + y_pred_std[
+        best_test_X_index
+    ] * scipy_stats.norm.pdf(
+        z_best
+    )
+
     return (
         suggested_X,
         suggested_X_prob_of_improvement,
         suggested_X_predicted_y,
-        test_X,
-        unnorm_y_pred,
-        unnorm_y_pred_std,
-        prob_of_improve,
+        suggested_X_predicted_std,
+        suggested_X_expected_improvement,
     )
 
 
@@ -409,13 +399,11 @@ def bayes_search_next_run(
     y *= -1 if goal == "maximize" else 1
 
     (
-        try_params,
-        success_prob,
-        pred,
-        test_X,
-        y_pred,
-        y_pred_std,
-        prob_of_improve,
+        suggested_X,
+        suggested_X_prob_of_improvement,
+        suggested_X_predicted_y,
+        suggested_X_predicted_std,
+        suggested_X_expected_improvement,
     ) = next_sample(
         sample_X=sample_X,
         sample_y=y,
@@ -429,11 +417,14 @@ def bayes_search_next_run(
     for param in params:
         if param.type == HyperParameter.CONSTANT:
             continue
-        try_value = try_params[params.param_names_to_index[param.name]]
+        try_value = suggested_X[params.param_names_to_index[param.name]]
         param.value = param.ppf(try_value)
 
     ret_dict = params.to_config()
     info = {
-        "Bayesian optimizer predicts the probability of finding a new optimum is": success_prob
+        "Bayesian optimizer predicts the probability of finding a new optimum is": suggested_X_prob_of_improvement,
+        "Bayesian optimizer predicts the new value of the metric is": suggested_X_predicted_y,
+        "Bayesian optimizer predicts the uncertainty in the predicted value of the metric is": suggested_X_predicted_std,
+        "Bayesian optimizer predicts the expected improvement in the value of the metric is": suggested_X_expected_improvement,
     }
     return SweepRun(config=ret_dict, search_info=info)
