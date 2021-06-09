@@ -427,8 +427,6 @@ def bayes_search_next_run(
         y_pred,
         y_pred_std,
         prob_of_improve,
-        # prob_of_failure,
-        # expected_runtime,
     ) = next_sample(
         sample_X=sample_X,
         sample_y=y,
@@ -446,14 +444,7 @@ def bayes_search_next_run(
         param.value = param.ppf(try_value)
 
     ret_dict = params.to_config()
-    info = {}
-    info["predictions"] = {metric_name: pred}
-    info["success_probability"] = success_prob
-    if test_X is not None:
-        info["acq_func"] = {}
-        info["acq_func"]["sample_x"] = params.denormalize_vector(test_X)
-        info["acq_func"]["y_pred"] = y_pred
-        info["acq_func"]["y_pred_std"] = y_pred_std
-        info["acq_func"]["score"] = prob_of_improve
-
+    info = {
+        "Bayesian optimizer predicts the probability of finding a new optimum is": success_prob
+    }
     return SweepRun(config=ret_dict, search_info=info)
