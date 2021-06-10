@@ -62,6 +62,9 @@ def run_bayes_search(
     [
         {"distribution": "normal", "mu": 2, "sigma": 4},
         {"distribution": "log_uniform", "min": -2, "max": 3},
+        {"min": 0.0, "max": 5.0},
+        {"min": 0, "max": 5},
+        {"distribution": "q_uniform", "min": 0.0, "max": 10.0, "q": 0.25},
     ],
 )
 def test_squiggle_convergence_full(x):
