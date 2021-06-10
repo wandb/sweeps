@@ -316,25 +316,6 @@ class HyperParameterSet(list):
         """Convert a HyperParameterSet to a SweepRun config."""
         return dict([param._to_config() for param in self])
 
-    def denormalize_vector(self, X: npt.ArrayLike) -> List[List[Any]]:
-        """Converts a list of vectors [0,1] to values in the original space.
-
-        Args:
-            X: 2-d array-like. Array of normalized parameter values. Rows are instances,
-            columns are parameters.
-        Returns:
-            List of denormalized instances (lists) of parameter vectors.
-        """
-        columns = []
-        for ii, param in enumerate(self.searchable_params):
-            vec = param.ppf(X[:, ii])
-            try:
-                vec = vec.tolist()
-            except AttributeError:
-                pass
-            columns.append(vec)
-        return [list(row) for row in zip(*columns)]
-
     def convert_runs_to_normalized_vector(self, runs: List[SweepRun]) -> npt.ArrayLike:
         """Converts a list of SweepRuns to an array of normalized parameter vectors.
 

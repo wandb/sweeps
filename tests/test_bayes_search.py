@@ -1,5 +1,6 @@
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional, Tuple, Iterable, Dict, Union
 
+import pytest
 import numpy as np
 import numpy.typing as npt
 
@@ -19,6 +20,70 @@ def squiggle(x: npt.ArrayLike) -> np.floating:
 def rosenbrock(x: npt.ArrayLike) -> np.floating:
     # has a minimum at (1, 1, 1, 1, ...) for 4 <= ndim <= 7
     return np.sum((x[1:] - x[:-1] ** 2.0) ** 2.0 + (1 - x[:-1]) ** 2.0)
+
+
+def run_bayes_search(
+    f: Callable[[SweepRun], floating],
+    config: SweepConfig,
+    init_runs: Iterable[SweepRun] = (),
+    improvement: floating = 0.1,
+    num_iterations: integer = 20,
+    optimium: Optional[Dict[str, floating]] = None,
+    atol: Optional[Union[Dict[str, floating], floating]] = 0.2,
+):
+
+    metric_name = config["metric"]["name"]
+    opt_goal = config["metric"]["goal"]
+
+    runs = list(init_runs)
+    for _ in range(num_iterations):
+        suggested_run = bayes.bayes_search_next_run(
+            runs, config, minimum_improvement=improvement
+        )
+        suggested_run.state = RunState.finished
+        metric = f(suggested_run)
+        suggested_run.summary_metrics[metric_name] = metric
+        runs.append(suggested_run)
+
+    if optimium is not None:
+        best_run = (min if opt_goal == "minimize" else max)(
+            runs, key=lambda run: run.metric_extremum(metric_name, opt_goal)
+        )
+        for param_name in config["parameters"]:
+            left_comp = best_run.config[param_name]["value"]
+            right_comp = (
+                optimium if isinstance(optimium, float) else optimium[param_name]
+            )
+            np.testing.assert_allclose(left_comp, right_comp, atol=atol)
+
+
+@pytest.mark.parametrize(
+    "x",
+    [
+        {"distribution": "normal", "mu": 2, "sigma": 4},
+        {"distribution": "log_uniform", "min": -2, "max": 3},
+    ],
+)
+def test_squiggle_convergence_full(x):
+    def y(x: SweepRun) -> floating:
+        return squiggle(x.config["x"]["value"])
+
+    run = SweepRun(
+        config={"x": {"value": np.random.uniform(0, 5)}}, state=RunState.finished
+    )
+    run.summary_metrics["y"] = y(run)
+
+    runs = [run]
+
+    config = SweepConfig(
+        {
+            "method": "bayes",
+            "metric": {"name": "y", "goal": "maximize"},
+            "parameters": {"x": x},
+        }
+    )
+
+    run_bayes_search(y, config, runs, num_iterations=50, optimium={"x": 2.0})
 
 
 def run_iterations(
