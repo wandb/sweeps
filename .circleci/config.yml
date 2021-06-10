@@ -2,15 +2,17 @@ version: 2.1
 
 orbs:
   python: circleci/python@1.4.0
-  codecov: codecov/codecov@1.1.5
+  codecov: codecov/codecov@1.1.0
 
 jobs:
   linux38:
-    executor:
-      name: python/default
-      tag: "3.8"
+    machine:
+      image: ubuntu-1604:202007-01
     steps:
       - checkout
+      - run:
+          name: Load python
+          command: pyenv global 3.8.3
       - run:
           name: Install dependencies
           command: pip install -r requirements.dev.txt
@@ -19,6 +21,11 @@ jobs:
           command: pytest --cov=./ --cov-report=xml
       - codecov/upload:
           file: coverage.xml
+      - store_artifacts:
+          path: prof/
+      - store_test_results:
+          path: .
+    resource_class: large
   linters:
     executor:
       name: python/default

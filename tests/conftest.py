@@ -1,55 +1,40 @@
 import pytest
+from ..config import SweepConfig
 
 
-class Run(object):
-    def __init__(self, name, state, config, summary, history):
-        self.name = name
-        self.state = state
-        self.config = config
-        self.summaryMetrics = summary
-        self.history = history
+def pytest_addoption(parser):
+    parser.addoption(
+        "--plot",
+        action="store_true",
+        help="Plot true and predicted distributions "
+        "for tests involving random sampling.",
+    )
 
-    def __repr__(self):
-        return "Run(%s,%s,%s,%s,%s)" % (
-            self.name,
-            self.state,
-            self.config,
-            self.history,
-            self.summaryMetrics,
-        )
+
+@pytest.fixture
+def plot(request):
+    return request.config.getoption("--plot")
 
 
 @pytest.fixture()
-def sweep_config_2params():
-    return {
-        "metric": {"name": "loss"},
-        "parameters": {"v1": {"min": 1, "max": 10}, "v2": {"min": 1, "max": 10}},
-    }
-
-
-@pytest.fixture()
-def sweep_config_2params_acc():
-    return {
-        "metric": {
-            "name": "acc",
-            "goal": "maximize",
-        },
-        "parameters": {"v1": {"min": 1, "max": 10}, "v2": {"min": 1, "max": 10}},
-    }
-
-
-@pytest.fixture()
-def sweep_config_2params_categorical():
-    return {
-        "metric": {
-            "name": "acc",
-            "goal": "maximize",
-        },
-        "parameters": {
-            "v1": {
-                "distribution": "categorical",
-                "values": [(2, 3), [3, 4], ["5", "6"], [(7, 8), ["9", [10, 11]]]],
+def sweep_config_bayes_search_2params_with_metric():
+    return SweepConfig(
+        {
+            "metric": {"name": "loss", "goal": "minimize"},
+            "method": "bayes",
+            "parameters": {
+                "v1": {"min": 1, "max": 10},
+                "v2": {"min": 1.0, "max": 10.0},
             },
-            "v2": {"min": 1, "max": 10},
-        },
-    }
+        }
+    )
+
+
+@pytest.fixture()
+def sweep_config_2params_grid_search():
+    return SweepConfig(
+        {
+            "method": "grid",
+            "parameters": {"v1": {"values": [1, 2, 3]}, "v2": {"values": [4, 5]}},
+        }
+    )

@@ -1,61 +1,64 @@
-from sweeps import grid_search
-from sweeps.params import HyperParameter
+import pytest
+import itertools
+
+from typing import List
+from ..run import RunState, SweepRun, next_run
+from ..config import SweepConfig
 
 
-class Run(object):
-    def __init__(self, params):
-        self.config = params
+def kernel_for_grid_search_tests(
+    runs: List[SweepRun], config: SweepConfig, randomize: bool
+) -> None:
+    """This kernel assumes that sweep config has two categorical parameters
+    named v1 and v2."""
 
+    answers = sorted(
+        list(
+            itertools.product(
+                config["parameters"]["v1"]["values"],
+                config["parameters"]["v2"]["values"],
+            )
+        )
+    )
+    suggested_parameters = [
+        (run.config["v1"]["value"], run.config["v2"]["value"]) for run in runs
+    ]
 
-class Param(object):
-    def __init__(self, name, values, type=HyperParameter.CATEGORICAL):
-        self.name = name
-        self.values = values
-        self.type = type
-
-
-sweep_config_2params = {
-    "parameters": {"v1": {"values": [1, 2, 3]}, "v2": {"values": [4, 5]}}
-}
-
-
-sweep_config_1params_none = {
-    "parameters": {
-        "v1": {"values": [None, 2, 3]},
-    }
-}
-
-
-def test_grid_single():
-    gs = grid_search.GridSearch(randomize_order=False)
-    runs = []
-    sweep = {"config": sweep_config_2params, "runs": runs}
-    params, info = gs.next_run(sweep)
-    assert info is None
-    assert params["v1"]["value"] == 1 and params["v2"]["value"] == 4
-
-
-def test_grid_single_none():
-    gs = grid_search.GridSearch(randomize_order=False)
-    runs = []
-    sweep = {"config": sweep_config_1params_none, "runs": runs}
-    params, info = gs.next_run(sweep)
-    assert info is None
-    assert params["v1"]["value"] is None
-
-
-def test_grid_all():
-    runs = []
-    num = 0
     while True:
-        gs = grid_search.GridSearch()
-        sweep = {"config": sweep_config_2params, "runs": runs}
-        params = gs.next_run(sweep)
-        if params is None:
+        suggestion = next_run(config, runs, randomize_order=randomize)
+        if suggestion is None:  # done
             break
-        params, _ = params
-        num += 1
-        runs.append(Run(params))
-        if num > 100:
-            break
-    assert num == 3 * 2
+        assert suggestion.search_info is None
+        assert suggestion.state == RunState.proposed
+        runs.append(suggestion)
+        suggested_parameters.append(
+            (suggestion.config["v1"]["value"], suggestion.config["v2"]["value"])
+        )
+
+    # assert that the grid search iterates over all possible parameters and stops when
+    # it exhausts the list of possibilities. do not assert anything about the order
+    # in which parameter suggestions are made.
+    suggested_parameters = sorted(suggested_parameters)
+    assert answers == suggested_parameters
+
+
+@pytest.mark.parametrize("randomize", [True, False])
+def test_grid_from_start_with_and_without_randomize(
+    sweep_config_2params_grid_search, randomize
+):
+    kernel_for_grid_search_tests(
+        [], sweep_config_2params_grid_search, randomize=randomize
+    )
+
+
+@pytest.mark.parametrize("randomize", [True, False])
+def test_grid_search_starting_from_in_progress(
+    sweep_config_2params_grid_search, randomize
+):
+    runs = [
+        SweepRun(config={"v1": {"value": 2}, "v2": {"value": 4}}),
+        SweepRun(config={"v1": {"value": 1}, "v2": {"value": 5}}),
+    ]
+    kernel_for_grid_search_tests(
+        runs, sweep_config_2params_grid_search, randomize=randomize
+    )
