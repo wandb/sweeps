@@ -222,5 +222,5 @@ def stop_runs(
         return hyperband_stop_runs(runs, sweep_config)
     else:
         raise ValueError(
-            f'Invalid early stopping type {et_type}, must be one of ["hyperband", "envelope"]'
+            f'Invalid early stopping type {et_type}, must be one of ["hyperband"]'
         )

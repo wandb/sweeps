@@ -65,17 +65,6 @@ def predict(
     return y_pred_norm[0], y_std_norm[0]
 
 
-def train_runtime_model(
-    sample_X: npt.ArrayLike,
-    runtimes: npt.ArrayLike,
-    X_bounds: Optional[npt.ArrayLike] = None,
-) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
-    if sample_X.shape[0] != runtimes.shape[0]:
-        raise ValueError("Sample X and runtimes must be the same length")
-
-    return train_gaussian_process(sample_X, runtimes, X_bounds)
-
-
 def train_gaussian_process(
     sample_X: npt.ArrayLike,
     sample_y: npt.ArrayLike,
