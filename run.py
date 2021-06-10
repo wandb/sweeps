@@ -38,7 +38,7 @@ class SweepRun(BaseModel):
     """
 
     name: Optional[str] = None
-    summary_metrics: dict = Field(default_factory=lambda: {})
+    summary_metrics: dict = Field(default_factory=lambda: {}, alias="summaryMetrics")
     history: List[dict] = Field(default_factory=lambda: [])
     config: dict = Field(default_factory=lambda: {})
     state: RunState = RunState.proposed
