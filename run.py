@@ -47,6 +47,7 @@ class SweepRun(BaseModel):
 
     class Config:
         use_enum_values = True
+        allow_population_by_field_name = True
 
     def metric_history(self, metric_name: str) -> List[floating]:
         return [d[metric_name] for d in self.history if metric_name in d]
