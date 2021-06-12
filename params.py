@@ -36,7 +36,7 @@ class HyperParameter:
     BETA = "param_beta"
     Q_BETA = "param_qbeta"
 
-    def __init__(self, name: str, config: dict):
+    def __init__(self, name: str, config: dict, validate: bool = True):
         """A hyperparameter to optimize.
 
         >>> parameter = HyperParameter('int_unif_distributed', {'min': 1, 'max': 10})
@@ -72,11 +72,12 @@ class HyperParameter:
                 filler = DefaultFiller(subschema, format_checker=format_checker)
 
                 # this sets the defaults, modifying config inplace
+                config = deepcopy(config)
                 filler.validate(config)
 
                 valid = True
                 self.type = schema_name
-                self.config = deepcopy(config)
+                self.config = config
 
         if not valid:
             raise jsonschema.ValidationError("invalid hyperparameter configuration")
