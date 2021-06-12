@@ -36,7 +36,7 @@ class HyperParameter:
     BETA = "param_beta"
     Q_BETA = "param_qbeta"
 
-    def __init__(self, name: str, config: dict):
+    def __init__(self, name: str, config: dict, validate: bool = True):
         """A hyperparameter to optimize.
 
         >>> parameter = HyperParameter('int_unif_distributed', {'min': 1, 'max': 10})
