@@ -100,7 +100,10 @@ class SweepRun(BaseModel):
 
 
 def next_run(
-    sweep_config: Union[dict, SweepConfig], runs: List[SweepRun], **kwargs
+    sweep_config: Union[dict, SweepConfig],
+    runs: List[SweepRun],
+    validate: bool = True,
+    **kwargs,
 ) -> Optional[SweepRun]:
     """Calculate the next run in a sweep.
 
@@ -113,6 +116,9 @@ def next_run(
     Args:
         sweep_config: The config for the sweep.
         runs: List of runs in the sweep.
+        validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
+           If true, will raise a Validation error if `sweep_config` does not conform to
+           the schema. If false, will attempt to run the sweep with an unvalidated schema.
 
     Returns:
         The suggested run.
@@ -123,17 +129,18 @@ def next_run(
     from .bayes_search import bayes_search_next_run
 
     # validate the sweep config
-    sweep_config = SweepConfig(sweep_config)
+    if validate:
+        sweep_config = SweepConfig(sweep_config)
 
     # this access is safe due to the jsonschema
     method = sweep_config["method"]
 
     if method == "grid":
-        return grid_search_next_run(runs, sweep_config, **kwargs)
+        return grid_search_next_run(runs, sweep_config, validate=validate, **kwargs)
     elif method == "random":
-        return random_search_next_run(sweep_config)
+        return random_search_next_run(sweep_config, validate=validate)
     elif method == "bayes":
-        return bayes_search_next_run(runs, sweep_config, **kwargs)
+        return bayes_search_next_run(runs, sweep_config, validate=validate, **kwargs)
     else:
         raise ValueError(
             f'Invalid search type {method}, must be one of ["grid", "random", "bayes"]'
@@ -143,6 +150,7 @@ def next_run(
 def stop_runs(
     sweep_config: Union[dict, SweepConfig],
     runs: List[SweepRun],
+    validate: bool = True,
 ) -> List[SweepRun]:
     """Calculate the runs in a sweep to stop by early termination.
 
@@ -206,6 +214,10 @@ def stop_runs(
     Args:
         sweep_config: The config for the sweep.
         runs: List of runs in the sweep.
+        validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
+           If true, will raise a Validation error if `sweep_config` does not conform to
+           the schema. If false, will attempt to run the sweep with an unvalidated schema.
+
 
     Returns:
         A list of the runs to stop.
@@ -214,7 +226,8 @@ def stop_runs(
     from .hyperband_stopping import hyperband_stop_runs
 
     # validate the sweep config
-    sweep_config = SweepConfig(sweep_config)
+    if validate:
+        sweep_config = SweepConfig(sweep_config)
 
     if "metric" not in sweep_config:
         raise ValueError('early terminate requires "metric" section')
@@ -224,7 +237,7 @@ def stop_runs(
     et_type = sweep_config["early_terminate"]["type"]
 
     if et_type == "hyperband":
-        return hyperband_stop_runs(runs, sweep_config)
+        return hyperband_stop_runs(runs, sweep_config, validate=validate)
     else:
         raise ValueError(
             f'Invalid early stopping type {et_type}, must be one of ["hyperband"]'

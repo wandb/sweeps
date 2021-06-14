@@ -75,3 +75,10 @@ def test_json_type_inference_beta():
     assert param.config["b"] == 1
     assert param.type == HyperParameter.BETA
     assert len(param.config) == 3
+
+
+def test_validate_does_not_modify_passed_config():
+    config = {"distribution": "normal"}
+    config_save = config.copy()
+    _ = HyperParameter("normal_test", config)
+    assert config == config_save

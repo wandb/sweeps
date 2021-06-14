@@ -9,6 +9,7 @@ from .run import SweepRun, RunState
 def hyperband_stop_runs(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
+    validate: bool = True,
 ) -> List[SweepRun]:
     """
     Suggest sweep runs to terminate early using Hyperband: A Novel Bandit-Based Approach to Hyperparameter Optimization
@@ -75,13 +76,17 @@ def hyperband_stop_runs(
     Args:
         runs: The runs in the sweep.
         config: The sweep's config.
+        validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
+           If true, will raise a Validation error if `sweep_config` does not conform to
+           the schema. If false, will attempt to run the sweep with an unvalidated schema.
 
     Returns:
         List of runs to stop early.
     """
 
     # validate config and fill in defaults
-    config = SweepConfig(config)
+    if validate:
+        config = SweepConfig(config)
 
     if "metric" not in config:
         raise ValueError('Hyperband stopping requires "metric" section')

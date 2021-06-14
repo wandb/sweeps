@@ -72,11 +72,12 @@ class HyperParameter:
                 filler = DefaultFiller(subschema, format_checker=format_checker)
 
                 # this sets the defaults, modifying config inplace
+                config = deepcopy(config)
                 filler.validate(config)
 
                 valid = True
                 self.type = schema_name
-                self.config = deepcopy(config)
+                self.config = config
 
         if not valid:
             raise jsonschema.ValidationError("invalid hyperparameter configuration")
