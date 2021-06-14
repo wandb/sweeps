@@ -523,7 +523,8 @@
       "enum": [
         "bayes",
         "random",
-        "grid"
+        "grid",
+        "custom"
       ]
     },
     "command": {
