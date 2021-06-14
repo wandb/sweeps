@@ -58,13 +58,13 @@
         "mu": {
           "type": "number",
           "description": "Mean for normal or lognormal distributions",
-          "default": 0
+          "default": 0.0
         },
         "sigma": {
           "type": "number",
           "description": "Std Dev for normal or lognormal distributions",
-          "default": 1,
-          "minimum": 0
+          "default": 1.0,
+          "minimum": 0.0
         }
       },
       "additionalProperties": false
@@ -84,12 +84,12 @@
         "mu": {
           "type": "number",
           "description": "Mean for normal or lognormal distributions",
-          "default": 0
+          "default": 0.0
         },
         "sigma": {
           "type": "number",
           "description": "Std Dev for normal or lognormal distributions",
-          "default": 1,
+          "default": 1.0,
           "minimum": 0
         }
       },
