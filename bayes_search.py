@@ -316,7 +316,7 @@ def next_sample(
 def bayes_search_next_run(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
-    validate: bool = True,
+    validate: bool = False,
     minimum_improvement: float = 0.1,
 ) -> SweepRun:
     """Suggest runs using Bayesian optimization.

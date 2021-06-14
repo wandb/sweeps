@@ -14,7 +14,7 @@ def test_validation_disable(search_type):
     }
 
     with pytest.raises(ValidationError):
-        _ = next_run(invalid_schema, [])
+        _ = next_run(invalid_schema, [], validate=True)
 
     # check that no error is raised
     result = next_run(invalid_schema, [], validate=False)

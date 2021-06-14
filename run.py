@@ -97,7 +97,7 @@ class SweepRun(BaseModel):
 def next_run(
     sweep_config: Union[dict, SweepConfig],
     runs: List[SweepRun],
-    validate: bool = True,
+    validate: bool = False,
     **kwargs,
 ) -> Optional[SweepRun]:
     """Calculate the next run in a sweep.
@@ -145,7 +145,7 @@ def next_run(
 def stop_runs(
     sweep_config: Union[dict, SweepConfig],
     runs: List[SweepRun],
-    validate: bool = True,
+    validate: bool = False,
 ) -> List[SweepRun]:
     """Calculate the runs in a sweep to stop by early termination.
 
