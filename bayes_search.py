@@ -260,10 +260,12 @@ def next_sample(
     # hack for dealing with predicted std of 0
     epsilon = 0.00000001
 
+    """
     if opt_func == "probability_of_improvement":
         min_norm_y = (min_unnorm_y - y_mean) / y_stddev - improvement
     else:
-        min_norm_y = (min_unnorm_y - y_mean) / y_stddev
+    """
+    min_norm_y = (min_unnorm_y - y_mean) / y_stddev
 
     Z = -(y_pred - min_norm_y) / (y_pred_std + epsilon)
     prob_of_improve: np.ndarray = scipy_stats.norm.cdf(Z)
@@ -271,10 +273,12 @@ def next_sample(
         Z
     ) + y_pred_std * scipy_stats.norm.pdf(Z)
 
+    """
     if opt_func == "probability_of_improvement":
         best_test_X_index = np.argmax(prob_of_improve)
     else:
-        best_test_X_index = np.argmax(e_i)
+    """
+    best_test_X_index = np.argmax(e_i)
 
     suggested_X = test_X[best_test_X_index]
     suggested_X_prob_of_improvement = prob_of_improve[best_test_X_index]
