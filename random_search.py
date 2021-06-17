@@ -6,7 +6,7 @@ from typing import Union
 
 
 def random_search_next_run(
-    sweep_config: Union[dict, SweepConfig], validate: bool = True
+    sweep_config: Union[dict, SweepConfig], validate: bool = False
 ) -> SweepRun:
     """Suggest runs with Hyperparameters sampled randomly from specified distributions.
 

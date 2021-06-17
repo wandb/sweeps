@@ -35,8 +35,6 @@ class SweepRun(BaseModel):
         history: List of dicts containing the arguments to calls of wandb.log made during the run.
         search_info: Dict containing information produced by the search algorithm.
         early_terminate_info: Dict containing information produced by the early terminate algorithm.
-        stopped: Whether the run was stopped in the sweep
-        shouldStop: Whether the run should stop in the sweep
     """
 
     name: Optional[str] = None
@@ -46,8 +44,6 @@ class SweepRun(BaseModel):
     state: RunState = RunState.proposed
     search_info: Optional[Dict] = None
     early_terminate_info: Optional[Dict] = None
-    stopped: bool = False
-    should_stop: bool = pydantic.Field(default=False, alias="shouldStop")
 
     class Config:
         use_enum_values = True
@@ -102,7 +98,7 @@ class SweepRun(BaseModel):
 def next_run(
     sweep_config: Union[dict, SweepConfig],
     runs: List[SweepRun],
-    validate: bool = True,
+    validate: bool = False,
     **kwargs,
 ) -> Optional[SweepRun]:
     """Calculate the next run in a sweep.
@@ -150,7 +146,7 @@ def next_run(
 def stop_runs(
     sweep_config: Union[dict, SweepConfig],
     runs: List[SweepRun],
-    validate: bool = True,
+    validate: bool = False,
 ) -> List[SweepRun]:
     """Calculate the runs in a sweep to stop by early termination.
 

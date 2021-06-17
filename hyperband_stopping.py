@@ -9,7 +9,7 @@ from .run import SweepRun, RunState
 def hyperband_stop_runs(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
-    validate: bool = True,
+    validate: bool = False,
 ) -> List[SweepRun]:
     """
     Suggest sweep runs to terminate early using Hyperband: A Novel Bandit-Based Approach to Hyperparameter Optimization

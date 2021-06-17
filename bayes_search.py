@@ -260,10 +260,12 @@ def next_sample(
     # hack for dealing with predicted std of 0
     epsilon = 0.00000001
 
+    """
     if opt_func == "probability_of_improvement":
         min_norm_y = (min_unnorm_y - y_mean) / y_stddev - improvement
     else:
-        min_norm_y = (min_unnorm_y - y_mean) / y_stddev
+    """
+    min_norm_y = (min_unnorm_y - y_mean) / y_stddev
 
     Z = -(y_pred - min_norm_y) / (y_pred_std + epsilon)
     prob_of_improve: np.ndarray = scipy_stats.norm.cdf(Z)
@@ -271,10 +273,12 @@ def next_sample(
         Z
     ) + y_pred_std * scipy_stats.norm.pdf(Z)
 
+    """
     if opt_func == "probability_of_improvement":
         best_test_X_index = np.argmax(prob_of_improve)
     else:
-        best_test_X_index = np.argmax(e_i)
+    """
+    best_test_X_index = np.argmax(e_i)
 
     suggested_X = test_X[best_test_X_index]
     suggested_X_prob_of_improvement = prob_of_improve[best_test_X_index]
@@ -306,7 +310,7 @@ def next_sample(
 def bayes_search_next_run(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
-    validate: bool = True,
+    validate: bool = False,
     minimum_improvement: float = 0.1,
 ) -> SweepRun:
     """Suggest runs using Bayesian optimization.
@@ -427,9 +431,9 @@ def bayes_search_next_run(
 
     ret_dict = params.to_config()
     info = {
-        "Bayesian optimizer predicts the probability of finding a new optimum is": suggested_X_prob_of_improvement,
-        "Bayesian optimizer predicts the new value of the metric is": suggested_X_predicted_y,
-        "Bayesian optimizer predicts the uncertainty in the predicted value of the metric is": suggested_X_predicted_std,
-        "Bayesian optimizer predicts the expected improvement in the value of the metric is": suggested_X_expected_improvement,
+        "success_probability": suggested_X_prob_of_improvement,
+        "predicted_value": suggested_X_predicted_y,
+        "predicted_value_std_dev": suggested_X_predicted_std,
+        "expected_improvement": suggested_X_expected_improvement,
     }
     return SweepRun(config=ret_dict, search_info=info)

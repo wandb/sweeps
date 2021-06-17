@@ -10,7 +10,7 @@ from .params import HyperParameter, HyperParameterSet
 def grid_search_next_run(
     runs: List[SweepRun],
     sweep_config: Union[dict, SweepConfig],
-    validate: bool = True,
+    validate: bool = False,
     randomize_order: bool = False,
 ) -> Optional[SweepRun]:
     """Suggest runs with Hyperparameters drawn from a grid.

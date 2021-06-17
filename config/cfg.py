@@ -13,7 +13,7 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
 
     schema_violation_messages = []
     for error in validator.iter_errors(config):
-        schema_violation_messages.append(f"{error}")
+        schema_violation_messages.append(f"{error.message}")
 
     # validate min/max - this cannot be done with jsonschema
     # because it does not support comparing values within
