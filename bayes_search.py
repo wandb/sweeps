@@ -431,9 +431,9 @@ def bayes_search_next_run(
 
     ret_dict = params.to_config()
     info = {
-        "Bayesian optimizer predicts the probability of finding a new optimum is": suggested_X_prob_of_improvement,
-        "Bayesian optimizer predicts the new value of the metric is": suggested_X_predicted_y,
-        "Bayesian optimizer predicts the uncertainty in the predicted value of the metric is": suggested_X_predicted_std,
-        "Bayesian optimizer predicts the expected improvement in the value of the metric is": suggested_X_expected_improvement,
+        "success_probability": suggested_X_prob_of_improvement,
+        "predicted_value": suggested_X_predicted_y,
+        "predicted_value_std_dev": suggested_X_predicted_std,
+        "expected_improvement": suggested_X_expected_improvement,
     }
     return SweepRun(config=ret_dict, search_info=info)
