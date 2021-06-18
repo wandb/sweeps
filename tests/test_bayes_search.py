@@ -98,6 +98,7 @@ def run_iterations(
     optimium: Optional[npt.ArrayLike] = None,
     atol: Optional[npt.ArrayLike] = 0.2,
     chunk_size: integer = 1,
+    model: str = "gp"
 ) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
 
     if x_init is not None:
@@ -173,14 +174,15 @@ def test_squiggle_convergence():
     run_iterations(squiggle, [[0.0, 5.0]], 200, x_init, optimium=[3.6], atol=0.2)
 
 
-def test_squiggle_convergence_to_maximum():
+@pytest.mark.parametrize("model",["gp","tpe"])
+def test_squiggle_convergence_to_maximum(model):
     # This test checks whether the bayes algorithm correctly explores the parameter space
     # we sample a ton of positive examples, ignoring the negative side
     def f(x):
         return -squiggle(x)
 
     x_init = np.random.uniform(0, 5, 1)[:, None]
-    run_iterations(f, [[0.0, 5.0]], 200, x_init, optimium=[2], atol=0.2)
+    run_iterations(f, [[0.0, 5.0]], 200, x_init, optimium=[2], atol=0.2, model=model)
 
 
 def test_nans():
@@ -206,7 +208,8 @@ def test_squiggle_int():
     assert np.isclose(sample % 1, 0)
 
 
-def test_iterations_rosenbrock():
+@pytest.mark.parametrize("model",["gp","tpe"])
+def test_iterations_rosenbrock(model):
     dimensions = 3
     # x_init = np.random.uniform(0, 2, size=(1, dimensions))
     x_init = np.zeros((1, dimensions))
@@ -218,6 +221,7 @@ def test_iterations_rosenbrock():
         optimium=[1, 1, 1],
         atol=0.2,
         improvement=0.1,
+        model=model
     )
 
 
