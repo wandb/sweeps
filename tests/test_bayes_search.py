@@ -120,6 +120,7 @@ def run_iterations(
                 X_bounds=bounds,
                 current_X=sample_X,
                 improvement=improvement,
+                model=model
             )
             if sample_X is None:
                 sample_X = np.array([sample])
