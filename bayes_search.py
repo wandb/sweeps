@@ -395,8 +395,11 @@ def llik_from_1D_parzen_estimator(samples, mus, sigmas, x_min, x_max):
     return llik
 
 def parzen_threshold(y, gamma):
-    low_ind = int(np.floor(gamma * np.sqrt(len(y))))
-    return np.sort(y)[low_ind]
+    num_low = int(np.ceil(gamma * np.sqrt(len(y))))
+    low_ind = np.argsort(y)[0:num_low]
+    ret_val = np.array([False] * len(y))
+    ret_val[low_ind] = True
+    return ret_val
 
 def next_sample_tpe(
     filtered_X: npt.ArrayLike,
@@ -410,7 +413,7 @@ def next_sample_tpe(
     fit_1D: Optional[bool] = False
 ) -> Tuple[npt.ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
 
-    y_star = np.quantile(filtered_y, improvement) 
+    low_ind = parzen_threshold(filtered_y, improvement)
     if X_bounds is None:
         hp_min = np.min(filtered_X, axis=0)
         hp_max = np.max(filtered_X, axis=0)
@@ -418,8 +421,8 @@ def next_sample_tpe(
     else:
         X_bounds = np.array(X_bounds)
 
-    low_X = filtered_X[filtered_y <= y_star]
-    high_X = filtered_X[filtered_y > y_star]
+    low_X = filtered_X[low_ind]
+    high_X = filtered_X[np.logical_not(low_ind)]
     num_hp = low_X.shape[1]
     # Fitting separate parzen estimators to each hyperparameter
     if fit_1D:
