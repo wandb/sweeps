@@ -377,7 +377,7 @@ def bayes_search_next_run(
                 metric = 0.0  # default
             y.append(metric)
             sample_X.append(X_norm)
-        elif run.state == RunState.running:
+        elif run.state in [RunState.running, RunState.preempting, RunState.preempted]:
             # run is in progress
             # we wont use the metric, but we should pass it into our optimizer to
             # account for the fact that it is running
