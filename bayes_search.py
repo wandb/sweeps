@@ -346,31 +346,57 @@ def next_sample_gp(
         suggested_X_expected_improvement,
     )
 
-def fit_1D_parzen_estimator(X, x_min, x_max):
+def fit_1D_parzen_estimator(X, X_bounds):
     mus = X.copy()
     sorted_mus = np.sort(mus)
-    extended_mus = np.concatenate((np.array([x_min]), sorted_mus, np.array([x_max])))
+    extended_mus = np.insert(X_bounds, 1, sorted_mus)
     sigmas = np.maximum(extended_mus[2:]-extended_mus[1:-1], extended_mus[1:-1] - extended_mus[0:-2])
     sigmas = np.maximum(sigmas, 1e-6)
     return (mus, sigmas)
 
-def sample_from_1D_parzen_estimator(mus, sigmas, x_min, x_max, indices):
-#        which_mu = np.argmax(np.multinomial(1, [1.0/len(mus)]*len(mus))
-    new_samples = np.zeros(len(indices))
+def sample_from_parzen_estimator(mus, sigmas, X_bounds, num_samples):
+    which_mu = np.random.default_rng().integers(-1, len(mus), num_samples)
+    samples = np.zeros((num_samples, len(X_bounds)))
+    uniform_ind = (which_mu == -1)
+    num_uniform = np.count_nonzero(uniform_ind)
+    samples[uniform_ind] = np.random.default_rng().uniform(
+                                  np.tile(X_bounds[:,0],[num_uniform, 1]),
+                                  np.tile(X_bounds[:,1],[num_uniform, 1]) )
+    normal_ind = (which_mu >= 0)
+    num_normal = np.count_nonzero(normal_ind)
+    samples[normal_ind] = np.random.default_rng().normal(
+                                loc = mus[which_mu[normal_ind]],
+                                scale = sigmas[which_mu[normal_ind]] )
+    return np.clip(samples, X_bounds[:,0], X_bounds[:,1])
+
+def sample_from_1D_parzen_estimator(mus, sigmas, x_min, x_max, num_points_to_try):
+    indices = np.random.default_rng().integers(-1, len(low_X), num_points_to_try)
+    new_samples = np.zeros(num_points_to_try)
 
     # For which_mu == -1, sample from the (uniform) prior
     new_samples[indices == -1] = np.random.default_rng().uniform(x_min, x_max, np.sum(indices == -1))
     # Other samples are from mus
-#    which_mu = which_mu[which_mu >=0]
     new_samples[indices >= 0] = np.random.default_rng().normal(loc = mus[indices[indices >= 0]], 
                                             scale = sigmas[indices[indices >= 0]])
     return np.clip(new_samples, x_min, x_max)
 
+def llik_from_parzen_estimator(samples, mus, sigmas, X_bounds):
+    samp_norm = (np.tile(samples, [len(mus), 1, 1]).transpose((1, 0, 2)) - mus) / sigmas
+    samp_norm = np.square(samp_norm)
+    normalization = (2.0 * np.pi) ** (-len(X_bounds) / 2.0) / np.prod(sigmas, axis=1) 
+    pdf = normalization * np.exp(-0.5 * np.sum(samp_norm, axis = 2))
+    uniform_pdf = 1.0 / np.prod(X_bounds[:,1] - X_bounds[:,0]) 
+    mixture = (np.sum(pdf, axis = 1) + uniform_pdf) / (len(mus) + 1.0)  
+    return np.log(mixture)
+
 def llik_from_1D_parzen_estimator(samples, mus, sigmas, x_min, x_max): 
-    llik = np.array(len(samples))
     samp_norm = (np.tile(samples, [len(mus), 1]).T - mus) / sigmas
     llik = np.log((np.sum(scipy_stats.norm.pdf(samp_norm), axis=1) + 1.0 / (x_max - x_min)) / (len(mus) + 1.0))
     return llik
+
+def parzen_threshold(y, gamma):
+    low_ind = int(np.floor(gamma * np.sqrt(len(y))))
+    return np.sort(y)[low_ind]
 
 def next_sample_tpe(
     filtered_X: npt.ArrayLike,
@@ -381,32 +407,50 @@ def next_sample_tpe(
     improvement: floating = 0.01,
     num_points_to_try: integer = 1000,
     test_X: Optional[npt.ArrayLike] = None,
+    fit_1D: Optional[bool] = False
 ) -> Tuple[npt.ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
 
-    y_star = np.quantile(filtered_y, improvement)
+    y_star = np.quantile(filtered_y, improvement) 
     if X_bounds is None:
         hp_min = np.min(filtered_X, axis=0)
         hp_max = np.max(filtered_X, axis=0)
         X_bounds = np.column_stack(hp_min, hp_max)
+    else:
+        X_bounds = np.array(X_bounds)
 
     low_X = filtered_X[filtered_y <= y_star]
     high_X = filtered_X[filtered_y > y_star]
     num_hp = low_X.shape[1]
-    new_samples = np.zeros((num_points_to_try, num_hp))
-    low_llik = np.zeros((num_points_to_try, num_hp))
-    high_llik = np.zeros((num_points_to_try, num_hp))
-    which_mu = np.random.default_rng().integers(-1, len(low_X), num_points_to_try)
-    # For each hyperparameter
-    for i in range(num_hp):
-        # Values below y_star
-        (x_min, x_max) = X_bounds[i]
-        (low_mus, low_sigmas) = fit_1D_parzen_estimator(low_X[:,i], x_min, x_max)
-        (high_mus, high_sigmas) = fit_1D_parzen_estimator(high_X[:,i], x_min, x_max)
-        new_samples[:, i] = sample_from_1D_parzen_estimator(low_mus, low_sigmas, x_min, x_max, which_mu)
-        low_llik[:,i] = llik_from_1D_parzen_estimator(new_samples[:,i], low_mus, low_sigmas, x_min, x_max)
-        high_llik[:,i] = llik_from_1D_parzen_estimator(new_samples[:,i], high_mus, high_sigmas, x_min, x_max)
+    # Fitting separate parzen estimators to each hyperparameter
+    if fit_1D:
+        new_samples = np.zeros((num_points_to_try, num_hp))
+        low_llik = np.zeros((num_points_to_try, num_hp))
+        high_llik = np.zeros((num_points_to_try, num_hp))
+        for i in range(num_hp):
+            # Values below y_star
+            (x_min, x_max) = X_bounds[i]
+            (low_mus, low_sigmas) = fit_1D_parzen_estimator(low_X[:,i], x_min, x_max)
+            (high_mus, high_sigmas) = fit_1D_parzen_estimator(high_X[:,i], x_min, x_max)
+            new_samples[:, i] = sample_from_1D_parzen_estimator(low_mus, low_sigmas, x_min, x_max, num_points_to_try)
+            low_llik[:,i] = llik_from_1D_parzen_estimator(new_samples[:,i], low_mus, low_sigmas, x_min, x_max)
+            high_llik[:,i] = llik_from_1D_parzen_estimator(new_samples[:,i], high_mus, high_sigmas, x_min, x_max)
+        score = np.sum(low_llik - high_llik, axis=1)
+    # Fitting a multidimensional Parzen estimator
+    else:
+        low_mus = low_X.copy()
+        low_sigmas = np.zeros((len(low_X), num_hp))
+        high_mus = high_X.copy()
+        high_sigmas = np.zeros((len(high_X), num_hp))
 
-    score = np.sum(low_llik - high_llik, axis=1)
+        for i in range(num_hp):
+            (low_mus[:,i], low_sigmas[:,i]) = fit_1D_parzen_estimator(low_X[:,i], X_bounds[i])
+            (high_mus[:,i], high_sigmas[:,i]) = fit_1D_parzen_estimator(high_X[:,i], X_bounds[i])
+
+        new_samples = sample_from_parzen_estimator(low_mus, low_sigmas, X_bounds, num_points_to_try)
+        low_llik = llik_from_parzen_estimator(new_samples, low_mus, low_sigmas, X_bounds)
+        high_llik = llik_from_parzen_estimator(new_samples, high_mus, high_sigmas, X_bounds)
+        score = low_llik - high_llik
+
     return (
         new_samples[np.argmax(score),:],
         None,
