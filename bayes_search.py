@@ -249,9 +249,20 @@ def next_sample(
             None,
         )
 
-    if model=="gp":
+    if model == "tpe":
+        return next_sample_tpe(
+            filtered_X=filtered_X,
+            filtered_y=filtered_y,
+            X_bounds=X_bounds,
+            current_X=current_X,
+            max_samples_for_model=max_samples_for_model,
+            improvement=improvement,
+            num_points_to_try=num_points_to_try,
+            test_X=test_X,
+        )
+    else:  # GP
         return next_sample_gp(
-            filtered_X=filtered_X, 
+            filtered_X=filtered_X,
             filtered_y=filtered_y,
             X_bounds=X_bounds,
             current_X=current_X,
@@ -260,19 +271,9 @@ def next_sample(
             improvement=improvement,
             num_points_to_try=num_points_to_try,
             opt_func=opt_func,
-            test_X=test_X
-            )
-    elif model=="tpe":
-        return next_sample_tpe(
-            filtered_X=filtered_X, 
-            filtered_y=filtered_y,
-            X_bounds=X_bounds,
-            current_X=current_X,
-            max_samples_for_model=max_samples_for_model,
-            improvement=improvement,
-            num_points_to_try=num_points_to_try,
-            test_X=test_X
-           )
+            test_X=test_X,
+        )
+
 
 def next_sample_gp(
     filtered_X: npt.ArrayLike,
@@ -346,53 +347,76 @@ def next_sample_gp(
         suggested_X_expected_improvement,
     )
 
+
 def fit_1D_parzen_estimator(X, X_bounds):
     mus = X.copy()
     sorted_mus = np.sort(mus)
     extended_mus = np.insert(X_bounds, 1, sorted_mus)
-    sigmas = np.maximum(extended_mus[2:]-extended_mus[1:-1], extended_mus[1:-1] - extended_mus[0:-2])
-    sigmas = np.maximum(sigmas, 1e-6)
+    sigmas = np.maximum(
+        extended_mus[2:] - extended_mus[1:-1], extended_mus[1:-1] - extended_mus[0:-2]
+    )
+
+    # Magic formula from reference implementation
+    prior_sigma = (X_bounds[1] - X_bounds[0]) / np.sqrt(12.0)
+    minsigma = prior_sigma / min(100.0, (1.0 + len(mus)))
+    sigmas = np.clip(sigmas, minsigma, prior_sigma)
+
     return (mus, sigmas)
+
 
 def sample_from_parzen_estimator(mus, sigmas, X_bounds, num_samples):
     which_mu = np.random.default_rng().integers(-1, len(mus), num_samples)
     samples = np.zeros((num_samples, len(X_bounds)))
-    uniform_ind = (which_mu == -1)
+    uniform_ind = which_mu == -1
     num_uniform = np.count_nonzero(uniform_ind)
     samples[uniform_ind] = np.random.default_rng().uniform(
-                                  np.tile(X_bounds[:,0],[num_uniform, 1]),
-                                  np.tile(X_bounds[:,1],[num_uniform, 1]) )
-    normal_ind = (which_mu >= 0)
-    num_normal = np.count_nonzero(normal_ind)
+        np.tile(X_bounds[:, 0], [num_uniform, 1]),
+        np.tile(X_bounds[:, 1], [num_uniform, 1]),
+    )
+    normal_ind = which_mu >= 0
     samples[normal_ind] = np.random.default_rng().normal(
-                                loc = mus[which_mu[normal_ind]],
-                                scale = sigmas[which_mu[normal_ind]] )
-    return np.clip(samples, X_bounds[:,0], X_bounds[:,1])
+        loc=mus[which_mu[normal_ind]], scale=sigmas[which_mu[normal_ind]]
+    )
+    return np.clip(samples, X_bounds[:, 0], X_bounds[:, 1])
 
-def sample_from_1D_parzen_estimator(mus, sigmas, x_min, x_max, num_points_to_try):
-    indices = np.random.default_rng().integers(-1, len(low_X), num_points_to_try)
+
+def sample_from_1D_parzen_estimator(mus, sigmas, X_bounds, num_points_to_try):
+    indices = np.random.default_rng().integers(-1, len(mus), num_points_to_try)
     new_samples = np.zeros(num_points_to_try)
 
     # For which_mu == -1, sample from the (uniform) prior
-    new_samples[indices == -1] = np.random.default_rng().uniform(x_min, x_max, np.sum(indices == -1))
+    new_samples[indices == -1] = np.random.default_rng().uniform(
+        X_bounds[0], X_bounds[1], np.sum(indices == -1)
+    )
     # Other samples are from mus
-    new_samples[indices >= 0] = np.random.default_rng().normal(loc = mus[indices[indices >= 0]], 
-                                            scale = sigmas[indices[indices >= 0]])
-    return np.clip(new_samples, x_min, x_max)
+    new_samples[indices >= 0] = np.random.default_rng().normal(
+        loc=mus[indices[indices >= 0]], scale=sigmas[indices[indices >= 0]]
+    )
+    return np.clip(new_samples, X_bounds[0], X_bounds[1])
+
 
 def llik_from_parzen_estimator(samples, mus, sigmas, X_bounds):
     samp_norm = (np.tile(samples, [len(mus), 1, 1]).transpose((1, 0, 2)) - mus) / sigmas
+    # alt_pdf = np.prod(scipy_stats.norm.pdf(samp_norm), axis=2) / np.prod(sigmas, axis=1)
     samp_norm = np.square(samp_norm)
-    normalization = (2.0 * np.pi) ** (-len(X_bounds) / 2.0) / np.prod(sigmas, axis=1) 
-    pdf = normalization * np.exp(-0.5 * np.sum(samp_norm, axis = 2))
-    uniform_pdf = 1.0 / np.prod(X_bounds[:,1] - X_bounds[:,0]) 
-    mixture = (np.sum(pdf, axis = 1) + uniform_pdf) / (len(mus) + 1.0)  
+    normalization = (2.0 * np.pi) ** (-len(X_bounds) / 2.0) / np.prod(sigmas, axis=1)
+    pdf = normalization * np.exp(-0.5 * np.sum(samp_norm, axis=2))
+    uniform_pdf = 1.0 / np.prod(X_bounds[:, 1] - X_bounds[:, 0])
+    mixture = (np.sum(pdf, axis=1) + uniform_pdf) / (len(mus) + 1.0)
     return np.log(mixture)
 
-def llik_from_1D_parzen_estimator(samples, mus, sigmas, x_min, x_max): 
+
+def llik_from_1D_parzen_estimator(samples, mus, sigmas, X_bounds):
     samp_norm = (np.tile(samples, [len(mus), 1]).T - mus) / sigmas
-    llik = np.log((np.sum(scipy_stats.norm.pdf(samp_norm), axis=1) + 1.0 / (x_max - x_min)) / (len(mus) + 1.0))
+    llik = np.log(
+        (
+            np.sum(scipy_stats.norm.pdf(samp_norm), axis=1)
+            + 1.0 / (X_bounds[1] - X_bounds[0])
+        )
+        / (len(mus) + 1.0)
+    )
     return llik
+
 
 def parzen_threshold(y, gamma):
     num_low = int(np.ceil(gamma * np.sqrt(len(y))))
@@ -400,6 +424,7 @@ def parzen_threshold(y, gamma):
     ret_val = np.array([False] * len(y))
     ret_val[low_ind] = True
     return ret_val
+
 
 def next_sample_tpe(
     filtered_X: npt.ArrayLike,
@@ -410,7 +435,7 @@ def next_sample_tpe(
     improvement: floating = 0.01,
     num_points_to_try: integer = 1000,
     test_X: Optional[npt.ArrayLike] = None,
-    fit_1D: Optional[bool] = False
+    fit_1D: Optional[bool] = False,
 ) -> Tuple[npt.ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
 
     low_ind = parzen_threshold(filtered_y, improvement)
@@ -431,12 +456,17 @@ def next_sample_tpe(
         high_llik = np.zeros((num_points_to_try, num_hp))
         for i in range(num_hp):
             # Values below y_star
-            (x_min, x_max) = X_bounds[i]
-            (low_mus, low_sigmas) = fit_1D_parzen_estimator(low_X[:,i], x_min, x_max)
-            (high_mus, high_sigmas) = fit_1D_parzen_estimator(high_X[:,i], x_min, x_max)
-            new_samples[:, i] = sample_from_1D_parzen_estimator(low_mus, low_sigmas, x_min, x_max, num_points_to_try)
-            low_llik[:,i] = llik_from_1D_parzen_estimator(new_samples[:,i], low_mus, low_sigmas, x_min, x_max)
-            high_llik[:,i] = llik_from_1D_parzen_estimator(new_samples[:,i], high_mus, high_sigmas, x_min, x_max)
+            (low_mus, low_sigmas) = fit_1D_parzen_estimator(low_X[:, i], X_bounds[i])
+            (high_mus, high_sigmas) = fit_1D_parzen_estimator(high_X[:, i], X_bounds[i])
+            new_samples[:, i] = sample_from_1D_parzen_estimator(
+                low_mus, low_sigmas, X_bounds[i], num_points_to_try
+            )
+            low_llik[:, i] = llik_from_1D_parzen_estimator(
+                new_samples[:, i], low_mus, low_sigmas, X_bounds[i]
+            )
+            high_llik[:, i] = llik_from_1D_parzen_estimator(
+                new_samples[:, i], high_mus, high_sigmas, X_bounds[i]
+            )
         score = np.sum(low_llik - high_llik, axis=1)
     # Fitting a multidimensional Parzen estimator
     else:
@@ -446,21 +476,32 @@ def next_sample_tpe(
         high_sigmas = np.zeros((len(high_X), num_hp))
 
         for i in range(num_hp):
-            (low_mus[:,i], low_sigmas[:,i]) = fit_1D_parzen_estimator(low_X[:,i], X_bounds[i])
-            (high_mus[:,i], high_sigmas[:,i]) = fit_1D_parzen_estimator(high_X[:,i], X_bounds[i])
+            (low_mus[:, i], low_sigmas[:, i]) = fit_1D_parzen_estimator(
+                low_X[:, i], X_bounds[i]
+            )
+            (high_mus[:, i], high_sigmas[:, i]) = fit_1D_parzen_estimator(
+                high_X[:, i], X_bounds[i]
+            )
 
-        new_samples = sample_from_parzen_estimator(low_mus, low_sigmas, X_bounds, num_points_to_try)
-        low_llik = llik_from_parzen_estimator(new_samples, low_mus, low_sigmas, X_bounds)
-        high_llik = llik_from_parzen_estimator(new_samples, high_mus, high_sigmas, X_bounds)
+        new_samples = sample_from_parzen_estimator(
+            low_mus, low_sigmas, X_bounds, num_points_to_try
+        )
+        low_llik = llik_from_parzen_estimator(
+            new_samples, low_mus, low_sigmas, X_bounds
+        )
+        high_llik = llik_from_parzen_estimator(
+            new_samples, high_mus, high_sigmas, X_bounds
+        )
         score = low_llik - high_llik
 
     return (
-        new_samples[np.argmax(score),:],
+        new_samples[np.argmax(score), :],
         None,
         None,
         None,
         None,
-        )
+    )
+
 
 def bayes_search_next_run(
     runs: List[SweepRun],
@@ -494,16 +535,12 @@ def bayes_search_next_run(
     if "metric" not in config:
         raise ValueError('Bayesian search requires "metric" section')
 
-    if isinstance(config["method"],str):
-        if config["method"] == "bayes":
-            config["method"] = { "name": "bayes", "model": "gp"}
-        else:
-            raise ValueError("Invalid sweep configuration for bayes_search_next_run.")
-    elif isinstance(config["method"],dict):
-        if config["method"]["model"] not in ("gp", "tpe"):
+    if isinstance(config["method"], dict):
+        model = config["method"]["model"]
+        if model not in ("gp", "tpe"):
             raise ValueError("Invalid sweep configuration for bayes_search_next_run.")
     else:
-        raise ValueError("Invalid sweep configuration for bayes_search_next_run.")
+        model = "gp"
 
     goal = config["metric"]["goal"]
     metric_name = config["metric"]["name"]
