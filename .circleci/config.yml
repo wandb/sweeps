@@ -43,12 +43,6 @@ jobs:
       - run:
           name: Run Tests
           command: pytest --cov=./ --cov-report=xml
-      - codecov/upload:
-          file: coverage.xml
-      - store_artifacts:
-          path: prof/
-      - store_test_results:
-          path: .
     resource_class: large
   linters:
     executor:
