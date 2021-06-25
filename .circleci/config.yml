@@ -33,7 +33,7 @@ jobs:
       - checkout
       - run:
           name: Install python
-          command: pyenv install 3.9.5
+          command:   cd /opt/circleci/.pyenv/plugins/python-build/../.. && git pull && cd - && pyenv install 3.9.5
       - run:
           name: Load python
           command: pyenv global 3.9.5
