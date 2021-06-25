@@ -82,3 +82,11 @@ def test_validate_does_not_modify_passed_config():
     config_save = config.copy()
     _ = HyperParameter("normal_test", config)
     assert config == config_save
+
+
+def test_uniform_with_integer_min_max():
+    # CLI-975
+    # https://github.com/wandb/sweeps/pull/16
+    config = {"distribution": "uniform", "min": 0, "max": 1}  # integers
+    unif_param = HyperParameter("uniform_param", config)  # this should not raise
+    assert unif_param.type == HyperParameter.UNIFORM
