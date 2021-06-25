@@ -122,7 +122,8 @@ def run_iterations(
             )
             if sample_X is None:
                 sample_X = np.array([sample])
-            sample_X = np.append(sample_X, np.array([sample]), axis=0)
+            else:
+                sample_X = np.append(sample_X, np.array([sample]), axis=0)
             counter += 1
             print(
                 "X: {} prob(I): {} pred: {} value: {}".format(
