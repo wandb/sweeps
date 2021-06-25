@@ -60,4 +60,5 @@ workflows:
   main:
     jobs:
       - linux38
+      - linux39
       - linters
