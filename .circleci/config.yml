@@ -26,6 +26,24 @@ jobs:
       - store_test_results:
           path: .
     resource_class: large
+  linux39:
+    machine:
+      image: ubuntu-1604:202007-01
+    steps:
+      - checkout
+      - run:
+          name: Install python
+          command: pyenv install 3.9.0b3
+      - run:
+          name: Load python
+          command: pyenv global 3.9.0b3
+      - run:
+          name: Install dependencies
+          command: pip install -r requirements.dev.txt
+      - run:
+          name: Run Tests
+          command: pytest --cov=./ --cov-report=xml
+    resource_class: large
   linters:
     executor:
       name: python/default
@@ -42,4 +60,5 @@ workflows:
   main:
     jobs:
       - linux38
+      - linux39
       - linters
