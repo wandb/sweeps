@@ -199,6 +199,12 @@
             "max": {
               "type": "number",
               "format": "float"
+            },
+            "distribution": {
+              "enum": [
+                "uniform"
+              ],
+              "default": "uniform"
             }
           },
           "additionalProperties": false
