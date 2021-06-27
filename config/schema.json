@@ -559,7 +559,7 @@
       "additionalProperties": {
         "$ref": "#/definitions/parameter"
       },
-      "minLength": 1
+      "minProperties": 1
     }
   }
 }
