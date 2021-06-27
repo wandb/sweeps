@@ -7,6 +7,7 @@ from typing import Union, Dict, List
 
 import jsonschema
 from .schema import validator
+from copy import deepcopy
 
 
 def schema_violations_from_proposed_config(config: Dict) -> List[str]:
@@ -31,7 +32,7 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
 
 class SweepConfig(dict):
     def __init__(self, d: Dict):
-        super(SweepConfig, self).__init__(d)
+        super(SweepConfig, self).__init__(deepcopy(d))
 
         if not isinstance(d, SweepConfig):
             # ensure the data conform to the schema

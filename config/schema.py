@@ -4,6 +4,7 @@ import jsonschema
 from jsonschema import Draft7Validator, validators
 
 from pathlib import Path
+from typing import Dict
 
 sweep_config_jsonschema_fname = Path(__file__).parent / "schema.json"
 with open(sweep_config_jsonschema_fname, "r") as f:
@@ -63,3 +64,28 @@ DefaultFiller = extend_with_default(Draft7Validator)
 default_filler = DefaultFiller(
     schema=sweep_config_jsonschema, format_checker=format_checker
 )
+
+
+def fill_schema(d: Dict) -> Dict:
+    from ..params import HyperParameterSet
+    from . import SweepConfig
+
+    # check that the schema is valid
+    validated = SweepConfig(d)
+
+    # update the parameters
+    validated["parameters"] = {
+        p.name: p.config for p in HyperParameterSet.from_config(validated["parameters"])
+    }
+
+    if "early_terminate" in validated:
+        if validated["early_terminate"]["type"] == "hyperband":
+            filler = DefaultFiller(
+                schema=dereferenced_sweep_config_jsonschema["definitions"][
+                    "hyperband_stopping"
+                ],
+                format_checker=format_checker,
+            )
+            filler.validate(validated["early_terminate"])
+
+    return validated
