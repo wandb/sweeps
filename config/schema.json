@@ -558,7 +558,8 @@
       },
       "additionalProperties": {
         "$ref": "#/definitions/parameter"
-      }
+      },
+      "minLength": 1
     }
   }
 }
