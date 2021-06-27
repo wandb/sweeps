@@ -4,7 +4,8 @@ import jsonschema
 from jsonschema import Draft7Validator, validators
 
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional, Tuple
+from copy import deepcopy
 
 sweep_config_jsonschema_fname = Path(__file__).parent / "schema.json"
 with open(sweep_config_jsonschema_fname, "r") as f:
@@ -66,17 +67,49 @@ default_filler = DefaultFiller(
 )
 
 
+def fill_parameter(config: Dict) -> Optional[Tuple[str, Dict]]:
+    # names of the parameter definitions that are allowed
+    allowed_schemas = [
+        d["$ref"].split("/")[-1]
+        for d in sweep_config_jsonschema["definitions"]["parameter"]["anyOf"]
+    ]
+
+    for schema_name in allowed_schemas:
+        # create a jsonschema object to validate against the subschema
+        subschema = dereferenced_sweep_config_jsonschema["definitions"][schema_name]
+
+        try:
+            jsonschema.Draft7Validator(
+                subschema, format_checker=format_checker
+            ).validate(config)
+        except jsonschema.ValidationError:
+            continue
+        else:
+            filler = DefaultFiller(subschema, format_checker=format_checker)
+
+            # this sets the defaults, modifying config inplace
+            config = deepcopy(config)
+            filler.validate(config)
+            return schema_name, config
+
+    return None
+
+
 def fill_schema(d: Dict) -> Dict:
-    from ..params import HyperParameterSet
     from . import SweepConfig
 
     # check that the schema is valid
     validated = SweepConfig(d)
 
     # update the parameters
-    validated["parameters"] = {
-        p.name: p.config for p in HyperParameterSet.from_config(validated["parameters"])
-    }
+    filled = {}
+    for k, v in validated["parameters"].items():
+        result = fill_parameter(v)
+        if result is None:
+            raise jsonschema.ValidationError(f"Parameter {k} is malformed")
+        _, config = result
+        filled[k] = config
+    validated["parameters"] = filled
 
     if "early_terminate" in validated:
         if validated["early_terminate"]["type"] == "hyperband":

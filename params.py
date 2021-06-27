@@ -7,17 +7,11 @@ from typing import List, Tuple, Dict, Any
 import numpy as np
 import numpy.typing as npt
 import scipy.stats as stats
-from copy import deepcopy
 
 import jsonschema
 
 from .run import SweepRun
-from .config.schema import (
-    sweep_config_jsonschema,
-    dereferenced_sweep_config_jsonschema,
-    DefaultFiller,
-    format_checker,
-)
+from .config import fill_parameter
 
 
 class HyperParameter:
@@ -51,42 +45,13 @@ class HyperParameter:
 
         self.name = name
 
-        # names of the parameter definitions that are allowed
-        allowed_schemas = [
-            d["$ref"].split("/")[-1]
-            for d in sweep_config_jsonschema["definitions"]["parameter"]["anyOf"]
-        ]
-
-        valid = False
-        for schema_name in allowed_schemas:
-            # create a jsonschema object to validate against the subschema
-            subschema = dereferenced_sweep_config_jsonschema["definitions"][schema_name]
-
-            try:
-                jsonschema.Draft7Validator(
-                    subschema, format_checker=format_checker
-                ).validate(config)
-            except jsonschema.ValidationError:
-                continue
-            else:
-                filler = DefaultFiller(subschema, format_checker=format_checker)
-
-                # this sets the defaults, modifying config inplace
-                config = deepcopy(config)
-                filler.validate(config)
-
-                valid = True
-                self.type = schema_name
-                self.config = config
-
-        if not valid:
+        result = fill_parameter(config)
+        if result is None:
             raise jsonschema.ValidationError("invalid hyperparameter configuration")
 
-        if self.config is None or self.type is None:
-            raise ValueError(
-                "list of allowed schemas has length zero; please provide some valid schemas"
-            )
-
+        type, config = result
+        self.config = config
+        self.type = type
         self.value = None
 
     def value_to_int(self, value: Any) -> int:
