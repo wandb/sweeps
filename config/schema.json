@@ -20,7 +20,8 @@
         "distribution": {
           "enum": [
             "categorical"
-          ]
+          ],
+          "default": "categorical"
         }
       },
       "additionalProperties": false
@@ -342,7 +343,9 @@
           ]
         }
       },
-      "required": ["distribution"],
+      "required": [
+        "distribution"
+      ],
       "additionalProperties": false
     },
     "param_qbeta": {
@@ -371,7 +374,9 @@
           ]
         }
       },
-      "required": ["distribution"],
+      "required": [
+        "distribution"
+      ],
       "additionalProperties": false
     },
     "parameter": {
