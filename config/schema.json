@@ -38,7 +38,8 @@
         "distribution": {
           "enum": [
             "constant"
-          ]
+          ],
+          "default": "constant"
         }
       },
       "additionalProperties": false
@@ -341,6 +342,7 @@
           ]
         }
       },
+      "required": ["distribution"],
       "additionalProperties": false
     },
     "param_qbeta": {
@@ -369,6 +371,7 @@
           ]
         }
       },
+      "required": ["distribution"],
       "additionalProperties": false
     },
     "parameter": {
