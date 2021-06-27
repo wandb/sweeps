@@ -315,7 +315,8 @@
         "distribution": {
           "enum": [
             "int_uniform"
-          ]
+          ],
+          "default": "int_uniform"
         }
       },
       "additionalProperties": false
