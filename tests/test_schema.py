@@ -1,4 +1,8 @@
+import jsonschema
+import pytest
+
 from ..params import HyperParameter
+from ..config import fill_schema
 
 
 def test_json_type_inference_int_uniform():
@@ -95,3 +99,15 @@ def test_uniform_with_integer_min_max():
     config = {"distribution": "uniform", "min": 0, "max": 1}  # integers
     unif_param = HyperParameter("uniform_param", config)  # this should not raise
     assert unif_param.type == HyperParameter.UNIFORM
+
+
+def test_fill_schema():
+    config = {"method": "random", "parameters": {"a": {"min": 0, "max": 1}}}
+    filled = fill_schema(config)
+    assert filled["parameters"]["a"]["distribution"] == "int_uniform"
+    config = {"method": "random", "parameters": {"a": {"min": 0.0, "max": 1.0}}}
+    filled = fill_schema(config)
+    assert filled["parameters"]["a"]["distribution"] == "uniform"
+    config = {"method": "random", "parameters": {"a": {"min": 0.0, "max": 1}}}
+    with pytest.raises(jsonschema.ValidationError):
+        fill_schema(config)
