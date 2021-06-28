@@ -104,10 +104,21 @@ def test_uniform_with_integer_min_max():
 def test_fill_schema():
     config = {"method": "random", "parameters": {"a": {"min": 0, "max": 1}}}
     filled = fill_schema(config)
+    assert "distribution" in filled["parameters"]["a"]
     assert filled["parameters"]["a"]["distribution"] == "int_uniform"
     config = {"method": "random", "parameters": {"a": {"min": 0.0, "max": 1.0}}}
     filled = fill_schema(config)
+    assert "distribution" in filled["parameters"]["a"]
     assert filled["parameters"]["a"]["distribution"] == "uniform"
     config = {"method": "random", "parameters": {"a": {"min": 0.0, "max": 1}}}
     with pytest.raises(jsonschema.ValidationError):
         fill_schema(config)
+
+    config = {
+        "method": "bayes",
+        "parameters": {"a": {"min": 0.0, "max": 1.0}},
+        "early_terminate": {"type": "hyperband", "min_iter": 2},
+    }
+    filled = fill_schema(config)
+    assert "eta" in filled["early_terminate"]
+    assert filled["early_terminate"]["eta"] == 3
