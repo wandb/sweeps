@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.typing as npt
 
 from typing import List, Tuple, Optional, Union
 
@@ -9,13 +8,13 @@ from .params import HyperParameter, HyperParameterSet
 from sklearn import gaussian_process as sklearn_gaussian
 from scipy import stats as scipy_stats
 
-from ._types import floating, integer
+from ._types import floating, integer, ArrayLike
 
 NUGGET = 1e-10
 
 
 def fit_normalized_gaussian_process(
-    X: npt.ArrayLike, y: npt.ArrayLike, nu: floating = 1.5
+    X: ArrayLike, y: ArrayLike, nu: floating = 1.5
 ) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
     gp = sklearn_gaussian.GaussianProcessRegressor(
         kernel=sklearn_gaussian.kernels.Matern(nu=nu),
@@ -35,11 +34,11 @@ def fit_normalized_gaussian_process(
     return gp, y_mean, y_stddev
 
 
-def sigmoid(x: npt.ArrayLike) -> npt.ArrayLike:
+def sigmoid(x: ArrayLike) -> ArrayLike:
     return np.exp(-np.logaddexp(0, -x))
 
 
-def random_sample(X_bounds: npt.ArrayLike, num_test_samples: integer) -> npt.ArrayLike:
+def random_sample(X_bounds: ArrayLike, num_test_samples: integer) -> ArrayLike:
     num_hyperparameters = len(X_bounds)
     test_X = np.empty((num_test_samples, num_hyperparameters))
     for ii in range(num_test_samples):
@@ -56,8 +55,8 @@ def random_sample(X_bounds: npt.ArrayLike, num_test_samples: integer) -> npt.Arr
 
 
 def predict(
-    X: npt.ArrayLike, y: npt.ArrayLike, test_X: npt.ArrayLike, nu: floating = 1.5
-) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
+    X: ArrayLike, y: ArrayLike, test_X: ArrayLike, nu: floating = 1.5
+) -> Tuple[ArrayLike, ArrayLike]:
     gp, norm_mean, norm_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
     y_pred, y_std = gp.predict([test_X], return_std=True)
     y_std_norm = y_std * norm_stddev
@@ -66,10 +65,10 @@ def predict(
 
 
 def train_gaussian_process(
-    sample_X: npt.ArrayLike,
-    sample_y: npt.ArrayLike,
-    X_bounds: Optional[npt.ArrayLike] = None,
-    current_X: npt.ArrayLike = None,
+    sample_X: ArrayLike,
+    sample_y: ArrayLike,
+    X_bounds: Optional[ArrayLike] = None,
+    current_X: ArrayLike = None,
     nu: floating = 1.5,
     max_samples: integer = 100,
 ) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
@@ -140,7 +139,7 @@ def train_gaussian_process(
     return gp, y_mean, y_stddev
 
 
-def filter_nans(sample_X: npt.ArrayLike, sample_y: npt.ArrayLike) -> npt.ArrayLike:
+def filter_nans(sample_X: ArrayLike, sample_y: ArrayLike) -> ArrayLike:
     is_row_finite = ~(np.isnan(sample_X).any(axis=1) | np.isnan(sample_y))
     sample_X = sample_X[is_row_finite, :]
     sample_y = sample_y[is_row_finite]
@@ -149,17 +148,17 @@ def filter_nans(sample_X: npt.ArrayLike, sample_y: npt.ArrayLike) -> npt.ArrayLi
 
 def next_sample(
     *,
-    sample_X: npt.ArrayLike,
-    sample_y: npt.ArrayLike,
-    X_bounds: Optional[npt.ArrayLike] = None,
-    current_X: Optional[npt.ArrayLike] = None,
+    sample_X: ArrayLike,
+    sample_y: ArrayLike,
+    X_bounds: Optional[ArrayLike] = None,
+    current_X: Optional[ArrayLike] = None,
     nu: floating = 1.5,
     max_samples_for_gp: integer = 100,
     improvement: floating = 0.01,
     num_points_to_try: integer = 1000,
     opt_func: str = "expected_improvement",
-    test_X: Optional[npt.ArrayLike] = None,
-) -> Tuple[npt.ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
+    test_X: Optional[ArrayLike] = None,
+) -> Tuple[ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
     """Calculates the best next sample to look at via bayesian optimization.
 
     Args:
