@@ -20,7 +20,8 @@
         "distribution": {
           "enum": [
             "categorical"
-          ]
+          ],
+          "default": "categorical"
         }
       },
       "additionalProperties": false
@@ -38,7 +39,8 @@
         "distribution": {
           "enum": [
             "constant"
-          ]
+          ],
+          "default": "constant"
         }
       },
       "additionalProperties": false
@@ -160,30 +162,56 @@
       "additionalProperties": false
     },
     "param_uniform": {
-      "type": "object",
-      "description": "uniform distribution on real numbers",
-      "required": [
-        "min",
-        "max"
-      ],
-      "properties": {
-        "min": {
-          "description": "float",
-          "type": "number",
-          "format": "float"
+      "anyOf": [
+        {
+          "type": "object",
+          "description": "uniform distribution on real numbers",
+          "required": [
+            "min",
+            "max",
+            "distribution"
+          ],
+          "properties": {
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "distribution": {
+              "enum": [
+                "uniform"
+              ]
+            }
+          },
+          "additionalProperties": false
         },
-        "max": {
-          "description": "float",
-          "type": "number",
-          "format": "float"
-        },
-        "distribution": {
-          "enum": [
-            "uniform"
-          ]
+        {
+          "type": "object",
+          "description": "uniform distribution on real numbers",
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "number",
+              "format": "float"
+            },
+            "max": {
+              "type": "number",
+              "format": "float"
+            },
+            "distribution": {
+              "enum": [
+                "uniform"
+              ],
+              "default": "uniform"
+            }
+          },
+          "additionalProperties": false
         }
-      },
-      "additionalProperties": false
+      ]
     },
     "param_loguniform": {
       "type": "object",
@@ -289,7 +317,8 @@
         "distribution": {
           "enum": [
             "int_uniform"
-          ]
+          ],
+          "default": "int_uniform"
         }
       },
       "additionalProperties": false
@@ -314,6 +343,9 @@
           ]
         }
       },
+      "required": [
+        "distribution"
+      ],
       "additionalProperties": false
     },
     "param_qbeta": {
@@ -342,23 +374,52 @@
           ]
         }
       },
+      "required": [
+        "distribution"
+      ],
       "additionalProperties": false
     },
     "parameter": {
       "anyOf": [
-        {"$ref":  "#/definitions/param_qbeta"},
-        {"$ref":  "#/definitions/param_beta"},
-        {"$ref":  "#/definitions/param_categorical"},
-        {"$ref":  "#/definitions/param_int_uniform"},
-        {"$ref":  "#/definitions/param_uniform"},
-        {"$ref":  "#/definitions/param_lognormal"},
-        {"$ref":  "#/definitions/param_loguniform"},
-        {"$ref":  "#/definitions/param_normal"},
-        {"$ref":  "#/definitions/param_qlognormal"},
-        {"$ref":  "#/definitions/param_qloguniform"},
-        {"$ref":  "#/definitions/param_qnormal"},
-        {"$ref":  "#/definitions/param_quniform"},
-        {"$ref":  "#/definitions/param_single_value"}
+        {
+          "$ref": "#/definitions/param_qbeta"
+        },
+        {
+          "$ref": "#/definitions/param_beta"
+        },
+        {
+          "$ref": "#/definitions/param_categorical"
+        },
+        {
+          "$ref": "#/definitions/param_int_uniform"
+        },
+        {
+          "$ref": "#/definitions/param_uniform"
+        },
+        {
+          "$ref": "#/definitions/param_lognormal"
+        },
+        {
+          "$ref": "#/definitions/param_loguniform"
+        },
+        {
+          "$ref": "#/definitions/param_normal"
+        },
+        {
+          "$ref": "#/definitions/param_qlognormal"
+        },
+        {
+          "$ref": "#/definitions/param_qloguniform"
+        },
+        {
+          "$ref": "#/definitions/param_qnormal"
+        },
+        {
+          "$ref": "#/definitions/param_quniform"
+        },
+        {
+          "$ref": "#/definitions/param_single_value"
+        }
       ]
     },
     "hyperband_stopping": {
@@ -489,7 +550,9 @@
     },
     "early_terminate": {
       "oneOf": [
-        {"$ref":  "#/definitions/hyperband_stopping"}
+        {
+          "$ref": "#/definitions/hyperband_stopping"
+        }
       ]
     },
     "parameters": {
@@ -498,7 +561,10 @@
       "propertyNames": {
         "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
       },
-      "additionalProperties": {"$ref": "#/definitions/parameter"}
+      "additionalProperties": {
+        "$ref": "#/definitions/parameter"
+      },
+      "minProperties": 1
     }
   }
 }
