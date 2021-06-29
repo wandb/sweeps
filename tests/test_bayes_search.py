@@ -122,7 +122,8 @@ def run_iterations(
             )
             if sample_X is None:
                 sample_X = np.array([sample])
-            sample_X = np.append(sample_X, np.array([sample]), axis=0)
+            else:
+                sample_X = np.append(sample_X, np.array([sample]), axis=0)
             counter += 1
             print(
                 "X: {} prob(I): {} pred: {} value: {}".format(
@@ -485,3 +486,62 @@ def test_runs_bayes_categorical_list():
 
     assert best_x[0] == ["5", "6"]
     assert np.abs(best_x[1] - 10) < 0.2
+
+
+def test_bayes_can_handle_preemptible_or_preempting_runs():
+
+    v2_min = 1
+    v2_max = 10
+
+    config = {
+        "method": "bayes",
+        "metric": {
+            "name": "acc",
+            "goal": "maximize",
+        },
+        "parameters": {
+            "v1": {
+                "distribution": "categorical",
+                "values": [(2, 3), [3, 4], ["5", "6"], [(7, 8), ["9", [10, 11]]]],
+            },
+            "v2": {"min": v2_min, "max": v2_max},
+        },
+    }
+
+    def loss_func(x: SweepRun) -> floating:
+        v2_acc = 0.5 * (x.config["v2"]["value"] - v2_min) / (v2_max - v2_min)
+        v1_acc = [0.1, 0.2, 0.5, 0.1][
+            config["parameters"]["v1"]["values"].index(x.config["v1"]["value"])
+        ]
+        return v1_acc + v2_acc
+
+    r1 = SweepRun(
+        name="b",
+        state=RunState.preempted,
+        config={"v1": {"value": [3, 4]}, "v2": {"value": 5}},
+        history=[],
+    )
+    r1.summary_metrics = {"acc": loss_func(r1)}
+
+    # this should not raise, and should produce the same result as if r1.state was running
+    seed = np.random.get_state()
+    pred = next_run(config, [r1])
+    r1.state = RunState.running
+    np.random.set_state(seed)
+    true = next_run(config, [r1])
+    assert pred.config == true.config
+
+    r2 = SweepRun(
+        name="b",
+        state=RunState.preempting,
+        config={"v1": {"value": (2, 3)}, "v2": {"value": 5}},
+        history=[],
+    )
+    r2.summary_metrics = {"acc": loss_func(r2)}
+
+    seed = np.random.get_state()
+    pred = next_run(config, [r2])
+    r2.state = RunState.running
+    np.random.set_state(seed)
+    true = next_run(config, [r2])
+    assert pred.config == true.config
