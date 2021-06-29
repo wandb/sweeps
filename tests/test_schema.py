@@ -5,14 +5,14 @@ def test_json_type_inference_int_uniform():
     config = {"min": 0, "max": 1}
     param = HyperParameter("int_unif_param", config)
     assert param.type == HyperParameter.INT_UNIFORM
-    assert len(param.config) == 2
+    assert len(param.config) == 3
 
 
 def test_json_type_inference_uniform():
     config = {"min": 0.0, "max": 1.0}
     param = HyperParameter("unif_param", config)
     assert param.type == HyperParameter.UNIFORM
-    assert len(param.config) == 2
+    assert len(param.config) == 3
 
 
 def test_json_type_inference_and_imputation_normal():
@@ -38,7 +38,7 @@ def test_json_type_inference_categorical():
     param = HyperParameter("categorical_param", config)
     assert param.type == HyperParameter.CATEGORICAL
     # TODO(dag): infer distribution key via default
-    assert len(param.config) == 1
+    assert len(param.config) == 2
 
 
 def test_json_type_inference_constant():
@@ -46,7 +46,7 @@ def test_json_type_inference_constant():
     param = HyperParameter("constant_param", config)
     assert param.type == HyperParameter.CONSTANT
     # TODO(dag): infer distribution key via default
-    assert len(param.config) == 1
+    assert len(param.config) == 2
 
 
 def test_json_type_inference_q_normal():
