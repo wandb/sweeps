@@ -40,13 +40,13 @@ def test_validation_disable(search_type):
 @pytest.mark.parametrize("controller_type", ["cloud", "local", "invalid"])
 def test_controller(controller_type):
     schema = {
-        "controller": controller_type,
+        "controller": {"type": controller_type},
         "method": "random",
         "parameters": {"a": {"values": [1, 2, 3, 4]}},
     }
 
     if controller_type in ["cloud", "local"]:
-        assert SweepConfig(schema)["controller"] == controller_type
+        assert SweepConfig(schema)["controller"]["type"] == controller_type
     else:
         with pytest.raises(ValidationError):
             SweepConfig(schema)
