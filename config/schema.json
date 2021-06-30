@@ -428,6 +428,12 @@
         "sweep"
       ]
     },
+    "controller": {
+	"type": "string",
+	"description": "Which controller to use, local or cloud",
+	"enum": ["local", "cloud"],
+	"default": "cloud"
+    },
     "description": {
       "type": "string",
       "description": "Short package description"
