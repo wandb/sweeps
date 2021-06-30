@@ -1,6 +1,6 @@
 import pytest
 from jsonschema import ValidationError
-from .. import next_run, stop_runs, SweepConfig
+from .. import next_run, stop_runs
 from ..config import SweepConfig, schema_violations_from_proposed_config
 from ..bayes_search import bayes_search_next_run
 from ..grid_search import grid_search_next_run
@@ -61,6 +61,7 @@ def test_minmax_type_inference():
 
     violations = schema_violations_from_proposed_config(schema)
     assert len(violations) == 1
+
 
 @pytest.mark.parametrize("controller_type", ["cloud", "local", "invalid"])
 def test_controller(controller_type):
