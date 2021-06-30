@@ -159,7 +159,7 @@ def next_sample(
     num_points_to_try: integer = 1000,
     opt_func: str = "expected_improvement",
     test_X: Optional[npt.ArrayLike] = None,
-) -> Tuple[npt.ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
+) -> Tuple[npt.ArrayLike, floating, floating, floating, floating]:
     """Calculates the best next sample to look at via bayesian optimization.
 
     Args:
@@ -242,8 +242,8 @@ def next_sample(
             X,
             1.0,
             prediction,
-            None,
-            None,
+            np.nan,
+            np.nan,
         )
 
     # build the acquisition function
