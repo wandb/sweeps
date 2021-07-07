@@ -467,7 +467,7 @@
         "eta": {
           "type": "number",
           "description": "At every eta^n steps, hyperband continues running the top 1/eta runs and stops all other runs",
-          "minimum": 1,
+          "exclusiveMinimum": 1,
           "default": 3
         }
       }
