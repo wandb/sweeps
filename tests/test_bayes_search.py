@@ -547,7 +547,7 @@ def test_bayes_can_handle_preemptible_or_preempting_runs():
     assert pred.config == true.config
 
 
-def test_gcp_issue_xl7xiuf6empym():
+def test_that_constant_parameters_are_sampled_correctly():
     # from https://console.cloud.google.com/logs/query;cursorTimestamp=2021-07-07T01:02:35.636458264Z;pinnedLogId=2021-07-07T01:02:35.636458264Z%2Fxl7xiuf6empym;query=jsonPayload.message%3D%22Mismatch%20detected%20in%20shadow%20sweep%20provider%22%0AjsonPayload.data.config%20!~%20%22%5C%22method%5C%22:%20%5C%22grid%5C%22%22%0Atimestamp%3D%222021-07-07T01:02:35.636458264Z%22%0AinsertId%3D%22xl7xiuf6empym%22%0Atimestamp%3D%222021-07-07T01:02:35.636458264Z%22%0AinsertId%3D%22xl7xiuf6empym%22?project=wandb-production
     config = {
         "name": "Elastic Sweep 07-06 1027",
@@ -858,5 +858,5 @@ def test_gcp_issue_xl7xiuf6empym():
 
     suggestion = next_run(config, [SweepRun(**run) for run in runs])
     for key in suggestion.config:
-        if key in config["parameters"]:
+        if key in config["parameters"] and key != "ppf_target_by":
             assert suggestion.config[key]["value"] is not None
