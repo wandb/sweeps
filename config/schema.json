@@ -15,7 +15,8 @@
         "values": {
           "type": "array",
           "description": "Discrete values",
-          "uniqueItems": true
+          "uniqueItems": true,
+          "minItems": 1
         },
         "distribution": {
           "enum": [
