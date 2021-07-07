@@ -545,3 +545,318 @@ def test_bayes_can_handle_preemptible_or_preempting_runs():
     np.random.set_state(seed)
     true = next_run(config, [r2])
     assert pred.config == true.config
+
+
+def test_gcp_issue_xl7xiuf6empym():
+    # from https://console.cloud.google.com/logs/query;cursorTimestamp=2021-07-07T01:02:35.636458264Z;pinnedLogId=2021-07-07T01:02:35.636458264Z%2Fxl7xiuf6empym;query=jsonPayload.message%3D%22Mismatch%20detected%20in%20shadow%20sweep%20provider%22%0AjsonPayload.data.config%20!~%20%22%5C%22method%5C%22:%20%5C%22grid%5C%22%22%0Atimestamp%3D%222021-07-07T01:02:35.636458264Z%22%0AinsertId%3D%22xl7xiuf6empym%22%0Atimestamp%3D%222021-07-07T01:02:35.636458264Z%22%0AinsertId%3D%22xl7xiuf6empym%22?project=wandb-production
+    config = {
+        "name": "Elastic Sweep 07-06 1027",
+        "method": "bayes",
+        "metric": {"goal": "maximize", "name": "IC_plus_Hitrate_risk_adj"},
+        "parameters": {
+            "tol": {"values": [1e-05, 0.0001, 0.0002, 2.5e-05, 5e-05, 7.5e-05]},
+            "alpha": {
+                "max": 6.907755278982137,
+                "min": -9.210340371976182,
+                "distribution": "log_uniform",
+            },
+            "model": {"value": "ElasticNet"},
+            "target": {"values": ["1D_spec", "5D_spec", "10D_spec"]},
+            "l1_ratio": {"max": 1, "min": 0, "distribution": "uniform"},
+            "selection": {"values": ["cyclic", "random"]},
+            "decay_days": {"values": [1, 2, 3, 4, 5, 6]},
+            "cat_columns": {"value": ["Sector", "Industry", "market_simple_regime"]},
+            "num_columns": {
+                "value": [
+                    "sales_a1.median",
+                    "sales_a1.std_dev",
+                    "sales_a1.median_slope",
+                    "ebit_a1.median",
+                    "ebit_a1.std_dev",
+                    "ebit_a1.median_slope",
+                    "Log Market Cap",
+                    "option_skew",
+                    "option_3m_90_vol",
+                    "option_3m_105_vol",
+                ]
+            },
+            "ppf_target_by": {"values": [None, "Sector", "Industry"]},
+            "ppf_the_target": {"value": True},
+        },
+    }
+
+    null = None
+    true = True
+    false = False
+    runs = [
+        {
+            "name": "cv4uof8s",
+            "config": {
+                "tol": {"desc": null, "value": 7.5e-05},
+                "alpha": {"desc": null, "value": 114.94621156856498},
+                "model": {"desc": null, "value": "ElasticNet"},
+                "_wandb": {
+                    "desc": null,
+                    "value": {
+                        "t": {
+                            "1": [3, 5],
+                            "2": [3, 5],
+                            "3": [2],
+                            "4": "3.7.9",
+                            "5": "0.10.31",
+                            "8": [1, 5],
+                        },
+                        "framework": "tensorflow",
+                        "cli_version": "0.10.31",
+                        "is_jupyter_run": true,
+                        "python_version": "3.7.9",
+                        "is_kaggle_kernel": false,
+                    },
+                },
+                "target": {"desc": null, "value": "1D_spec"},
+                "l1_ratio": {"desc": null, "value": 0.7475487707624942},
+                "selection": {"desc": null, "value": "random"},
+                "decay_days": {"desc": null, "value": 4},
+                "cat_columns": {
+                    "desc": null,
+                    "value": ["Sector", "Industry", "market_simple_regime"],
+                },
+                "num_columns": {
+                    "desc": null,
+                    "value": [
+                        "sales_a1.median",
+                        "sales_a1.std_dev",
+                        "sales_a1.median_slope",
+                        "ebit_a1.median",
+                        "ebit_a1.std_dev",
+                        "ebit_a1.median_slope",
+                        "Log Market Cap",
+                        "option_skew",
+                        "option_3m_90_vol",
+                        "option_3m_105_vol",
+                    ],
+                },
+                "ppf_target_by": {"desc": null, "value": "Industry"},
+                "ppf_the_target": {"desc": null, "value": true},
+            },
+            "summaryMetrics": {},
+            "state": "failed",
+        },
+        {
+            "config": {
+                "tol": {"desc": null, "value": 7.5e-05},
+                "alpha": {"desc": null, "value": 0.07239397556453357},
+                "model": {"desc": null, "value": "ElasticNet"},
+                "_wandb": {
+                    "desc": null,
+                    "value": {
+                        "t": {
+                            "1": [3, 5],
+                            "2": [3, 5],
+                            "3": [2],
+                            "4": "3.7.9",
+                            "5": "0.10.31",
+                            "8": [1, 5],
+                        },
+                        "framework": "tensorflow",
+                        "cli_version": "0.10.31",
+                        "is_jupyter_run": true,
+                        "python_version": "3.7.9",
+                        "is_kaggle_kernel": false,
+                    },
+                },
+                "target": {"desc": null, "value": "1D_spec"},
+                "l1_ratio": {"desc": null, "value": 0.9317758724316296},
+                "selection": {"desc": null, "value": "random"},
+                "decay_days": {"desc": null, "value": 6},
+                "cat_columns": {
+                    "desc": null,
+                    "value": ["Sector", "Industry", "market_simple_regime"],
+                },
+                "num_columns": {
+                    "desc": null,
+                    "value": [
+                        "sales_a1.median",
+                        "sales_a1.std_dev",
+                        "sales_a1.median_slope",
+                        "ebit_a1.median",
+                        "ebit_a1.std_dev",
+                        "ebit_a1.median_slope",
+                        "Log Market Cap",
+                        "option_skew",
+                        "option_3m_90_vol",
+                        "option_3m_105_vol",
+                    ],
+                },
+                "ppf_target_by": {"desc": null, "value": null},
+                "ppf_the_target": {"desc": null, "value": true},
+            },
+            "summaryMetrics": {},
+            "state": "failed",
+            "name": "633fjdhd",
+        },
+        {
+            "name": "77ywpu3j",
+            "summaryMetrics": {},
+            "state": "failed",
+            "config": {
+                "tol": {"desc": null, "value": 5e-05},
+                "alpha": {"desc": null, "value": 0.002774852781906077},
+                "model": {"desc": null, "value": "ElasticNet"},
+                "_wandb": {
+                    "desc": null,
+                    "value": {
+                        "t": {
+                            "1": [3, 5],
+                            "2": [3, 5],
+                            "3": [2],
+                            "4": "3.7.9",
+                            "5": "0.10.31",
+                            "8": [1, 5],
+                        },
+                        "framework": "tensorflow",
+                        "cli_version": "0.10.31",
+                        "is_jupyter_run": true,
+                        "python_version": "3.7.9",
+                        "is_kaggle_kernel": false,
+                    },
+                },
+                "target": {"desc": null, "value": "10D_spec"},
+                "l1_ratio": {"desc": null, "value": 0.01483000099874121},
+                "selection": {"desc": null, "value": "cyclic"},
+                "decay_days": {"desc": null, "value": 6},
+                "cat_columns": {
+                    "desc": null,
+                    "value": ["Sector", "Industry", "market_simple_regime"],
+                },
+                "num_columns": {
+                    "desc": null,
+                    "value": [
+                        "sales_a1.median",
+                        "sales_a1.std_dev",
+                        "sales_a1.median_slope",
+                        "ebit_a1.median",
+                        "ebit_a1.std_dev",
+                        "ebit_a1.median_slope",
+                        "Log Market Cap",
+                        "option_skew",
+                        "option_3m_90_vol",
+                        "option_3m_105_vol",
+                    ],
+                },
+                "ppf_target_by": {"desc": null, "value": null},
+                "ppf_the_target": {"desc": null, "value": true},
+            },
+        },
+        {
+            "name": "06z3nutf",
+            "summaryMetrics": {},
+            "config": {
+                "tol": {"desc": null, "value": 0.0001},
+                "alpha": {"desc": null, "value": 0.005228908948292734},
+                "model": {"desc": null, "value": "ElasticNet"},
+                "_wandb": {
+                    "desc": null,
+                    "value": {
+                        "t": {
+                            "1": [3, 5],
+                            "2": [3, 5],
+                            "3": [2],
+                            "4": "3.7.9",
+                            "5": "0.10.31",
+                            "8": [1, 5],
+                        },
+                        "framework": "tensorflow",
+                        "cli_version": "0.10.31",
+                        "is_jupyter_run": true,
+                        "python_version": "3.7.9",
+                        "is_kaggle_kernel": false,
+                    },
+                },
+                "target": {"desc": null, "value": "1D_spec"},
+                "l1_ratio": {"desc": null, "value": 0.974230005151591},
+                "selection": {"desc": null, "value": "random"},
+                "decay_days": {"desc": null, "value": 1},
+                "cat_columns": {
+                    "desc": null,
+                    "value": ["Sector", "Industry", "market_simple_regime"],
+                },
+                "num_columns": {
+                    "desc": null,
+                    "value": [
+                        "sales_a1.median",
+                        "sales_a1.std_dev",
+                        "sales_a1.median_slope",
+                        "ebit_a1.median",
+                        "ebit_a1.std_dev",
+                        "ebit_a1.median_slope",
+                        "Log Market Cap",
+                        "option_skew",
+                        "option_3m_90_vol",
+                        "option_3m_105_vol",
+                    ],
+                },
+                "ppf_target_by": {"desc": null, "value": null},
+                "ppf_the_target": {"desc": null, "value": true},
+            },
+            "state": "failed",
+        },
+        {
+            "summaryMetrics": {},
+            "config": {
+                "tol": {"desc": null, "value": 0.0001},
+                "alpha": {"desc": null, "value": 2.2736520853608524},
+                "model": {"desc": null, "value": "ElasticNet"},
+                "_wandb": {
+                    "desc": null,
+                    "value": {
+                        "t": {
+                            "1": [3, 5],
+                            "2": [3, 5],
+                            "3": [2],
+                            "4": "3.7.9",
+                            "5": "0.10.31",
+                            "8": [1, 5],
+                        },
+                        "framework": "tensorflow",
+                        "cli_version": "0.10.31",
+                        "is_jupyter_run": true,
+                        "python_version": "3.7.9",
+                        "is_kaggle_kernel": false,
+                    },
+                },
+                "target": {"desc": null, "value": "1D_spec"},
+                "l1_ratio": {"desc": null, "value": 0.6713230851920869},
+                "selection": {"desc": null, "value": "random"},
+                "decay_days": {"desc": null, "value": 1},
+                "cat_columns": {
+                    "desc": null,
+                    "value": ["Sector", "Industry", "market_simple_regime"],
+                },
+                "num_columns": {
+                    "desc": null,
+                    "value": [
+                        "sales_a1.median",
+                        "sales_a1.std_dev",
+                        "sales_a1.median_slope",
+                        "ebit_a1.median",
+                        "ebit_a1.std_dev",
+                        "ebit_a1.median_slope",
+                        "Log Market Cap",
+                        "option_skew",
+                        "option_3m_90_vol",
+                        "option_3m_105_vol",
+                    ],
+                },
+                "ppf_target_by": {"desc": null, "value": "Industry"},
+                "ppf_the_target": {"desc": null, "value": true},
+            },
+            "state": "failed",
+            "name": "1ddlc02y",
+        },
+    ]
+
+    suggestion = next_run(config, [SweepRun(**run) for run in runs])
+    for key in suggestion.config:
+        if key in config["parameters"]:
+            assert suggestion.config[key]["value"] is not None
