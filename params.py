@@ -87,7 +87,9 @@ class HyperParameter:
                 "list of allowed schemas has length zero; please provide some valid schemas"
             )
 
-        self.value = None
+        self.value = (
+            None if self.type != HyperParameter.CONSTANT else self.config["value"]
+        )
 
     def value_to_int(self, value: Any) -> int:
         """Get the index of the value of a categorically distributed HyperParameter.
