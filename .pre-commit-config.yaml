@@ -21,3 +21,8 @@ repos:
     hooks:
       - id: mypy
         pass_filenames: true
+        args:
+          - --ignore-missing-imports
+          - --scripts-are-modules
+          - --namespace-packages
+          - --explicit-package-bases
