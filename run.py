@@ -135,7 +135,7 @@ def next_run(
         return grid_search_next_run(runs, sweep_config, validate=validate, **kwargs)
     elif method == "random":
         return random_search_next_run(sweep_config, validate=validate)
-    elif method == "bayes":
+    elif method == "bayes" or isinstance(method, dict) and "bayes" in method.keys():
         return bayes_search_next_run(runs, sweep_config, validate=validate, **kwargs)
     else:
         raise ValueError(

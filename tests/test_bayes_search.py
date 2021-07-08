@@ -22,6 +22,36 @@ def rosenbrock(x: npt.ArrayLike) -> np.floating:
     return np.sum((x[1:] - x[:-1] ** 2.0) ** 2.0 + (1 - x[:-1]) ** 2.0)
 
 
+rastrigin_A = 10.0
+
+
+def rastrigin(x: npt.ArrayLike) -> np.floating:
+    # has a global minimum at (1, 1, 1, ...) with x_i \in [-4.12, 6.12]
+    return rastrigin_A * len(x) + np.sum(
+        np.square(x - 1.0) - rastrigin_A * np.cos(2 * np.pi * (x - 1.0))
+    )
+
+
+shekel_beta = np.array([0.1, 0.2, 0.2, 0.4, 0.4, 0.6, 0.3, 0.7, 0.5, 0.5])
+shekel_C = np.array(
+    [
+        [4.0, 1.0, 8.0, 6.0, 3.0, 2.0, 5.0, 8.0, 6.0, 7.0],
+        [4.0, 1.0, 8.0, 6.0, 7.0, 9.0, 3.0, 1.0, 2.0, 3.6],
+        [4.0, 1.0, 8.0, 6.0, 3.0, 2.0, 5.0, 8.0, 6.0, 7.0],
+        [4.0, 1.0, 8.0, 6.0, 7.0, 9.0, 3.0, 1.0, 2.0, 3.6],
+    ]
+).T
+shekel_min = -10.5364
+
+
+def shekel(x: npt.ArrayLike) -> np.floating:
+    # Four minima in bounding region [[0,10]]*4
+    return (
+        -np.sum(np.reciprocal(np.sum(np.square(shekel_C - x), axis=1) + shekel_beta))
+        - shekel_min
+    )
+
+
 def run_bayes_search(
     f: Callable[[SweepRun], floating],
     config: SweepConfig,
@@ -98,13 +128,15 @@ def run_iterations(
     optimium: Optional[npt.ArrayLike] = None,
     atol: Optional[npt.ArrayLike] = 0.2,
     chunk_size: integer = 1,
-    model: str = "gp"
+    model: str = "gp",
+    bw_multiplier: floating = 1.0,
 ) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
 
+    bounds = np.array(bounds)
     if x_init is not None:
         X = x_init
     else:
-        X = [np.zeros(len(bounds))]
+        X = [np.random.uniform(low=bounds[:, 0], high=bounds[:, 1])]
 
     y = np.array([f(x) for x in X]).flatten()
 
@@ -120,11 +152,13 @@ def run_iterations(
                 X_bounds=bounds,
                 current_X=sample_X,
                 improvement=improvement,
-                model=model
+                model=model,
+                bw_multiplier=bw_multiplier,
             )
             if sample_X is None:
                 sample_X = np.array([sample])
-            sample_X = np.append(sample_X, np.array([sample]), axis=0)
+            else:
+                sample_X = np.append(sample_X, np.array([sample]), axis=0)
             counter += 1
             print(
                 "X: {} prob(I): {} pred: {} value: {}".format(
@@ -175,7 +209,7 @@ def test_squiggle_convergence():
     run_iterations(squiggle, [[0.0, 5.0]], 200, x_init, optimium=[3.6], atol=0.2)
 
 
-@pytest.mark.parametrize("model",["gp","tpe"])
+@pytest.mark.parametrize("model", ["gp", "tpe", "tpe_multi"])
 def test_squiggle_convergence_to_maximum(model):
     # This test checks whether the bayes algorithm correctly explores the parameter space
     # we sample a ton of positive examples, ignoring the negative side
@@ -183,7 +217,21 @@ def test_squiggle_convergence_to_maximum(model):
         return -squiggle(x)
 
     x_init = np.random.uniform(0, 5, 1)[:, None]
-    run_iterations(f, [[0.0, 5.0]], 200, x_init, optimium=[2], atol=0.2, model=model)
+    if model == "tpe" or model == "tpe_multi":
+        improvement = 0.15
+    else:
+        improvement = 0.1
+
+    run_iterations(
+        f,
+        [[0.0, 5.0]],
+        200,
+        x_init,
+        improvement=improvement,
+        optimium=[2],
+        atol=0.2,
+        model=model,
+    )
 
 
 def test_nans():
@@ -209,11 +257,16 @@ def test_squiggle_int():
     assert np.isclose(sample % 1, 0)
 
 
-@pytest.mark.parametrize("model",["gp","tpe"])
+@pytest.mark.parametrize("model", ["gp", "tpe", "tpe_multi"])
 def test_iterations_rosenbrock(model):
     dimensions = 3
     # x_init = np.random.uniform(0, 2, size=(1, dimensions))
     x_init = np.zeros((1, dimensions))
+    if model == "tpe" or model == "tpe_multi":
+        improvement = 0.15
+    else:
+        improvement = 0.1
+
     run_iterations(
         rosenbrock,
         [[0.0, 2.0]] * dimensions,
@@ -221,8 +274,8 @@ def test_iterations_rosenbrock(model):
         x_init,
         optimium=[1, 1, 1],
         atol=0.2,
-        improvement=0.1,
-        model=model
+        improvement=improvement,
+        model=model,
     )
 
 
