@@ -161,7 +161,7 @@ def next_sample(
     opt_func: str = "expected_improvement",
     model: str = "gp",
     test_X: Optional[npt.ArrayLike] = None,
-) -> Tuple[npt.ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
+) -> Tuple[npt.ArrayLike, floating, floating, floating, floating]:
     """Calculates the best next sample to look at via bayesian optimization.
 
     Args:
@@ -248,8 +248,8 @@ def next_sample(
             X,
             1.0,
             prediction,
-            None,
-            None,
+            np.nan,
+            np.nan,
         )
 
     if model == "tpe":
@@ -605,7 +605,7 @@ def bayes_search_next_run(
                 metric = 0.0  # default
             y.append(metric)
             sample_X.append(X_norm)
-        elif run.state == RunState.running:
+        elif run.state in [RunState.running, RunState.preempting, RunState.preempted]:
             # run is in progress
             # we wont use the metric, but we should pass it into our optimizer to
             # account for the fact that it is running
