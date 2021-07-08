@@ -47,7 +47,7 @@ class SweepRun(BaseModel):
     search_info: Optional[Dict] = None
     early_terminate_info: Optional[Dict] = None
     stopped: bool = False
-    should_stop: bool = pydantic.Field(default=False, alias="shouldStop")
+    should_stop: bool = Field(default=False, alias="shouldStop")
 
     class Config:
         use_enum_values = True
