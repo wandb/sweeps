@@ -1,4 +1,4 @@
-"""Hyperparameter search parameters. """
+"""Hyperparameter search parameters."""
 
 import random
 
