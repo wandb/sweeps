@@ -55,6 +55,8 @@ jobs:
           command: pip install -r requirements.dev.txt
       - run:
           pre-commit run --all-files
+      - run:
+          mypy --ignore-missing-imports --scripts-are-modules .
 
 workflows:
   main:
