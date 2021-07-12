@@ -56,9 +56,7 @@ jobs:
       - run:
           pre-commit run --all-files
       - run:
-          mypy --install-types
-      - run:
-          mypy --ignore-missing-imports --scripts-are-modules .
+          mypy --ignore-missing-imports --scripts-are-modules --install-types .
 
 workflows:
   main:
