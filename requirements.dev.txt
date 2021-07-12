@@ -9,5 +9,4 @@ matplotlib>=3
 pytest-xdist>=2.2.1
 pytest-profiling>=1.7.0
 types-PyYAML==5.4.3
-typing-extensions==3.7.4.3
 mypy==0.910
