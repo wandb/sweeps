@@ -8,3 +8,4 @@ pytest-randomly==3.8.0
 matplotlib>=3
 pytest-xdist>=2.2.1
 pytest-profiling>=1.7.0
+mypy==0.812
