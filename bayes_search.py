@@ -22,10 +22,12 @@ def fit_normalized_gaussian_process(
         alpha=0.0000001,
         random_state=2,
     )
+
+    y_stddev: ArrayLike
     if len(y) == 1:
         y = np.array(y)
         y_mean = y[0]
-        y_stddev = 1
+        y_stddev = 1.0
     else:
         y_mean = np.mean(y)
         y_stddev = np.std(y) + 0.0001
@@ -40,7 +42,7 @@ def sigmoid(x: ArrayLike) -> ArrayLike:
 
 def random_sample(X_bounds: ArrayLike, num_test_samples: integer) -> ArrayLike:
     num_hyperparameters = len(X_bounds)
-    test_X = np.empty((num_test_samples, num_hyperparameters))
+    test_X = np.empty((int(num_test_samples), num_hyperparameters))
     for ii in range(num_test_samples):
         for jj in range(num_hyperparameters):
             if type(X_bounds[jj][0]) == int:
@@ -103,7 +105,7 @@ def train_gaussian_process(
             print(
                 "current_X is bigger than max samples - 5 so dropping some currently running parameters"
             )
-            current_X = current_X[: (max_samples - 5), :]
+            current_X = current_X[: (max_samples - 5), :]  # type: ignore
     if len(sample_y.shape) != 1:
         raise ValueError("Sample y must be a 1 dimensional array")
 
@@ -310,7 +312,7 @@ def bayes_search_next_run(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
     validate: bool = False,
-    minimum_improvement: float = 0.1,
+    minimum_improvement: floating = 0.1,
 ) -> SweepRun:
     """Suggest runs using Bayesian optimization.
 
@@ -346,15 +348,15 @@ def bayes_search_next_run(
     worst_func = min if goal == "maximize" else max
     params = HyperParameterSet.from_config(config["parameters"])
 
-    sample_X = []
-    current_X = []
-    y = []
+    sample_X: ArrayLike = []
+    current_X: ArrayLike = []
+    y: ArrayLike = []
 
     X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
 
     # we calc the max metric to put as the metric for failed runs
     # so that our bayesian search stays away from them
-    worst_metric = 0.0
+    worst_metric: floating = 0.0
     for run in runs:
         if run.state == RunState.finished:
             try:
