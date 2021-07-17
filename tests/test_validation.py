@@ -81,4 +81,4 @@ def test_controller(controller_type):
 def test_invalid_config():
     config = "this is a totally invalid config"
     with pytest.raises(ValueError):
-        SweepConfig(config)
+        schema_violations_from_proposed_config(config)
