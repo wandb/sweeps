@@ -16,6 +16,9 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
     for error in validator.iter_errors(config):
         schema_violation_messages.append(f"{error.message}")
 
+    if not isinstance(config, dict):
+        raise ValueError("Sweep config must be parsable as a JSON object.")
+
     # validate min/max - this cannot be done with jsonschema
     # because it does not support comparing values within
     # a json document. so we do it manually here:
