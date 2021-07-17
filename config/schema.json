@@ -15,7 +15,8 @@
         "values": {
           "type": "array",
           "description": "Discrete values",
-          "uniqueItems": true
+          "uniqueItems": true,
+          "minItems": 1
         },
         "distribution": {
           "enum": [
@@ -466,7 +467,7 @@
         "eta": {
           "type": "number",
           "description": "At every eta^n steps, hyperband continues running the top 1/eta runs and stops all other runs",
-          "minimum": 1,
+          "exclusiveMinimum": 1,
           "default": 3
         }
       }
@@ -488,6 +489,18 @@
       "enum": [
         "sweep"
       ]
+    },
+    "controller": {
+	"type": "object",
+	"properties": {
+	    "type": {
+		"type": "string",
+		"description": "Which controller to use, local or cloud",
+		"enum": ["local", "cloud"],
+		"default": "cloud"
+	    }
+	},
+	"required": ["type"]
     },
     "description": {
       "type": "string",

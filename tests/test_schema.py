@@ -1,3 +1,5 @@
+import pytest
+import jsonschema
 from ..params import HyperParameter
 
 
@@ -87,6 +89,12 @@ def test_validate_does_not_modify_passed_config():
     config_save = config.copy()
     _ = HyperParameter("normal_test", config)
     assert config == config_save
+
+
+def test_categorical_hyperparameter_no_values():
+    config = {"values": []}
+    with pytest.raises(jsonschema.ValidationError):
+        HyperParameter("invalid_test", config)
 
 
 def test_uniform_with_integer_min_max():

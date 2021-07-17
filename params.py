@@ -49,10 +49,15 @@ class HyperParameter:
         if result is None:
             raise jsonschema.ValidationError("invalid hyperparameter configuration")
 
-        type, config = result
-        self.config = config
-        self.type = type
-        self.value = None
+        self.type, self.config = result
+        if self.config is None or self.type is None:
+            raise ValueError(
+                "list of allowed schemas has length zero; please provide some valid schemas"
+            )
+
+        self.value = (
+            None if self.type != HyperParameter.CONSTANT else self.config["value"]
+        )
 
     def value_to_int(self, value: Any) -> int:
         """Get the index of the value of a categorically distributed HyperParameter.
