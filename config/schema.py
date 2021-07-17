@@ -96,10 +96,14 @@ def fill_parameter(config: Dict) -> Optional[Tuple[str, Dict]]:
 
 
 def fill_schema(d: Dict) -> Dict:
-    from . import SweepConfig
+    from . import schema_violations_from_proposed_config
 
     # check that the schema is valid
-    validated = SweepConfig(d)
+    violations = schema_violations_from_proposed_config(d)
+    if len(violations) != 0:
+        raise jsonschema.ValidationError("\n".join(violations))
+
+    validated = deepcopy(d)
 
     # update the parameters
     filled = {}

@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Union, Dict, List
 
 import jsonschema
-from .schema import validator
+from .schema import validator, fill_schema
 from copy import deepcopy
 
 
@@ -40,7 +40,9 @@ class SweepConfig(dict):
                 err_msg = "\n".join(schema_violation_messages)
                 raise jsonschema.ValidationError(err_msg)
 
-        super(SweepConfig, self).__init__(deepcopy(d))
+        copied_config = deepcopy(d)
+        filled_config = fill_schema(copied_config)
+        super(SweepConfig, self).__init__(filled_config)
 
     def __str__(self) -> str:
         return yaml.safe_dump(self)
