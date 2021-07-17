@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Union, Dict, List
 
 import jsonschema
-from .schema import validator
+from .schema import validator, default_filler
 
 
 def schema_violations_from_proposed_config(config: Dict) -> List[str]:
@@ -31,7 +31,6 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
 
 class SweepConfig(dict):
     def __init__(self, d: Dict):
-        super(SweepConfig, self).__init__(d)
 
         if not isinstance(d, SweepConfig):
             # ensure the data conform to the schema
@@ -40,6 +39,9 @@ class SweepConfig(dict):
             if len(schema_violation_messages) > 0:
                 err_msg = "\n".join(schema_violation_messages)
                 raise jsonschema.ValidationError(err_msg)
+
+        default_filler.validate(d)
+        super(SweepConfig, self).__init__(d)
 
     def __str__(self) -> str:
         return yaml.safe_dump(self)
