@@ -29,7 +29,7 @@ def kernel_for_grid_search_tests(
         if suggestion is None:  # done
             break
         assert suggestion.search_info is None
-        assert suggestion.state == RunState.proposed
+        assert suggestion.state == RunState.pending
         runs.append(suggestion)
         suggested_parameters.append(
             (suggestion.config["v1"]["value"], suggestion.config["v2"]["value"])

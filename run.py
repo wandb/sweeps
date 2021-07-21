@@ -8,7 +8,7 @@ from ._types import floating
 
 
 class RunState(str, Enum):
-    proposed = "proposed"
+    pending = "pending"
     running = "running"
     finished = "finished"
     killed = "killed"
@@ -43,7 +43,7 @@ class SweepRun(BaseModel):
     summary_metrics: dict = Field(default_factory=lambda: {}, alias="summaryMetrics")
     history: List[dict] = Field(default_factory=lambda: [])
     config: dict = Field(default_factory=lambda: {})
-    state: RunState = RunState.proposed
+    state: RunState = RunState.pending
     search_info: Optional[Dict] = None
     early_terminate_info: Optional[Dict] = None
     stopped: bool = False
