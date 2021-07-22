@@ -348,6 +348,9 @@ def bayes_search_next_run(
     worst_func = min if goal == "maximize" else max
     params = HyperParameterSet.from_config(config["parameters"])
 
+    if len(params.searchable_params) == 0:
+        raise ValueError("Need at least one searchable parameter for bayes search.")
+
     sample_X: ArrayLike = []
     current_X: ArrayLike = []
     y: ArrayLike = []
