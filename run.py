@@ -1,6 +1,7 @@
 from typing import List, Optional, Union, Any, Dict
 from enum import Enum
 import numpy as np
+import datetime
 
 from pydantic import BaseModel, Field
 from .config import SweepConfig
@@ -40,14 +41,19 @@ class SweepRun(BaseModel):
     """
 
     name: Optional[str] = None
-    summary_metrics: dict = Field(default_factory=lambda: {}, alias="summaryMetrics")
-    history: List[dict] = Field(default_factory=lambda: [])
+    summary_metrics: Optional[dict] = Field(default_factory=lambda: {}, alias="summaryMetrics")
+    history: List[dict] = Field(default_factory=lambda: [], alias="sampledHistory")
     config: dict = Field(default_factory=lambda: {})
     state: RunState = RunState.pending
     search_info: Optional[Dict] = None
     early_terminate_info: Optional[Dict] = None
     stopped: bool = False
     should_stop: bool = Field(default=False, alias="shouldStop")
+    heartbeat_at: Optional[datetime.datetime] = Field(default=None, alias="heartbeatAt")
+    exitcode: Optional[int] = None
+    running: Optional[bool] = None
+
+
 
     class Config:
         use_enum_values = True
