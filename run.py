@@ -38,6 +38,9 @@ class SweepRun(BaseModel):
         early_terminate_info: Dict containing information produced by the early terminate algorithm.
         stopped: Whether the run was stopped in the sweep
         shouldStop: Whether the run should stop in the sweep
+        heartbeat_at: The last time the backend received a heart beat from the run
+        exitcode: The exitcode of the process that trained the run
+        running: Whether the run is currently running
     """
 
     name: Optional[str] = None
