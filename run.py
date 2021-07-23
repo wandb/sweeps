@@ -41,7 +41,9 @@ class SweepRun(BaseModel):
     """
 
     name: Optional[str] = None
-    summary_metrics: Optional[dict] = Field(default_factory=lambda: {}, alias="summaryMetrics")
+    summary_metrics: Optional[dict] = Field(
+        default_factory=lambda: {}, alias="summaryMetrics"
+    )
     history: List[dict] = Field(default_factory=lambda: [], alias="sampledHistory")
     config: dict = Field(default_factory=lambda: {})
     state: RunState = RunState.pending
@@ -52,8 +54,6 @@ class SweepRun(BaseModel):
     heartbeat_at: Optional[datetime.datetime] = Field(default=None, alias="heartbeatAt")
     exitcode: Optional[int] = None
     running: Optional[bool] = None
-
-
 
     class Config:
         use_enum_values = True
