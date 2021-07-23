@@ -63,6 +63,8 @@ class SweepRun(BaseModel):
         return [d[metric_name] for d in self.history if metric_name in d]
 
     def summary_metric(self, metric_name: str) -> floating:
+        if self.summary_metrics is None:
+            raise ValueError("this run has no summary metrics")
         if metric_name not in self.summary_metrics:
             raise KeyError(f"{metric_name} is not a summary metric of this run.")
         return self.summary_metrics[metric_name]

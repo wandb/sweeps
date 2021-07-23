@@ -41,6 +41,8 @@ def run_bayes_search(
         )
         suggested_run.state = RunState.finished
         metric = f(suggested_run)
+        if suggested_run.summary_metrics is None:
+            suggested_run.summary_metrics = {}
         suggested_run.summary_metrics[metric_name] = metric
         runs.append(suggested_run)
 
