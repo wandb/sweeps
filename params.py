@@ -5,13 +5,13 @@ import random
 from typing import List, Tuple, Dict, Any
 
 import numpy as np
-import numpy.typing as npt
 import scipy.stats as stats
 
 import jsonschema
 
 from .run import SweepRun
 from .config import fill_parameter
+from ._types import ArrayLike
 
 
 class HyperParameter:
@@ -81,7 +81,7 @@ class HyperParameter:
 
         raise ValueError("Couldn't find {}".format(value))
 
-    def cdf(self, x: npt.ArrayLike) -> npt.ArrayLike:
+    def cdf(self, x: ArrayLike) -> ArrayLike:
         """Cumulative distribution function (CDF).
 
         In probability theory and statistics, the cumulative distribution function
@@ -127,7 +127,7 @@ class HyperParameter:
         else:
             raise ValueError("Unsupported hyperparameter distribution type")
 
-    def ppf(self, x: npt.ArrayLike) -> Any:
+    def ppf(self, x: ArrayLike) -> Any:
         """Percentage point function (PPF).
 
         In probability theory and statistics, the percentage point function is
@@ -287,7 +287,7 @@ class HyperParameterSet(list):
         """Convert a HyperParameterSet to a SweepRun config."""
         return dict([param._to_config() for param in self])
 
-    def convert_runs_to_normalized_vector(self, runs: List[SweepRun]) -> npt.ArrayLike:
+    def convert_runs_to_normalized_vector(self, runs: List[SweepRun]) -> ArrayLike:
         """Converts a list of SweepRuns to an array of normalized parameter vectors.
 
         Args:

@@ -1,6 +1,7 @@
 from typing import List, Optional, Union, Any, Dict
 from enum import Enum
 import numpy as np
+import datetime
 
 from pydantic import BaseModel, Field
 from .config import SweepConfig
@@ -8,7 +9,7 @@ from ._types import floating
 
 
 class RunState(str, Enum):
-    proposed = "proposed"
+    pending = "pending"
     running = "running"
     finished = "finished"
     killed = "killed"
@@ -35,15 +36,27 @@ class SweepRun(BaseModel):
         history: List of dicts containing the arguments to calls of wandb.log made during the run.
         search_info: Dict containing information produced by the search algorithm.
         early_terminate_info: Dict containing information produced by the early terminate algorithm.
+        stopped: Whether the run was stopped in the sweep
+        shouldStop: Whether the run should stop in the sweep
+        heartbeat_at: The last time the backend received a heart beat from the run
+        exitcode: The exitcode of the process that trained the run
+        running: Whether the run is currently running
     """
 
     name: Optional[str] = None
-    summary_metrics: dict = Field(default_factory=lambda: {}, alias="summaryMetrics")
-    history: List[dict] = Field(default_factory=lambda: [])
+    summary_metrics: Optional[dict] = Field(
+        default_factory=lambda: {}, alias="summaryMetrics"
+    )
+    history: List[dict] = Field(default_factory=lambda: [], alias="sampledHistory")
     config: dict = Field(default_factory=lambda: {})
-    state: RunState = RunState.proposed
+    state: RunState = RunState.pending
     search_info: Optional[Dict] = None
     early_terminate_info: Optional[Dict] = None
+    stopped: bool = False
+    should_stop: bool = Field(default=False, alias="shouldStop")
+    heartbeat_at: Optional[datetime.datetime] = Field(default=None, alias="heartbeatAt")
+    exitcode: Optional[int] = None
+    running: Optional[bool] = None
 
     class Config:
         use_enum_values = True
@@ -53,6 +66,8 @@ class SweepRun(BaseModel):
         return [d[metric_name] for d in self.history if metric_name in d]
 
     def summary_metric(self, metric_name: str) -> floating:
+        if self.summary_metrics is None:
+            raise ValueError("this run has no summary metrics")
         if metric_name not in self.summary_metrics:
             raise KeyError(f"{metric_name} is not a summary metric of this run.")
         return self.summary_metrics[metric_name]

@@ -1,3 +1,4 @@
+import pytest
 from .. import SweepRun, RunState
 
 
@@ -19,3 +20,12 @@ def test_skipped_steps():
         ],
     )
     assert run.metric_history("loss") == [10, 6, 1]
+
+
+def test_summary_metric_none():
+    run = SweepRun(
+        name="a",
+        summary_metrics=None,
+    )
+    with pytest.raises(ValueError):
+        run.summary_metric("loss")

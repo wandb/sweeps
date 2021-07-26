@@ -2,22 +2,21 @@ from typing import Callable, Optional, Tuple, Iterable, Dict, Union
 
 import pytest
 import numpy as np
-import numpy.typing as npt
 
 from .. import bayes_search as bayes
-from .._types import integer, floating
+from .._types import integer, floating, ArrayLike
 from .. import SweepRun, RunState, next_run, SweepConfig
 
 from .test_random_search import check_that_samples_are_from_the_same_distribution
 
 
-def squiggle(x: npt.ArrayLike) -> np.floating:
+def squiggle(x: ArrayLike) -> np.floating:
     # the maximum of this 1d function is at x=2 and the minimum is at ~3.6 over the
     # interval 0-5
     return np.exp(-((x - 2) ** 2)) + np.exp(-((x - 6) ** 2) / 10) + 1 / (x ** 2 + 1)
 
 
-def rosenbrock(x: npt.ArrayLike) -> np.floating:
+def rosenbrock(x: ArrayLike) -> np.floating:
     # has a minimum at (1, 1, 1, 1, ...) for 4 <= ndim <= 7
     return np.sum((x[1:] - x[:-1] ** 2.0) ** 2.0 + (1 - x[:-1]) ** 2.0)
 
@@ -42,6 +41,8 @@ def run_bayes_search(
         )
         suggested_run.state = RunState.finished
         metric = f(suggested_run)
+        if suggested_run.summary_metrics is None:
+            suggested_run.summary_metrics = {}  # pragma: no cover
         suggested_run.summary_metrics[metric_name] = metric
         runs.append(suggested_run)
 
@@ -90,15 +91,15 @@ def test_squiggle_convergence_full(x):
 
 
 def run_iterations(
-    f: Callable[[npt.ArrayLike], floating],
-    bounds: npt.ArrayLike,
+    f: Callable[[ArrayLike], floating],
+    bounds: ArrayLike,
     num_iterations: integer = 20,
-    x_init: Optional[npt.ArrayLike] = None,
+    x_init: Optional[ArrayLike] = None,
     improvement: floating = 0.1,
-    optimium: Optional[npt.ArrayLike] = None,
-    atol: Optional[npt.ArrayLike] = 0.2,
+    optimium: Optional[ArrayLike] = None,
+    atol: Optional[ArrayLike] = 0.2,
     chunk_size: integer = 1,
-) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
+) -> Tuple[ArrayLike, ArrayLike]:
 
     if x_init is not None:
         X = x_init
