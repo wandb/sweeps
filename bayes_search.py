@@ -308,7 +308,7 @@ def next_sample(
     )
 
 
-def bayes_search_next_run(
+def bayes_search_next_runs(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
     validate: bool = False,
@@ -316,7 +316,7 @@ def bayes_search_next_run(
 ) -> SweepRun:
     """Suggest runs using Bayesian optimization.
 
-    >>> suggestion = bayes_search_next_run([], {
+    >>> suggestion = bayes_search_next_runs([], {
     ...    'method': 'bayes',
     ...    'parameters': {'a': {'min': 1., 'max': 2.}},
     ...    'metric': {'name': 'loss', 'goal': 'maximize'}

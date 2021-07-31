@@ -7,27 +7,29 @@ from .run import SweepRun
 from .params import HyperParameter, HyperParameterSet
 
 
-def grid_search_next_run(
+def grid_search_next_runs(
     runs: List[SweepRun],
     sweep_config: Union[dict, SweepConfig],
     validate: bool = False,
+    n: int = 1,
     randomize_order: bool = False,
-) -> Optional[SweepRun]:
+) -> List[Optional[SweepRun]]:
     """Suggest runs with Hyperparameters drawn from a grid.
 
-    >>> suggestion = grid_search_next_run([], {'method': 'grid', 'parameters': {'a': {'values': [1, 2, 3]}}})
-    >>> assert suggestion.config['a']['value'] == 1
+    >>> suggestion = grid_search_next_runs([], {'method': 'grid', 'parameters': {'a': {'values': [1, 2, 3]}}})
+    >>> assert suggestion[0].config['a']['value'] == 1
 
     Args:
         runs: The runs in the sweep.
         sweep_config: The sweep's config.
         randomize_order: Whether to randomize the order of the grid search.
+        n: The number of runs to draw
         validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
            If true, will raise a Validation error if `sweep_config` does not conform to
            the schema. If false, will attempt to run the sweep with an unvalidated schema.
 
     Returns:
-        The suggested run.
+        The suggested runs.
     """
 
     # make sure the sweep config is valid
@@ -65,15 +67,21 @@ def grid_search_next_run(
 
     # this is O(N) due to the O(1) complexity of individual hash lookups; previous implementation was O(N^2)
     remaining_params = list(all_param_values - param_values_seen)
+    n_remaining = len(remaining_params)
 
     if randomize_order:
         random.shuffle(remaining_params)
 
-    # we have searched over the entire parameter space
-    if len(remaining_params) == 0:
-        return None
+    retval: List[Optional[SweepRun]] = []
+    for i in range(n):
+        if i < n_remaining:
+            for param, value in zip(discrete_params, remaining_params[0]):
+                param.value = value
 
-    for param, value in zip(discrete_params, remaining_params[0]):
-        param.value = value
+            run = SweepRun(config=discrete_params.to_config())
+            retval.append(run)
+        else:
+            retval.append(None)
+            break
 
-    return SweepRun(config=discrete_params.to_config())
+    return retval

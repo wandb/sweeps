@@ -36,7 +36,7 @@ def run_bayes_search(
 
     runs = list(init_runs)
     for _ in range(num_iterations):
-        suggested_run = bayes.bayes_search_next_run(
+        suggested_run = bayes.bayes_search_next_runs(
             runs, config, minimum_improvement=improvement
         )
         suggested_run.state = RunState.finished
