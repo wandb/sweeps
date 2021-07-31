@@ -114,10 +114,9 @@ def next_run(
     sweep_config: Union[dict, SweepConfig],
     runs: List[SweepRun],
     validate: bool = False,
-    n: int = 1,
     **kwargs,
 ) -> Optional[SweepRun]:
-    runs = next_runs(sweep_config, runs, validate, n, **kwargs)
+    runs = next_runs(sweep_config, runs, validate, 1, **kwargs)
     return runs[0]
 
 
@@ -142,6 +141,7 @@ def next_runs(
         validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
            If true, will raise a Validation error if `sweep_config` does not conform to
            the schema. If false, will attempt to run the sweep with an unvalidated schema.
+        n: the number of runs to return
 
     Returns:
         The suggested runs.
