@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Any, Dict
+from typing import Sequence, List, Optional, Union, Any, Dict
 from enum import Enum
 import numpy as np
 import datetime
@@ -116,8 +116,7 @@ def next_run(
     validate: bool = False,
     **kwargs,
 ) -> Optional[SweepRun]:
-    runs = next_runs(sweep_config, runs, validate, 1, **kwargs)
-    return runs[0]
+    return next_runs(sweep_config, runs, validate, 1, **kwargs)[0]
 
 
 def next_runs(
@@ -126,7 +125,7 @@ def next_runs(
     validate: bool = False,
     n: int = 1,
     **kwargs,
-) -> List[Optional[SweepRun]]:
+) -> Sequence[Optional[SweepRun]]:
     """Calculate the next runs in a sweep.
 
     >>> suggested_run = next_runs({

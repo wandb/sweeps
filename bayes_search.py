@@ -308,7 +308,7 @@ def next_sample(
     )
 
 
-def bayes_search_next_runs(
+def bayes_search_next_run(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
     validate: bool = False,
@@ -316,7 +316,7 @@ def bayes_search_next_runs(
 ) -> SweepRun:
     """Suggest runs using Bayesian optimization.
 
-    >>> suggestion = bayes_search_next_runs([], {
+    >>> suggestion = bayes_search_next_run([], {
     ...    'method': 'bayes',
     ...    'parameters': {'a': {'min': 1., 'max': 2.}},
     ...    'metric': {'name': 'loss', 'goal': 'maximize'}
@@ -381,7 +381,12 @@ def bayes_search_next_runs(
                 metric = 0.0  # default
             y.append(metric)
             sample_X.append(X_norm)
-        elif run.state in [RunState.running, RunState.preempting, RunState.preempted]:
+        elif run.state in [
+            RunState.running,
+            RunState.preempting,
+            RunState.preempted,
+            RunState.pending,
+        ]:
             # run is in progress
             # we wont use the metric, but we should pass it into our optimizer to
             # account for the fact that it is running
@@ -441,3 +446,19 @@ def bayes_search_next_runs(
         "expected_improvement": suggested_X_expected_improvement,
     }
     return SweepRun(config=ret_dict, search_info=info)
+
+
+def bayes_search_next_runs(
+    runs: List[SweepRun],
+    config: Union[dict, SweepConfig],
+    validate: bool = False,
+    n: int = 1,
+    minimum_improvement: floating = 0.1,
+):
+    ret: List[SweepRun] = []
+    for _ in range(n):
+        suggestion = bayes_search_next_run(
+            runs + ret, config, validate, minimum_improvement
+        )
+        ret.append(suggestion)
+    return ret
