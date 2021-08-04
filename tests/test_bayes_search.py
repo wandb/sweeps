@@ -1,3 +1,5 @@
+import os
+import json
 from typing import Callable, Optional, Tuple, Iterable, Dict, Union
 
 import pytest
@@ -861,3 +863,17 @@ def test_that_constant_parameters_are_sampled_correctly():
     for key in suggestion.config:
         if key in config["parameters"] and key != "ppf_target_by":
             assert suggestion.config[key]["value"] is not None
+
+
+def test_metric_extremum_in_bayes_search():
+    import pdb
+
+    pdb.set_trace()
+    data_path = f"{os.path.dirname(__file__)}/data/ygnwe8ptupj33get.decoded.json"
+    with open(data_path, "r") as f:
+        data = json.load(f)
+    _, _, _, y = bayes._construct_gp_data(
+        [SweepRun(**r) for r in data["jsonPayload"]["data"]["runs"]],
+        data["jsonPayload"]["data"]["config"],
+    )
+    np.testing.assert_array_less(np.abs(y + 98), 5)
