@@ -866,9 +866,6 @@ def test_that_constant_parameters_are_sampled_correctly():
 
 
 def test_metric_extremum_in_bayes_search():
-    import pdb
-
-    pdb.set_trace()
     data_path = f"{os.path.dirname(__file__)}/data/ygnwe8ptupj33get.decoded.json"
     with open(data_path, "r") as f:
         data = json.load(f)
