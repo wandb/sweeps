@@ -346,7 +346,7 @@ def _construct_gp_data(
                     metric_name, kind="maximum" if goal == "maximize" else "minimum"
                 )
             except ValueError:
-                metric = 0.0  # default
+                metric = worst_metric  # default
             y.append(metric)
             sample_X.append(X_norm)
         elif run.state in [RunState.running, RunState.preempting, RunState.preempted]:
