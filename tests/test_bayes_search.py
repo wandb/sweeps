@@ -866,6 +866,7 @@ def test_that_constant_parameters_are_sampled_correctly():
 
 
 def test_metric_extremum_in_bayes_search():
+    # from https://console.cloud.google.com/logs/query;query=ygnwe8ptupj33get%0A;timeRange=2021-08-03T21:34:50.082Z%2F2021-08-03T21:34:59.082Z;summaryFields=:false:32:beginning;cursorTimestamp=2021-08-03T21:34:51.189649752Z?project=wandb-production
     data_path = f"{os.path.dirname(__file__)}/data/ygnwe8ptupj33get.decoded.json"
     with open(data_path, "r") as f:
         data = json.load(f)
