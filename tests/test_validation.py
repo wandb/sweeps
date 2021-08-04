@@ -38,6 +38,46 @@ def test_validation_disable(search_type):
     assert result is not None
 
 
+def test_bayes_methods():
+    schema = {
+        "method": {"bayes": {"model": "tpex"}},
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {"a": {"min": 0, "max": 1, "distribution": "uniform"}},
+    }
+    with pytest.raises(ValidationError):
+        SweepConfig(schema)
+
+    schema = {
+        "method": {"bayes": "gp"},
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {"a": {"min": 0, "max": 1, "distribution": "uniform"}},
+    }
+    with pytest.raises(ValidationError):
+        SweepConfig(schema)
+
+    schema = {
+        "method": "baye",
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {"a": {"min": 0, "max": 1, "distribution": "uniform"}},
+    }
+    with pytest.raises(ValidationError):
+        SweepConfig(schema)
+
+    schema = {
+        "method": {"bayes": {"model": "tpe"}},
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {"a": {"min": 0, "max": 1, "distribution": "uniform"}},
+    }
+    SweepConfig(schema)
+
+    schema = {
+        "method": "bayes",
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {"a": {"min": 0, "max": 1, "distribution": "uniform"}},
+    }
+    SweepConfig(schema)
+
+
 def test_validation_not_enough_params():
     schema = {"method": "random", "parameters": {}}
 

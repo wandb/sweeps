@@ -520,10 +520,36 @@
     },
     "method": {
       "description": "Possible values: bayes, random, grid",
-      "enum": [
-        "bayes",
-        "random",
-        "grid"
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "bayes",
+            "random",
+            "grid"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bayes": {
+              "type": "object",
+              "properties": {
+                "model": {
+                  "type": "string",
+                  "description": "The model type for the Bayesian optimizer",
+                  "enum": [
+                    "gp",
+                    "tpe",
+                    "tpe_multi"
+                  ]
+                }
+              },
+              "required": ["model"]
+            }
+          },
+          "required": ["bayes"]
+        }
       ]
     },
     "command": {
