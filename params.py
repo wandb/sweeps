@@ -5,19 +5,13 @@ import random
 from typing import List, Tuple, Dict, Any
 
 import numpy as np
-import numpy.typing as npt
 import scipy.stats as stats
-from copy import deepcopy
 
 import jsonschema
 
 from .run import SweepRun
-from .config.schema import (
-    sweep_config_jsonschema,
-    dereferenced_sweep_config_jsonschema,
-    DefaultFiller,
-    format_checker,
-)
+from .config import fill_parameter
+from ._types import ArrayLike
 
 
 class HyperParameter:
@@ -51,37 +45,11 @@ class HyperParameter:
 
         self.name = name
 
-        # names of the parameter definitions that are allowed
-        allowed_schemas = [
-            d["$ref"].split("/")[-1]
-            for d in sweep_config_jsonschema["definitions"]["parameter"]["anyOf"]
-        ]
-
-        valid = False
-        for schema_name in allowed_schemas:
-            # create a jsonschema object to validate against the subschema
-            subschema = dereferenced_sweep_config_jsonschema["definitions"][schema_name]
-
-            try:
-                jsonschema.Draft7Validator(
-                    subschema, format_checker=format_checker
-                ).validate(config)
-            except jsonschema.ValidationError:
-                continue
-            else:
-                filler = DefaultFiller(subschema, format_checker=format_checker)
-
-                # this sets the defaults, modifying config inplace
-                config = deepcopy(config)
-                filler.validate(config)
-
-                valid = True
-                self.type = schema_name
-                self.config = config
-
-        if not valid:
+        result = fill_parameter(config)
+        if result is None:
             raise jsonschema.ValidationError("invalid hyperparameter configuration")
 
+        self.type, self.config = result
         if self.config is None or self.type is None:
             raise ValueError(
                 "list of allowed schemas has length zero; please provide some valid schemas"
@@ -113,7 +81,7 @@ class HyperParameter:
 
         raise ValueError("Couldn't find {}".format(value))
 
-    def cdf(self, x: npt.ArrayLike) -> npt.ArrayLike:
+    def cdf(self, x: ArrayLike) -> ArrayLike:
         """Cumulative distribution function (CDF).
 
         In probability theory and statistics, the cumulative distribution function
@@ -159,7 +127,7 @@ class HyperParameter:
         else:
             raise ValueError("Unsupported hyperparameter distribution type")
 
-    def ppf(self, x: npt.ArrayLike) -> Any:
+    def ppf(self, x: ArrayLike) -> Any:
         """Percentage point function (PPF).
 
         In probability theory and statistics, the percentage point function is
@@ -319,7 +287,7 @@ class HyperParameterSet(list):
         """Convert a HyperParameterSet to a SweepRun config."""
         return dict([param._to_config() for param in self])
 
-    def convert_runs_to_normalized_vector(self, runs: List[SweepRun]) -> npt.ArrayLike:
+    def convert_runs_to_normalized_vector(self, runs: List[SweepRun]) -> ArrayLike:
         """Converts a list of SweepRuns to an array of normalized parameter vectors.
 
         Args:

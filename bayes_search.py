@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.typing as npt
 
 from typing import List, Tuple, Optional, Union
 
@@ -9,13 +8,13 @@ from .params import HyperParameter, HyperParameterSet
 from sklearn import gaussian_process as sklearn_gaussian
 from scipy import stats as scipy_stats
 
-from ._types import floating, integer
+from ._types import floating, integer, ArrayLike
 
 NUGGET = 1e-10
 
 
 def fit_normalized_gaussian_process(
-    X: npt.ArrayLike, y: npt.ArrayLike, nu: floating = 1.5
+    X: ArrayLike, y: ArrayLike, nu: floating = 1.5
 ) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
     gp = sklearn_gaussian.GaussianProcessRegressor(
         kernel=sklearn_gaussian.kernels.Matern(nu=nu),
@@ -23,10 +22,12 @@ def fit_normalized_gaussian_process(
         alpha=0.0000001,
         random_state=2,
     )
+
+    y_stddev: ArrayLike
     if len(y) == 1:
         y = np.array(y)
         y_mean = y[0]
-        y_stddev = 1
+        y_stddev = 1.0
     else:
         y_mean = np.mean(y)
         y_stddev = np.std(y) + 0.0001
@@ -35,13 +36,13 @@ def fit_normalized_gaussian_process(
     return gp, y_mean, y_stddev
 
 
-def sigmoid(x: npt.ArrayLike) -> npt.ArrayLike:
+def sigmoid(x: ArrayLike) -> ArrayLike:
     return np.exp(-np.logaddexp(0, -x))
 
 
-def random_sample(X_bounds: npt.ArrayLike, num_test_samples: integer) -> npt.ArrayLike:
+def random_sample(X_bounds: ArrayLike, num_test_samples: integer) -> ArrayLike:
     num_hyperparameters = len(X_bounds)
-    test_X = np.empty((num_test_samples, num_hyperparameters))
+    test_X = np.empty((int(num_test_samples), num_hyperparameters))
     for ii in range(num_test_samples):
         for jj in range(num_hyperparameters):
             if type(X_bounds[jj][0]) == int:
@@ -56,8 +57,8 @@ def random_sample(X_bounds: npt.ArrayLike, num_test_samples: integer) -> npt.Arr
 
 
 def predict(
-    X: npt.ArrayLike, y: npt.ArrayLike, test_X: npt.ArrayLike, nu: floating = 1.5
-) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
+    X: ArrayLike, y: ArrayLike, test_X: ArrayLike, nu: floating = 1.5
+) -> Tuple[ArrayLike, ArrayLike]:
     gp, norm_mean, norm_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
     y_pred, y_std = gp.predict([test_X], return_std=True)
     y_std_norm = y_std * norm_stddev
@@ -66,10 +67,10 @@ def predict(
 
 
 def train_gaussian_process(
-    sample_X: npt.ArrayLike,
-    sample_y: npt.ArrayLike,
-    X_bounds: Optional[npt.ArrayLike] = None,
-    current_X: npt.ArrayLike = None,
+    sample_X: ArrayLike,
+    sample_y: ArrayLike,
+    X_bounds: Optional[ArrayLike] = None,
+    current_X: ArrayLike = None,
     nu: floating = 1.5,
     max_samples: integer = 100,
 ) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
@@ -104,7 +105,7 @@ def train_gaussian_process(
             print(
                 "current_X is bigger than max samples - 5 so dropping some currently running parameters"
             )
-            current_X = current_X[: (max_samples - 5), :]
+            current_X = current_X[: (max_samples - 5), :]  # type: ignore
     if len(sample_y.shape) != 1:
         raise ValueError("Sample y must be a 1 dimensional array")
 
@@ -140,7 +141,7 @@ def train_gaussian_process(
     return gp, y_mean, y_stddev
 
 
-def filter_nans(sample_X: npt.ArrayLike, sample_y: npt.ArrayLike) -> npt.ArrayLike:
+def filter_nans(sample_X: ArrayLike, sample_y: ArrayLike) -> ArrayLike:
     is_row_finite = ~(np.isnan(sample_X).any(axis=1) | np.isnan(sample_y))
     sample_X = sample_X[is_row_finite, :]
     sample_y = sample_y[is_row_finite]
@@ -149,10 +150,10 @@ def filter_nans(sample_X: npt.ArrayLike, sample_y: npt.ArrayLike) -> npt.ArrayLi
 
 def next_sample(
     *,
-    sample_X: npt.ArrayLike,
-    sample_y: npt.ArrayLike,
-    X_bounds: Optional[npt.ArrayLike] = None,
-    current_X: Optional[npt.ArrayLike] = None,
+    sample_X: ArrayLike,
+    sample_y: ArrayLike,
+    X_bounds: Optional[ArrayLike] = None,
+    current_X: Optional[ArrayLike] = None,
     nu: floating = 1.5,
     max_samples_for_model: integer = 100,
     improvement: floating = 0.1,
@@ -160,8 +161,8 @@ def next_sample(
     num_points_to_try: integer = 1000,
     opt_func: str = "expected_improvement",
     model: str = "gp",
-    test_X: Optional[npt.ArrayLike] = None,
-) -> Tuple[npt.ArrayLike, floating, floating, floating, floating]:
+    test_X: Optional[ArrayLike] = None,
+) -> Tuple[ArrayLike, floating, floating, floating, floating]:
     """Calculates the best next sample to look at via bayesian optimization.
 
     Args:
@@ -293,17 +294,17 @@ def next_sample(
 
 
 def next_sample_gp(
-    filtered_X: npt.ArrayLike,
-    filtered_y: npt.ArrayLike,
-    X_bounds: Optional[npt.ArrayLike] = None,
-    current_X: Optional[npt.ArrayLike] = None,
+    filtered_X: ArrayLike,
+    filtered_y: ArrayLike,
+    X_bounds: Optional[ArrayLike] = None,
+    current_X: Optional[ArrayLike] = None,
     nu: floating = 1.5,
     max_samples_for_model: integer = 100,
     improvement: floating = 0.01,
     num_points_to_try: integer = 1000,
     opt_func: str = "expected_improvement",
-    test_X: Optional[npt.ArrayLike] = None,
-) -> Tuple[npt.ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
+    test_X: Optional[ArrayLike] = None,
+) -> Tuple[ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
     # build the acquisition function
     gp, y_mean, y_stddev, = train_gaussian_process(
         filtered_X, filtered_y, X_bounds, current_X, nu, max_samples_for_model
@@ -459,17 +460,17 @@ def parzen_threshold(y, gamma):
 
 
 def next_sample_tpe(
-    filtered_X: npt.ArrayLike,
-    filtered_y: npt.ArrayLike,
-    X_bounds: Optional[npt.ArrayLike] = None,
-    current_X: Optional[npt.ArrayLike] = None,
+    filtered_X: ArrayLike,
+    filtered_y: ArrayLike,
+    X_bounds: Optional[ArrayLike] = None,
+    current_X: Optional[ArrayLike] = None,
     max_samples_for_model: integer = 100,
     improvement: floating = 0.01,
     num_points_to_try: integer = 1000,
-    test_X: Optional[npt.ArrayLike] = None,
+    test_X: Optional[ArrayLike] = None,
     multivariate: Optional[bool] = False,
     bw_multiplier: Optional[floating] = 1.0,
-) -> Tuple[npt.ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
+) -> Tuple[ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
 
     if X_bounds is None:
         hp_min = np.min(filtered_X, axis=0)
@@ -534,7 +535,7 @@ def bayes_search_next_run(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
     validate: bool = False,
-    minimum_improvement: float = 0.1,
+    minimum_improvement: floating = 0.1,
 ) -> SweepRun:
     """Suggest runs using Bayesian optimization.
 
@@ -575,15 +576,18 @@ def bayes_search_next_run(
     worst_func = min if goal == "maximize" else max
     params = HyperParameterSet.from_config(config["parameters"])
 
-    sample_X = []
-    current_X = []
-    y = []
+    if len(params.searchable_params) == 0:
+        raise ValueError("Need at least one searchable parameter for bayes search.")
+
+    sample_X: ArrayLike = []
+    current_X: ArrayLike = []
+    y: ArrayLike = []
 
     X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
 
     # we calc the max metric to put as the metric for failed runs
     # so that our bayesian search stays away from them
-    worst_metric = 0.0
+    worst_metric: floating = 0.0
     for run in runs:
         if run.state == RunState.finished:
             try:

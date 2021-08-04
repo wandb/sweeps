@@ -2,8 +2,8 @@ import pytest
 
 from ..config import SweepConfig
 import numpy as np
-from numpy import typing as npt
 from ..run import next_run
+from .._types import ArrayLike
 import os
 from scipy import stats
 
@@ -39,9 +39,9 @@ def check_that_samples_are_from_the_same_distribution(
 
 
 def plot_two_distributions(
-    samples_true: npt.ArrayLike,
-    samples_pred: npt.ArrayLike,
-    bins: npt.ArrayLike,
+    samples_true: ArrayLike,
+    samples_pred: ArrayLike,
+    bins: ArrayLike,
     xscale="linear",
 ):
     import matplotlib.pyplot as plt

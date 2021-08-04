@@ -179,7 +179,7 @@ def hyperband_stop_runs(
                 history = list(map(lambda x: -x, history))
 
             closest_band = -1
-            closest_threshold = 0
+            closest_threshold = 0.0
             bandstr = ""
             termstr = ""
             for band, threshold in zip(bands, thresholds):
