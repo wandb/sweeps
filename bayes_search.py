@@ -308,6 +308,80 @@ def next_sample(
     )
 
 
+def _construct_gp_data(
+    runs: List[SweepRun], config: Union[dict, SweepConfig]
+) -> Tuple[HyperParameterSet, ArrayLike, ArrayLike, ArrayLike]:
+    goal = config["metric"]["goal"]
+    metric_name = config["metric"]["name"]
+    worst_func = min if goal == "maximize" else max
+    params = HyperParameterSet.from_config(config["parameters"])
+
+    if len(params.searchable_params) == 0:
+        raise ValueError("Need at least one searchable parameter for bayes search.")
+
+    sample_X: ArrayLike = []
+    current_X: ArrayLike = []
+    y: ArrayLike = []
+
+    # we calc the max metric to put as the metric for failed runs
+    # so that our bayesian search stays away from them
+    worst_metric: floating = np.inf if goal == "maximize" else -np.inf
+    for run in runs:
+        if run.state == RunState.finished:
+            try:
+                run_extremum = run.metric_extremum(
+                    metric_name, kind="minimum" if goal == "maximize" else "maximum"
+                )
+            except ValueError:
+                run_extremum = 0.0  # default
+            worst_metric = worst_func(worst_metric, run_extremum)
+    if not np.isfinite(worst_metric):
+        worst_metric = 0.0
+
+    X_norms = params.convert_runs_to_normalized_vector(runs)
+    for run, X_norm in zip(runs, X_norms):
+        if run.state == RunState.finished:
+            try:
+                metric = run.metric_extremum(
+                    metric_name, kind="maximum" if goal == "maximize" else "minimum"
+                )
+            except ValueError:
+                metric = worst_metric  # default
+            y.append(metric)
+            sample_X.append(X_norm)
+        elif run.state in [RunState.running, RunState.preempting, RunState.preempted]:
+            # run is in progress
+            # we wont use the metric, but we should pass it into our optimizer to
+            # account for the fact that it is running
+            current_X.append(X_norm)
+        elif run.state in [RunState.failed, RunState.crashed, RunState.killed]:
+            # run failed, but we're still going to use it
+            # maybe we should be smarter about this
+            y.append(worst_metric)
+            sample_X.append(X_norm)
+        else:
+            raise ValueError("Run is in unknown state")
+
+    if len(sample_X) == 0:
+        sample_X = np.empty([0, 0])
+    else:
+        sample_X = np.asarray(sample_X)
+
+    if len(current_X) > 0:
+        current_X = np.array(current_X)
+
+    # impute bad metric values from y
+    y = np.asarray(y)
+    if len(y) > 0:
+        y[~np.isfinite(y)] = worst_metric
+
+    # next_sample is a minimizer, so if we are trying to
+    # maximize, we need to negate y
+    y *= -1 if goal == "maximize" else 1
+
+    return params, sample_X, current_X, y
+
+
 def bayes_search_next_run(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
@@ -343,73 +417,8 @@ def bayes_search_next_run(
     if config["method"] != "bayes":
         raise ValueError("Invalid sweep configuration for bayes_search_next_run.")
 
-    goal = config["metric"]["goal"]
-    metric_name = config["metric"]["name"]
-    worst_func = min if goal == "maximize" else max
-    params = HyperParameterSet.from_config(config["parameters"])
-
-    if len(params.searchable_params) == 0:
-        raise ValueError("Need at least one searchable parameter for bayes search.")
-
-    sample_X: ArrayLike = []
-    current_X: ArrayLike = []
-    y: ArrayLike = []
-
+    params, sample_X, current_X, y = _construct_gp_data(runs, config)
     X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
-
-    # we calc the max metric to put as the metric for failed runs
-    # so that our bayesian search stays away from them
-    worst_metric: floating = 0.0
-    for run in runs:
-        if run.state == RunState.finished:
-            try:
-                run_extremum = run.metric_extremum(
-                    metric_name, kind="minimum" if goal == "maximize" else "maximum"
-                )
-            except ValueError:
-                run_extremum = 0.0  # default
-            worst_metric = worst_func(worst_metric, run_extremum)
-
-    X_norms = params.convert_runs_to_normalized_vector(runs)
-    for run, X_norm in zip(runs, X_norms):
-        if run.state == RunState.finished:
-            try:
-                metric = run.metric_extremum(
-                    metric_name, kind="maximum" if goal == "maximize" else "minimum"
-                )
-            except ValueError:
-                metric = 0.0  # default
-            y.append(metric)
-            sample_X.append(X_norm)
-        elif run.state in [RunState.running, RunState.preempting, RunState.preempted]:
-            # run is in progress
-            # we wont use the metric, but we should pass it into our optimizer to
-            # account for the fact that it is running
-            current_X.append(X_norm)
-        elif run.state in [RunState.failed, RunState.crashed, RunState.killed]:
-            # run failed, but we're still going to use it
-            # maybe we should be smarter about this
-            y.append(worst_metric)
-            sample_X.append(X_norm)
-        else:
-            raise ValueError("Run is in unknown state")
-
-    if len(sample_X) == 0:
-        sample_X = np.empty([0, 0])
-    else:
-        sample_X = np.asarray(sample_X)
-
-    if len(current_X) > 0:
-        current_X = np.array(current_X)
-
-    # impute bad metric values from y
-    y = np.asarray(y)
-    if len(y) > 0:
-        y[~np.isfinite(y)] = worst_metric
-
-    # next_sample is a minimizer, so if we are trying to
-    # maximize, we need to negate y
-    y *= -1 if goal == "maximize" else 1
 
     (
         suggested_X,
