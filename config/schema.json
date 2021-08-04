@@ -211,6 +211,54 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "uniform distribution on real numbers",
+          "required": [
+            "min",
+            "max",
+            "distribution"
+          ],
+          "properties": {
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number",
+              "format": "float"
+            },
+            "distribution": {
+              "enum": [
+                "uniform"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "uniform distribution on real numbers",
+          "required": [
+            "min",
+            "max",
+            "distribution"
+          ],
+          "properties": {
+            "min": {
+              "type": "number",
+              "format": "float"
+            },
+            "max": {
+              "type": "number"
+            },
+            "distribution": {
+              "enum": [
+                "uniform"
+              ]
+            }
+          },
+          "additionalProperties": false
         }
       ]
     },
