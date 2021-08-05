@@ -1,3 +1,5 @@
+import os
+import json
 from typing import Callable, Optional, Tuple, Iterable, Dict, Union
 
 import pytest
@@ -861,3 +863,15 @@ def test_that_constant_parameters_are_sampled_correctly():
     for key in suggestion.config:
         if key in config["parameters"] and key != "ppf_target_by":
             assert suggestion.config[key]["value"] is not None
+
+
+def test_metric_extremum_in_bayes_search():
+    # from https://console.cloud.google.com/logs/query;query=ygnwe8ptupj33get%0A;timeRange=2021-08-03T21:34:50.082Z%2F2021-08-03T21:34:59.082Z;summaryFields=:false:32:beginning;cursorTimestamp=2021-08-03T21:34:51.189649752Z?project=wandb-production
+    data_path = f"{os.path.dirname(__file__)}/data/ygnwe8ptupj33get.decoded.json"
+    with open(data_path, "r") as f:
+        data = json.load(f)
+    _, _, _, y = bayes._construct_gp_data(
+        [SweepRun(**r) for r in data["jsonPayload"]["data"]["runs"]],
+        data["jsonPayload"]["data"]["config"],
+    )
+    np.testing.assert_array_less(np.abs(y + 98), 5)
