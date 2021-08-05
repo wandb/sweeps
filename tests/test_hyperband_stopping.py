@@ -408,6 +408,7 @@ def test_eta_3_max():
 
 
 def test_hyperband_runs_with_nan_metrics():
+    # fixes https://sentry.io/share/issue/e6e002283c0447d6ac4defaf58a5d665/
     runs = [
         SweepRun(
             name="c",
