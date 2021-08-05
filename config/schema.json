@@ -217,8 +217,7 @@
           "description": "uniform distribution on real numbers",
           "required": [
             "min",
-            "max",
-            "distribution"
+            "max"
           ],
           "properties": {
             "min": {
@@ -231,7 +230,8 @@
             "distribution": {
               "enum": [
                 "uniform"
-              ]
+              ],
+              "default": "uniform"
             }
           },
           "additionalProperties": false
@@ -241,8 +241,7 @@
           "description": "uniform distribution on real numbers",
           "required": [
             "min",
-            "max",
-            "distribution"
+            "max"
           ],
           "properties": {
             "min": {
@@ -255,7 +254,8 @@
             "distribution": {
               "enum": [
                 "uniform"
-              ]
+              ],
+              "default": "uniform"
             }
           },
           "additionalProperties": false
