@@ -107,9 +107,9 @@
       "properties": {
         "q": {
           "type": "number",
-          "default": 1,
+          "default": 1.0,
           "description": "Quantization parameter for quantized distributions",
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "mu": {
           "type": "number",
@@ -139,9 +139,9 @@
       "properties": {
         "q": {
           "type": "number",
-          "default": 1,
+          "default": 1.0,
           "description": "Quantization parameter for quantized distributions",
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "mu": {
           "type": "number",
@@ -306,9 +306,9 @@
         },
         "q": {
           "type": "number",
-          "default": 1,
+          "default": 1.0,
           "description": "Quantization parameter for quantized distributions",
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "distribution": {
           "enum": [
@@ -335,9 +335,9 @@
         },
         "q": {
           "type": "number",
-          "default": 1,
+          "default": 1.0,
           "description": "Quantization parameter for quantized distributions",
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "distribution": {
           "enum": [
@@ -413,9 +413,9 @@
         },
         "q": {
           "type": "number",
-          "default": 1,
+          "default": 1.0,
           "description": "Quantization parameter for quantized distributions",
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "distribution": {
           "enum": [
