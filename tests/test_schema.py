@@ -22,6 +22,22 @@ def test_json_type_inference_uniform():
     assert len(param.config) == 3
 
 
+def test_json_type_inference_uniform_mixed():
+    config = {"min": 0.0, "max": 1}
+    param = HyperParameter("unif_param", config)
+    assert param.type == HyperParameter.UNIFORM
+
+    # len is 3 because distribution key is inferred via default
+    assert len(param.config) == 3
+
+    config = {"min": 0, "max": 1.0}
+    param = HyperParameter("unif_param", config)
+    assert param.type == HyperParameter.UNIFORM
+
+    # len is 3 because distribution key is inferred via default
+    assert len(param.config) == 3
+
+
 def test_json_type_inference_and_imputation_normal():
     config = {"distribution": "normal"}
     param = HyperParameter("normal_param", config)

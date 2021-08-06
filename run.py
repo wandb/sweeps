@@ -1,5 +1,6 @@
 from typing import Sequence, List, Optional, Union, Any, Dict
 from enum import Enum
+from numbers import Number
 import numpy as np
 import datetime
 
@@ -17,6 +18,14 @@ class RunState(str, Enum):
     failed = "failed"
     preempted = "preempted"
     preempting = "preempting"
+
+
+def is_number(x: Any) -> bool:
+    """Check if a value is a finite number."""
+    try:
+        return np.isscalar(x) and np.isfinite(x) and isinstance(x, Number)
+    except TypeError:
+        return False
 
 
 class SweepRun(BaseModel):
@@ -62,8 +71,15 @@ class SweepRun(BaseModel):
         use_enum_values = True
         allow_population_by_field_name = True
 
-    def metric_history(self, metric_name: str) -> List[floating]:
-        return [d[metric_name] for d in self.history if metric_name in d]
+    def metric_history(
+        self, metric_name: str, filter_invalid: bool = False
+    ) -> List[floating]:
+        return [
+            d[metric_name]
+            for d in self.history
+            if metric_name in d
+            and not (filter_invalid and not is_number(d[metric_name]))
+        ]
 
     def summary_metric(self, metric_name: str) -> floating:
         if self.summary_metrics is None:
@@ -96,13 +112,7 @@ class SweepRun(BaseModel):
         if len(all_metrics) == 0:
             raise ValueError(f"Cannot extract metric {metric_name} from run")
 
-        def filter_func(x: Any) -> bool:
-            try:
-                return np.isscalar(x) and np.isfinite(x)
-            except TypeError:
-                return False
-
-        all_metrics = list(filter(filter_func, all_metrics))
+        all_metrics = list(filter(is_number, all_metrics))
 
         if len(all_metrics) == 0:
             raise ValueError("Run does not have any finite metric values")
