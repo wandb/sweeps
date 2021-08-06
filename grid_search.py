@@ -75,7 +75,8 @@ def grid_search_next_runs(
     retval: List[Optional[SweepRun]] = []
     for i in range(n):
         if i < n_remaining:
-            for param, value in zip(discrete_params, remaining_params[0]):
+            next_value = remaining_params.pop(0)
+            for param, value in zip(discrete_params, next_value):
                 param.value = value
 
             run = SweepRun(config=discrete_params.to_config())
