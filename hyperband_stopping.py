@@ -138,7 +138,7 @@ def hyperband_stop_runs(
 
     all_run_histories = []  # we're going to look at every run
     for run in runs:
-        history = run.metric_history(metric_name)
+        history = run.metric_history(metric_name, filter_invalid=True)
         if config["metric"]["goal"] == "maximize":
             history = list(map(lambda x: -x, history))
         if len(history) > 0:
@@ -174,7 +174,7 @@ def hyperband_stop_runs(
 
     for run in runs:
         if run.state == RunState.running:
-            history = run.metric_history(metric_name)
+            history = run.metric_history(metric_name, filter_invalid=True)
             if config["metric"]["goal"] == "maximize":
                 history = list(map(lambda x: -x, history))
 
