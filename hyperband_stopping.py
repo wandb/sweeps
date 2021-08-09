@@ -1,9 +1,45 @@
 from typing import List, Union, Dict, Any
+from copy import deepcopy
 
 import numpy as np
 
-from .config import SweepConfig
+from .config import SweepConfig, fill_early_terminate
 from .run import SweepRun, RunState
+from .config.schema import dereferenced_sweep_config_jsonschema
+
+
+def hyperband_baseline_validate_and_fill(config: Dict) -> Dict:
+    config = deepcopy(config)
+
+    if "metric" not in config:
+        raise ValueError('Hyperband stopping requires "metric" section')
+
+    if "early_terminate" not in config:
+        raise ValueError('Hyperband stopping requires "early_terminate" section.')
+    et_config = config["early_terminate"]
+
+    if et_config["type"] != "hyperband":
+        raise ValueError("Sweep config is not configured for hyperband stopping")
+
+    # remove extra keys (that are already ignored anyway) from the early_terminate config dict to avoid triggering a
+    # jsonschema validation error. Extra keys are disallowed by the schema but to maintain compatibility we
+    # will allow them here.
+    allowed_keys = list(
+        dereferenced_sweep_config_jsonschema["definitions"]["hyperband_stopping"][
+            "properties"
+        ].keys()
+    )
+    to_delete = []
+    for key in et_config:
+        if key not in allowed_keys:
+            to_delete.append(key)
+    for key in to_delete:
+        del et_config[key]
+
+    # fill in defaults needed for hyperband
+    config = fill_early_terminate(config)
+
+    return config
 
 
 def hyperband_stop_runs(
@@ -86,17 +122,13 @@ def hyperband_stop_runs(
 
     # validate config and fill in defaults
     if validate:
+        # this fully validates the entire config
         config = SweepConfig(config)
 
-    if "metric" not in config:
-        raise ValueError('Hyperband stopping requires "metric" section')
-
-    if "early_terminate" not in config:
-        raise ValueError('Hyperband stopping requires "early_terminate" section.')
+    # this manually validates the parts of the config that are absolutely
+    # required to do hyperband stopping, and fills in any associated defaults
+    config = hyperband_baseline_validate_and_fill(config)
     et_config = config["early_terminate"]
-
-    if et_config["type"] != "hyperband":
-        raise ValueError("Sweep config is not configured for hyperband stopping")
 
     if "max_iter" in et_config:
         max_iter = et_config["max_iter"]
