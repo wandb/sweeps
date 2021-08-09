@@ -3,7 +3,7 @@ import jsonschema
 from .. import config
 
 
-def test_nvalid_sweep_config_nonuniform_array_elements_categorical():
+def test_invalid_sweep_config_nonuniform_array_elements_categorical():
     invalid_config = {
         "method": "grid",
         "parameters": {
@@ -47,3 +47,12 @@ def test_negative_sigma_validation():
     }
     with pytest.raises(jsonschema.ValidationError):
         _ = config.SweepConfig(invalid_config)
+
+
+def test_missing_parameters_section():
+    invalid_config = {
+        "method": "random",
+    }
+
+    warnings = config.schema_violations_from_proposed_config(invalid_config)
+    assert len(warnings) == 1
