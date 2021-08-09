@@ -7,6 +7,14 @@ from .run import SweepRun
 from .params import HyperParameter, HyperParameterSet
 
 
+def list_to_tuple(nested_list: list) -> tuple:
+    return (
+        tuple(list_to_tuple(x) for x in nested_list)
+        if type(nested_list) is list
+        else nested_list
+    )
+
+
 def grid_search_next_run(
     runs: List[SweepRun],
     sweep_config: Union[dict, SweepConfig],
@@ -56,13 +64,15 @@ def grid_search_next_run(
 
     # build an iterator over all combinations of param values
     param_names = [p.name for p in discrete_params]
-    param_values = [p.config["values"] for p in discrete_params]
+    param_values = [list_to_tuple(p.config["values"]) for p in discrete_params]
 
     all_param_values = set(itertools.product(*param_values))
     param_values_seen = set(
         [
             tuple(
-                run.config[name]["value"] for name in param_names if name in run.config
+                list_to_tuple(run.config[name]["value"])
+                for name in param_names
+                if name in run.config
             )
             for run in runs
         ]
