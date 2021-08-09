@@ -60,7 +60,12 @@ def grid_search_next_run(
 
     all_param_values = set(itertools.product(*param_values))
     param_values_seen = set(
-        [tuple(run.config[name]["value"] for name in param_names) for run in runs]
+        [
+            tuple(
+                run.config[name]["value"] for name in param_names if name in run.config
+            )
+            for run in runs
+        ]
     )
 
     # this is O(N) due to the O(1) complexity of individual hash lookups; previous implementation was O(N^2)
