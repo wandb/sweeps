@@ -24,6 +24,10 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
     # a json document. so we do it manually here:
     if "parameters" in config:
         for parameter_name, parameter_dict in config["parameters"].items():
+            if not isinstance(parameter_dict, Dict):
+                raise ValueError(
+                    f"Invalid configuration for hyperparameter '{parameter_name}'"
+                )
             if "min" in parameter_dict and "max" in parameter_dict:
                 # this comparison is type safe because the jsonschema enforces type uniformity
                 if parameter_dict["min"] >= parameter_dict["max"]:
