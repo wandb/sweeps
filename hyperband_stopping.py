@@ -161,7 +161,10 @@ def hyperband_stop_runs(
     r = 1.0 / eta
 
     if len(bands) < 1:
-        raise ValueError("Bands must be an array of length at least 1")
+        raise ValueError(
+            "Bands must be an array of length at least 1. Try increasing s, decreasing eta, or increasing min_iter."
+        )
+
     if r < 0 or r > 1:
         raise ValueError("r must be a float between 0 and 1")
 
