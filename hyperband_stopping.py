@@ -17,12 +17,12 @@ def hyperband_baseline_validate_and_fill(config: Dict) -> Dict:
 
     if "early_terminate" not in config:
         raise ValueError('Hyperband stopping requires "early_terminate" section.')
-    et_config = config["early_terminate"]
 
-    if et_config["type"] != "hyperband":
+    if config["early_terminate"]["type"] != "hyperband":
         raise ValueError("Sweep config is not configured for hyperband stopping")
 
     config = fill_validate_metric(config)
+    et_config = config["early_terminate"]
 
     # remove extra keys (that are already ignored anyway) from the early_terminate config dict to avoid triggering a
     # jsonschema validation error. Extra keys are disallowed by the schema but to maintain compatibility we
@@ -32,6 +32,7 @@ def hyperband_baseline_validate_and_fill(config: Dict) -> Dict:
             "properties"
         ].keys()
     )
+
     to_delete = []
     for key in et_config:
         if key not in allowed_keys:

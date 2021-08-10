@@ -95,3 +95,33 @@ def test_sweepconfig_no_method_baseline_validation():
 
     with pytest.raises(ValueError):
         next_run(schema, [], validate=False)
+
+
+def test_invalid_early_stopping():
+    invalid_schema = {
+        "method": "bayes",
+        "parameters": {
+            "v1": {"values": ["a", "b", "c"]},
+        },
+    }
+
+    with pytest.raises(ValueError):
+        stop_runs(invalid_schema, [], validate=False)
+
+    invalid_schema["metric"] = {"name": "loss", "goal": "minimise"}
+
+    with pytest.raises(ValueError):
+        stop_runs(invalid_schema, [], validate=False)
+
+    invalid_schema["early_terminate"] = dict()
+    invalid_schema["early_terminate"]["type"] = "invalid type"
+
+    with pytest.raises(ValueError):
+        stop_runs(invalid_schema, [], validate=False)
+
+    invalid_schema["early_terminate"]["type"] = "hyperband"
+    invalid_schema["early_terminate"]["extra_key"] = 1234
+    invalid_schema["early_terminate"]["min_iter"] = 100
+
+    to_stop = stop_runs(invalid_schema, [], validate=False)
+    assert len(to_stop) == 0
