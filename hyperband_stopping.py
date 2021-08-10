@@ -3,7 +3,8 @@ from copy import deepcopy
 
 import numpy as np
 
-from .config import SweepConfig, fill_early_terminate
+from .config import SweepConfig, fill_validate_early_terminate
+from .config.schema import fill_validate_metric
 from .run import SweepRun, RunState
 from .config.schema import dereferenced_sweep_config_jsonschema
 
@@ -21,6 +22,8 @@ def hyperband_baseline_validate_and_fill(config: Dict) -> Dict:
     if et_config["type"] != "hyperband":
         raise ValueError("Sweep config is not configured for hyperband stopping")
 
+    config = fill_validate_metric(config)
+
     # remove extra keys (that are already ignored anyway) from the early_terminate config dict to avoid triggering a
     # jsonschema validation error. Extra keys are disallowed by the schema but to maintain compatibility we
     # will allow them here.
@@ -37,7 +40,7 @@ def hyperband_baseline_validate_and_fill(config: Dict) -> Dict:
         del et_config[key]
 
     # fill in defaults needed for hyperband
-    config = fill_early_terminate(config)
+    config = fill_validate_early_terminate(config)
 
     return config
 
