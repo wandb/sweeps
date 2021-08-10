@@ -44,6 +44,10 @@ def test_validation_not_enough_params():
     with pytest.raises(ValidationError):
         SweepConfig(schema)
 
+    # test that this doesnt raise a keyerror https://sentry.io/organizations/weights-biases/issues/2461042074/?project=5812400&query=is%3Aresolved&statsPeriod=14d
+    result = schema_violations_from_proposed_config(schema)
+    assert len(result) == 1
+
 
 def test_minmax_type_inference():
     schema = {
@@ -82,3 +86,42 @@ def test_invalid_config():
     config = "this is a totally invalid config"
     with pytest.raises(ValueError):
         schema_violations_from_proposed_config(config)
+
+
+def test_sweepconfig_no_method_baseline_validation():
+    schema = {
+        "parameters": {"a": {"values": [1, 2, 3, 4]}},
+    }
+
+    with pytest.raises(ValueError):
+        next_run(schema, [], validate=False)
+
+
+def test_invalid_early_stopping():
+    invalid_schema = {
+        "method": "bayes",
+        "parameters": {
+            "v1": {"values": ["a", "b", "c"]},
+        },
+    }
+
+    with pytest.raises(ValueError):
+        stop_runs(invalid_schema, [], validate=False)
+
+    invalid_schema["metric"] = {"name": "loss", "goal": "minimise"}
+
+    with pytest.raises(ValueError):
+        stop_runs(invalid_schema, [], validate=False)
+
+    invalid_schema["early_terminate"] = dict()
+    invalid_schema["early_terminate"]["type"] = "invalid type"
+
+    with pytest.raises(ValueError):
+        stop_runs(invalid_schema, [], validate=False)
+
+    invalid_schema["early_terminate"]["type"] = "hyperband"
+    invalid_schema["early_terminate"]["extra_key"] = 1234
+    invalid_schema["early_terminate"]["min_iter"] = 100
+
+    to_stop = stop_runs(invalid_schema, [], validate=False)
+    assert len(to_stop) == 0

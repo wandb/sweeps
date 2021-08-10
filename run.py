@@ -164,7 +164,9 @@ def next_runs(
     if validate:
         sweep_config = SweepConfig(sweep_config)
 
-    # this access is safe due to the jsonschema
+    if "method" not in sweep_config:
+        raise ValueError("Sweep config must contain metric section")
+
     method = sweep_config["method"]
 
     if method == "grid":

@@ -4,24 +4,29 @@ import itertools
 from typing import List
 from ..run import RunState, SweepRun, next_run
 from ..config import SweepConfig
+from ..grid_search import list_to_tuple
 
 
 def kernel_for_grid_search_tests(
-    runs: List[SweepRun], config: SweepConfig, randomize: bool
+    runs: List[SweepRun],
+    config: SweepConfig,
+    randomize: bool,
 ) -> None:
     """This kernel assumes that sweep config has two categorical parameters
     named v1 and v2."""
 
-    answers = sorted(
-        list(
-            itertools.product(
-                config["parameters"]["v1"]["values"],
-                config["parameters"]["v2"]["values"],
-            )
+    answers = list(
+        itertools.product(
+            list_to_tuple(config["parameters"]["v1"]["values"]),
+            list_to_tuple(config["parameters"]["v2"]["values"]),
         )
     )
     suggested_parameters = [
-        (run.config["v1"]["value"], run.config["v2"]["value"]) for run in runs
+        (
+            list_to_tuple(run.config["v1"]["value"]),
+            list_to_tuple(run.config["v2"]["value"]),
+        )
+        for run in runs
     ]
 
     while True:
@@ -32,14 +37,15 @@ def kernel_for_grid_search_tests(
         assert suggestion.state == RunState.pending
         runs.append(suggestion)
         suggested_parameters.append(
-            (suggestion.config["v1"]["value"], suggestion.config["v2"]["value"])
+            (
+                list_to_tuple(suggestion.config["v1"]["value"]),
+                list_to_tuple(suggestion.config["v2"]["value"]),
+            )
         )
 
-    # assert that the grid search iterates over all possible parameters and stops when
-    # it exhausts the list of possibilities. do not assert anything about the order
-    # in which parameter suggestions are made.
-    suggested_parameters = sorted(suggested_parameters)
-    assert answers == suggested_parameters
+    assert len(answers) == len(suggested_parameters)
+    for key in suggested_parameters:
+        assert key in answers
 
 
 @pytest.mark.parametrize("randomize", [True, False])
@@ -61,4 +67,27 @@ def test_grid_search_starting_from_in_progress(
     ]
     kernel_for_grid_search_tests(
         runs, sweep_config_2params_grid_search, randomize=randomize
+    )
+
+
+def test_grid_search_with_list_values():
+    # https://sentry.io/organizations/weights-biases/issues/2501125152/?project=5812400&query=is%3Aresolved&statsPeriod=14d
+    config = SweepConfig(
+        {
+            "method": "grid",
+            "parameters": {
+                "v1": {
+                    "values": ["", [9, 5]],
+                },
+                "v2": {
+                    "values": [256, 512],
+                },
+            },
+        }
+    )
+
+    kernel_for_grid_search_tests(
+        [],
+        config,
+        randomize=False,
     )

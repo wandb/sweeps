@@ -1,8 +1,10 @@
 import numpy as np
 
-from typing import List, Tuple, Optional, Union
+from copy import deepcopy
+from typing import List, Tuple, Optional, Union, Dict
 
 from .config.cfg import SweepConfig
+from .config.schema import fill_validate_metric
 from .run import SweepRun, RunState
 from .params import HyperParameter, HyperParameterSet
 from sklearn import gaussian_process as sklearn_gaussian
@@ -11,6 +13,20 @@ from scipy import stats as scipy_stats
 from ._types import floating, integer, ArrayLike
 
 NUGGET = 1e-10
+
+
+def bayes_baseline_validate_and_fill(config: Dict) -> Dict:
+    config = deepcopy(config)
+
+    if "metric" not in config:
+        raise ValueError('Bayesian search requires "metric" section')
+
+    if config["method"] != "bayes":
+        raise ValueError("Invalid sweep configuration for bayes_search_next_run.")
+
+    config = fill_validate_metric(config)
+
+    return config
 
 
 def fit_normalized_gaussian_process(
@@ -416,11 +432,7 @@ def bayes_search_next_run(
     if validate:
         config = SweepConfig(config)
 
-    if "metric" not in config:
-        raise ValueError('Bayesian search requires "metric" section')
-
-    if config["method"] != "bayes":
-        raise ValueError("Invalid sweep configuration for bayes_search_next_run.")
+    config = bayes_baseline_validate_and_fill(config)
 
     params, sample_X, current_X, y = _construct_gp_data(runs, config)
     X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
