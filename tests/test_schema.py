@@ -102,6 +102,12 @@ def test_json_type_inference_beta():
     assert len(param.config) == 3
 
 
+def test_totally_invalid_config():
+    config = {"invalid": "this config is not valid"}
+    with pytest.raises(jsonschema.ValidationError):
+        HyperParameter("invalid", config)
+
+
 def test_validate_does_not_modify_passed_config():
     config = {"distribution": "normal"}
     config_save = config.copy()
