@@ -44,6 +44,10 @@ def test_validation_not_enough_params():
     with pytest.raises(ValidationError):
         SweepConfig(schema)
 
+    # test that this doesnt raise a keyerror https://sentry.io/organizations/weights-biases/issues/2461042074/?project=5812400&query=is%3Aresolved&statsPeriod=14d
+    result = schema_violations_from_proposed_config(schema)
+    assert len(result) == 1
+
 
 def test_minmax_type_inference():
     schema = {
