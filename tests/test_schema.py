@@ -1,7 +1,7 @@
 import pytest
 import jsonschema
 from ..params import HyperParameter
-from ..config import SweepConfig
+from ..config import SweepConfig, fill_validate_early_terminate
 
 
 def test_json_type_inference_int_uniform():
@@ -153,4 +153,38 @@ def test_hyperband_missing_eta_imputed():
     }
 
     sc = SweepConfig(config)
+    assert sc["early_terminate"]["eta"] == 3
+
+
+def test_hyperband_missing_eta_imputed_incremental():
+    # sentry https://sentry.io/organizations/weights-biases/issues/2500192925/?referrer=slack
+    config = {
+        "command": [
+            "${env}",
+            "${interpreter}",
+            "${program}",
+            "sweep",
+            "2dconv_lstm.stat.ac",
+            "--dataset",
+            "deam",
+            "--temp_folder",
+            "a_deam",
+            "--batch-size",
+        ],
+        "early_terminate": {"min_iter": 3, "type": "hyperband"},
+        "method": "random",
+        "metric": {"goal": "minimize", "name": "val/loss"},
+        "name": "AC-2DConvLSTM-Stat-DEAM",
+        "parameters": {
+            "dropout": {"values": ["0.15", "0.2", "0.25", "0.3", "0.4", "0.5"]},
+            "lr": {"values": ["0.001", "0.005", "0.01"]},
+            "momentum": {"values": ["0.8", "0.9", "0.95"]},
+            "n_fft": {"value": 1024},
+            "n_mels": {"value": 128},
+        },
+        "program": "exec.py",
+        "project": "mer",
+    }
+
+    sc = fill_validate_early_terminate(config)
     assert sc["early_terminate"]["eta"] == 3
