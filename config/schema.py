@@ -95,7 +95,42 @@ def fill_parameter(config: Dict) -> Optional[Tuple[str, Dict]]:
     return None
 
 
-def fill_schema(d: Dict) -> Dict:
+def fill_validate_metric(d: Dict) -> Dict:
+    d = deepcopy(d)
+
+    if "metric" in d:
+        if "goal" in d["metric"]:
+            if (
+                d["metric"]["goal"]
+                not in dereferenced_sweep_config_jsonschema["properties"]["metric"][
+                    "properties"
+                ]["goal"]["enum"]
+            ):
+                # let it be filled in by the schema default
+                del d["metric"]["goal"]
+
+        filler = DefaultFiller(
+            schema=dereferenced_sweep_config_jsonschema["properties"]["metric"],
+            format_checker=format_checker,
+        )
+        filler.validate(d["metric"])
+    return d
+
+
+def fill_validate_early_terminate(d: Dict) -> Dict:
+    d = deepcopy(d)
+    if d["early_terminate"]["type"] == "hyperband":
+        filler = DefaultFiller(
+            schema=dereferenced_sweep_config_jsonschema["definitions"][
+                "hyperband_stopping"
+            ],
+            format_checker=format_checker,
+        )
+        filler.validate(d["early_terminate"])
+    return d
+
+
+def fill_validate_schema(d: Dict) -> Dict:
     from . import schema_violations_from_proposed_config
 
     # check that the schema is valid
@@ -116,13 +151,6 @@ def fill_schema(d: Dict) -> Dict:
     validated["parameters"] = filled
 
     if "early_terminate" in validated:
-        if validated["early_terminate"]["type"] == "hyperband":
-            filler = DefaultFiller(
-                schema=dereferenced_sweep_config_jsonschema["definitions"][
-                    "hyperband_stopping"
-                ],
-                format_checker=format_checker,
-            )
-            filler.validate(validated["early_terminate"])
+        validated = fill_validate_early_terminate(validated)
 
     return validated

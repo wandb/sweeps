@@ -587,8 +587,7 @@
       "type": "object",
       "description": "Metric to optimize",
       "required": [
-        "name",
-        "goal"
+        "name"
       ],
       "additionalProperties": false,
       "properties": {
@@ -602,7 +601,8 @@
           "enum": [
             "minimize",
             "maximize"
-          ]
+          ],
+          "default": "minimize"
         },
         "target": {
           "type": "number",
