@@ -86,3 +86,12 @@ def test_invalid_config():
     config = "this is a totally invalid config"
     with pytest.raises(ValueError):
         schema_violations_from_proposed_config(config)
+
+
+def test_sweepconfig_no_method_baseline_validation():
+    schema = {
+        "parameters": {"a": {"values": [1, 2, 3, 4]}},
+    }
+
+    with pytest.raises(ValueError):
+        next_run(schema, [], validate=False)
