@@ -2,9 +2,9 @@ import pytest
 from jsonschema import ValidationError
 from .. import next_run, stop_runs
 from ..config import SweepConfig, schema_violations_from_proposed_config
-from ..bayes_search import bayes_search_next_runs
-from ..grid_search import grid_search_next_runs
-from ..random_search import random_search_next_runs
+from ..bayes_search import bayes_search_next_run
+from ..grid_search import grid_search_next_run
+from ..random_search import random_search_next_run
 from ..hyperband_stopping import hyperband_stop_runs
 
 
@@ -27,11 +27,11 @@ def test_validation_disable(search_type):
 
     with pytest.raises(ValidationError):
         if search_type == "bayes":
-            _ = bayes_search_next_runs([], invalid_schema, validate=True)
+            _ = bayes_search_next_run([], invalid_schema, validate=True)
         elif search_type == "grid":
-            _ = grid_search_next_runs([], invalid_schema, validate=True)
+            _ = grid_search_next_run([], invalid_schema, validate=True)
         elif search_type == "random":
-            _ = random_search_next_runs(invalid_schema, validate=True)
+            _ = random_search_next_run(invalid_schema, validate=True)
 
     # check that no error is raised
     result = next_run(invalid_schema, [], validate=False)
