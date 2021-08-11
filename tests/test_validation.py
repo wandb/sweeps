@@ -1,6 +1,6 @@
 import pytest
 from jsonschema import ValidationError
-from .. import next_run, stop_runs
+from .. import next_run, stop_runs, SweepRun
 from ..config import SweepConfig, schema_violations_from_proposed_config
 from ..bayes_search import bayes_search_next_runs
 from ..grid_search import grid_search_next_runs
@@ -125,3 +125,17 @@ def test_invalid_early_stopping():
 
     to_stop = stop_runs(invalid_schema, [], validate=False)
     assert len(to_stop) == 0
+
+
+def test_invalid_run_parameter():
+    config = {
+        "method": "bayes",
+        "parameters": {
+            "v1": {"values": ["a", "b", "c"]},
+        },
+    }
+
+    runs = [SweepRun(config={"v1": {"value": "d"}})]
+
+    with pytest.raises(ValueError):
+        next_run(config, runs, validate=False)
