@@ -365,12 +365,7 @@ def _construct_gp_data(
                 metric = worst_metric  # default
             y.append(metric)
             sample_X.append(X_norm)
-        elif run.state in [
-            RunState.running,
-            RunState.preempting,
-            RunState.preempted,
-            RunState.pending,
-        ]:
+        elif run.state in [RunState.running, RunState.preempting, RunState.preempted]:
             # run is in progress
             # we wont use the metric, but we should pass it into our optimizer to
             # account for the fact that it is running
@@ -467,19 +462,3 @@ def bayes_search_next_run(
         "expected_improvement": suggested_X_expected_improvement,
     }
     return SweepRun(config=ret_dict, search_info=info)
-
-
-def bayes_search_next_runs(
-    runs: List[SweepRun],
-    config: Union[dict, SweepConfig],
-    validate: bool = False,
-    n: int = 1,
-    minimum_improvement: floating = 0.1,
-):
-    ret: List[SweepRun] = []
-    for _ in range(n):
-        suggestion = bayes_search_next_run(
-            runs + ret, config, validate, minimum_improvement
-        )
-        ret.append(suggestion)
-    return ret

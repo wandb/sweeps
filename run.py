@@ -1,4 +1,4 @@
-from typing import Sequence, List, Optional, Union, Any, Dict
+from typing import List, Optional, Union, Any, Dict
 from enum import Enum
 from numbers import Number
 import numpy as np
@@ -126,23 +126,13 @@ def next_run(
     validate: bool = False,
     **kwargs,
 ) -> Optional[SweepRun]:
-    return next_runs(sweep_config, runs, validate, 1, **kwargs)[0]
+    """Calculate the next run in a sweep.
 
-
-def next_runs(
-    sweep_config: Union[dict, SweepConfig],
-    runs: List[SweepRun],
-    validate: bool = False,
-    n: int = 1,
-    **kwargs,
-) -> Sequence[Optional[SweepRun]]:
-    """Calculate the next runs in a sweep.
-
-    >>> suggested_run = next_runs({
+    >>> suggested_run = next_run({
     ...    'method': 'grid',
     ...    'parameters': {'a': {'values': [1, 2, 3]}}
     ... }, [])
-    >>> assert suggested_run[0].config['a']['value'] == 1
+    >>> assert suggested_run.config['a']['value'] == 1
 
     Args:
         sweep_config: The config for the sweep.
@@ -150,15 +140,14 @@ def next_runs(
         validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
            If true, will raise a Validation error if `sweep_config` does not conform to
            the schema. If false, will attempt to run the sweep with an unvalidated schema.
-        n: the number of runs to return
 
     Returns:
-        The suggested runs.
+        The suggested run.
     """
 
-    from .grid_search import grid_search_next_runs
-    from .random_search import random_search_next_runs
-    from .bayes_search import bayes_search_next_runs
+    from .grid_search import grid_search_next_run
+    from .random_search import random_search_next_run
+    from .bayes_search import bayes_search_next_run
 
     # validate the sweep config
     if validate:
@@ -170,15 +159,11 @@ def next_runs(
     method = sweep_config["method"]
 
     if method == "grid":
-        return grid_search_next_runs(
-            runs, sweep_config, validate=validate, n=n, **kwargs
-        )
+        return grid_search_next_run(runs, sweep_config, validate=validate, **kwargs)
     elif method == "random":
-        return random_search_next_runs(sweep_config, validate=validate, n=n)
+        return random_search_next_run(sweep_config, validate=validate)
     elif method == "bayes":
-        return bayes_search_next_runs(
-            runs, sweep_config, validate=validate, n=n, **kwargs
-        )
+        return bayes_search_next_run(runs, sweep_config, validate=validate, **kwargs)
     else:
         raise ValueError(
             f'Invalid search type {method}, must be one of ["grid", "random", "bayes"]'
