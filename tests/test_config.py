@@ -4,17 +4,8 @@ from .. import config
 
 
 def test_invalid_sweep_config_nonuniform_array_elements_categorical():
-    invalid_config = {
-        "method": "grid",
-        "parameters": {
-            "v1": {"values": [None, 2, 3, "a", (2, 3), 3]},
-        },
-    }
 
-    with pytest.raises(jsonschema.ValidationError):
-        _ = config.SweepConfig(invalid_config)
-
-    invalid_config = {
+    valid_config = {
         "method": "grid",
         "parameters": {
             "v1": {"values": [None, 2, 3, "a", (2, 3)]},
@@ -22,7 +13,7 @@ def test_invalid_sweep_config_nonuniform_array_elements_categorical():
     }
 
     # doesn't raise
-    _ = config.SweepConfig(invalid_config)
+    _ = config.SweepConfig(valid_config)
 
 
 def test_min_max_validation():

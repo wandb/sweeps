@@ -15,7 +15,6 @@
         "values": {
           "type": "array",
           "description": "Discrete values",
-          "uniqueItems": true,
           "minItems": 1
         },
         "distribution": {
