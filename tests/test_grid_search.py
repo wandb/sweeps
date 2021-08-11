@@ -16,9 +16,11 @@ def kernel_for_grid_search_tests(
     named v1 and v2."""
 
     answers = list(
-        itertools.product(
-            list_to_tuple(config["parameters"]["v1"]["values"]),
-            list_to_tuple(config["parameters"]["v2"]["values"]),
+        set(
+            itertools.product(
+                list_to_tuple(config["parameters"]["v1"]["values"]),
+                list_to_tuple(config["parameters"]["v2"]["values"]),
+            )
         )
     )
     suggested_parameters = [
@@ -91,3 +93,20 @@ def test_grid_search_with_list_values():
         config,
         randomize=False,
     )
+
+
+def test_grid_search_duplicated_values_are_not_duplicated_in_answer():
+    duplicated_config = SweepConfig(
+        {
+            "method": "grid",
+            "parameters": {
+                "v1": {"values": [None, 2, 3, "a", (2, 3), 3]},
+                "v2": {"values": ["a", "b", "c'"]},
+                "v3": {"value": 1},
+            },
+        }
+    )
+
+    runs = []
+    kernel_for_grid_search_tests(runs, duplicated_config, randomize=True)
+    assert len(runs) == 15
