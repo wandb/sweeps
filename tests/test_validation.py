@@ -130,12 +130,13 @@ def test_invalid_early_stopping():
 def test_invalid_run_parameter():
     config = {
         "method": "bayes",
+        "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
             "v1": {"values": ["a", "b", "c"]},
         },
     }
 
-    runs = [SweepRun(config={"v1": {"value": "d"}})]
+    runs = [SweepRun(config={"v1": {"value": "d"}}, summary_metrics={"loss": 5.0})]
 
     with pytest.raises(ValueError):
         next_run(config, runs, validate=False)
