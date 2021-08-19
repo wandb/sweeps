@@ -110,3 +110,20 @@ def test_grid_search_duplicated_values_are_not_duplicated_in_answer():
     runs = []
     kernel_for_grid_search_tests(runs, duplicated_config, randomize=True)
     assert len(runs) == 15
+
+
+def test_grid_search_constant_val_is_propagated():
+    config_const = SweepConfig(
+        {
+            "method": "grid",
+            "parameters": {
+                "v1": {"values": ["a", "b", "c'"]},
+                "v2": {"value": 1},
+            },
+        }
+    )
+
+    runs = []
+    run = next_run(config_const, runs)
+    assert "v1" in run.config
+    assert "v2" in run.config

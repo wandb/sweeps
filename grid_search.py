@@ -91,4 +91,4 @@ def grid_search_next_run(
     for param, value in zip(discrete_params, remaining_params[0]):
         param.value = tuple_to_list(value)
 
-    return SweepRun(config=discrete_params.to_config())
+    return SweepRun(config=params.to_config())
