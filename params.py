@@ -81,7 +81,10 @@ class HyperParameter:
             if value == test_value:
                 return ii
 
-        raise ValueError("Couldn't find {}".format(value))
+        raise ValueError(
+            f"{value} is not a permitted value of the categorical hyperparameter {self.name} "
+            f"in the current sweep."
+        )
 
     def cdf(self, x: ArrayLike) -> ArrayLike:
         """Cumulative distribution function (CDF).
