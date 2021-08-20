@@ -4,7 +4,7 @@ import itertools
 from typing import List
 from ..run import RunState, SweepRun, next_run
 from ..config import SweepConfig
-from ..grid_search import list_to_tuple
+from ..grid_search import yaml_hash
 
 
 def kernel_for_grid_search_tests(
@@ -18,15 +18,15 @@ def kernel_for_grid_search_tests(
     answers = list(
         set(
             itertools.product(
-                list_to_tuple(config["parameters"]["v1"]["values"]),
-                list_to_tuple(config["parameters"]["v2"]["values"]),
+                [yaml_hash(v) for v in config["parameters"]["v1"]["values"]],
+                [yaml_hash(v) for v in config["parameters"]["v2"]["values"]],
             )
         )
     )
     suggested_parameters = [
         (
-            list_to_tuple(run.config["v1"]["value"]),
-            list_to_tuple(run.config["v2"]["value"]),
+            yaml_hash(run.config["v1"]["value"]),
+            yaml_hash(run.config["v2"]["value"]),
         )
         for run in runs
     ]
@@ -40,8 +40,8 @@ def kernel_for_grid_search_tests(
         runs.append(suggestion)
         suggested_parameters.append(
             (
-                list_to_tuple(suggestion.config["v1"]["value"]),
-                list_to_tuple(suggestion.config["v2"]["value"]),
+                yaml_hash(suggestion.config["v1"]["value"]),
+                yaml_hash(suggestion.config["v2"]["value"]),
             )
         )
 
