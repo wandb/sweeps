@@ -153,5 +153,5 @@ def test_grid_search_dict_val_is_propagated(randomize):
 
     hashes = kernel_for_grid_search_tests([], config_const, randomize=randomize)
 
-    # assert that only 9 hyperparameter combos are iterated over, as there is one duplicate in v2
+    # assert that only 9 hyperparameter combos are iterated over, as there are 2 duplicates in v2
     assert len(hashes) == 3 * 3
