@@ -139,7 +139,13 @@ def test_grid_search_dict_val_is_propagated(randomize):
             "parameters": {
                 "v1": {"values": ["a", "b", "c'"]},
                 "v2": {
-                    "values": [{"a": "b"}, {"c": "d"}, {"e": {"f": "g"}}, {"a": "b"}]
+                    "values": [
+                        {"a": "b"},
+                        {"c": "d", "b": "g"},
+                        {"e": {"f": "g"}},
+                        {"a": "b"},
+                        {"b": "g", "c": "d"},
+                    ]
                 },
             },
         }
