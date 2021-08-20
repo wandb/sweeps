@@ -15,7 +15,7 @@ def kernel_for_grid_search_tests(
     """This kernel assumes that sweep config has two categorical parameters
     named v1 and v2."""
 
-    answers = list(
+    answer_hashes = list(
         set(
             itertools.product(
                 [yaml_hash(v) for v in config["parameters"]["v1"]["values"]],
@@ -23,7 +23,7 @@ def kernel_for_grid_search_tests(
             )
         )
     )
-    suggested_parameters = [
+    suggested_parameter_hashes = [
         (
             yaml_hash(run.config["v1"]["value"]),
             yaml_hash(run.config["v2"]["value"]),
@@ -38,18 +38,18 @@ def kernel_for_grid_search_tests(
         assert suggestion.search_info is None
         assert suggestion.state == RunState.pending
         runs.append(suggestion)
-        suggested_parameters.append(
+        suggested_parameter_hashes.append(
             (
                 yaml_hash(suggestion.config["v1"]["value"]),
                 yaml_hash(suggestion.config["v2"]["value"]),
             )
         )
 
-    assert len(answers) == len(suggested_parameters)
-    for key in suggested_parameters:
-        assert key in answers
+    assert len(answer_hashes) == len(suggested_parameter_hashes)
+    for key in suggested_parameter_hashes:
+        assert key in answer_hashes
 
-    return suggested_parameters
+    return suggested_parameter_hashes
 
 
 @pytest.mark.parametrize("randomize", [True, False])
