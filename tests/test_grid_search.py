@@ -1,7 +1,7 @@
 import pytest
 import itertools
 
-from typing import List, Tuple
+from typing import List, Sequence, Tuple
 from ..run import RunState, SweepRun, next_run
 from ..config import SweepConfig
 from ..grid_search import yaml_hash
@@ -11,7 +11,7 @@ def kernel_for_grid_search_tests(
     runs: List[SweepRun],
     config: SweepConfig,
     randomize: bool,
-) -> List[Tuple[str]]:
+) -> Sequence[Tuple]:
     """This kernel assumes that sweep config has two categorical parameters
     named v1 and v2."""
 
