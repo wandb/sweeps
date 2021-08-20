@@ -1,7 +1,7 @@
 import pytest
 import itertools
 
-from typing import List
+from typing import List, Tuple
 from ..run import RunState, SweepRun, next_run
 from ..config import SweepConfig
 from ..grid_search import yaml_hash
@@ -11,7 +11,7 @@ def kernel_for_grid_search_tests(
     runs: List[SweepRun],
     config: SweepConfig,
     randomize: bool,
-) -> None:
+) -> List[Tuple[str]]:
     """This kernel assumes that sweep config has two categorical parameters
     named v1 and v2."""
 
@@ -48,6 +48,8 @@ def kernel_for_grid_search_tests(
     assert len(answers) == len(suggested_parameters)
     for key in suggested_parameters:
         assert key in answers
+
+    return suggested_parameters
 
 
 @pytest.mark.parametrize("randomize", [True, False])
@@ -136,9 +138,14 @@ def test_grid_search_dict_val_is_propagated(randomize):
             "method": "grid",
             "parameters": {
                 "v1": {"values": ["a", "b", "c'"]},
-                "v2": {"values": [{"a": "b"}, {"c": "d"}, {"e": {"f": "g"}}]},
+                "v2": {
+                    "values": [{"a": "b"}, {"c": "d"}, {"e": {"f": "g"}}, {"a": "b"}]
+                },
             },
         }
     )
 
-    kernel_for_grid_search_tests([], config_const, randomize=randomize)
+    hashes = kernel_for_grid_search_tests([], config_const, randomize=randomize)
+
+    # assert that only 9 hyperparameter combos are iterated over, as there is one duplicate in v2
+    assert len(hashes) == 3 * 3
