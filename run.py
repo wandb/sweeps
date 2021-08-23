@@ -161,7 +161,7 @@ def next_run(
 
     if not (
         isinstance(sweep_config["parameters"], dict)
-        and len(sweep_config["parameters"] > 0)
+        and len(sweep_config["parameters"]) > 0
     ):
         raise ValueError(
             "Parameters section of sweep config must be a dict of at least length 1"
