@@ -48,6 +48,15 @@ def test_validation_not_enough_params():
     result = schema_violations_from_proposed_config(schema)
     assert len(result) == 1
 
+    # test that this is rejected at the next_run stage
+    with pytest.raises(ValueError):
+        next_run(schema, [])
+
+    del schema["parameters"]
+    # test that this is rejected at the next_run stage
+    with pytest.raises(ValueError):
+        next_run(schema, [])
+
 
 def test_minmax_type_inference():
     schema = {
