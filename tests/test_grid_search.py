@@ -1,32 +1,23 @@
 import pytest
-import itertools
 
 from typing import List, Sequence, Tuple
 from ..run import RunState, SweepRun, next_run
 from ..config import SweepConfig
-from ..grid_search import yaml_hash
 
 
 def kernel_for_grid_search_tests(
     runs: List[SweepRun],
     config: SweepConfig,
+    answers: Sequence[Tuple],
     randomize: bool,
-) -> Sequence[Tuple]:
+) -> None:
     """This kernel assumes that sweep config has two categorical parameters
     named v1 and v2."""
 
-    answer_hashes = list(
-        set(
-            itertools.product(
-                [yaml_hash(v) for v in config["parameters"]["v1"]["values"]],
-                [yaml_hash(v) for v in config["parameters"]["v2"]["values"]],
-            )
-        )
-    )
-    suggested_parameter_hashes = [
+    suggested_parameters = [
         (
-            yaml_hash(run.config["v1"]["value"]),
-            yaml_hash(run.config["v2"]["value"]),
+            run.config["v1"]["value"],
+            run.config["v2"]["value"],
         )
         for run in runs
     ]
@@ -38,18 +29,16 @@ def kernel_for_grid_search_tests(
         assert suggestion.search_info is None
         assert suggestion.state == RunState.pending
         runs.append(suggestion)
-        suggested_parameter_hashes.append(
+        suggested_parameters.append(
             (
-                yaml_hash(suggestion.config["v1"]["value"]),
-                yaml_hash(suggestion.config["v2"]["value"]),
+                suggestion.config["v1"]["value"],
+                suggestion.config["v2"]["value"],
             )
         )
 
-    assert len(answer_hashes) == len(suggested_parameter_hashes)
-    for key in suggested_parameter_hashes:
-        assert key in answer_hashes
-
-    return suggested_parameter_hashes
+    assert len(answers) == len(suggested_parameters)
+    for key in suggested_parameters:
+        assert key in answers
 
 
 @pytest.mark.parametrize("randomize", [True, False])
@@ -57,7 +46,10 @@ def test_grid_from_start_with_and_without_randomize(
     sweep_config_2params_grid_search, randomize
 ):
     kernel_for_grid_search_tests(
-        [], sweep_config_2params_grid_search, randomize=randomize
+        [],
+        sweep_config_2params_grid_search,
+        randomize=randomize,
+        answers=[(1, 4), (1, 5), (2, 4), (2, 5), (3, 4), (3, 5)],
     )
 
 
@@ -70,7 +62,10 @@ def test_grid_search_starting_from_in_progress(
         SweepRun(config={"v1": {"value": 1}, "v2": {"value": 5}}),
     ]
     kernel_for_grid_search_tests(
-        runs, sweep_config_2params_grid_search, randomize=randomize
+        runs,
+        sweep_config_2params_grid_search,
+        randomize=randomize,
+        answers=[(1, 4), (1, 5), (2, 4), (2, 5), (3, 4), (3, 5)],
     )
 
 
@@ -94,6 +89,7 @@ def test_grid_search_with_list_values():
         [],
         config,
         randomize=False,
+        answers=[("", 256), ("", 512), ([9, 5], 256), ([9, 5], 512)],
     )
 
 
@@ -104,13 +100,66 @@ def test_grid_search_duplicated_values_are_not_duplicated_in_answer():
             "parameters": {
                 "v1": {"values": [None, 2, 3, "a", (2, 3), 3]},
                 "v2": {"values": ["a", "b", "c'"]},
-                "v3": {"value": 1},
             },
         }
     )
 
     runs = []
-    kernel_for_grid_search_tests(runs, duplicated_config, randomize=True)
+    kernel_for_grid_search_tests(
+        runs,
+        duplicated_config,
+        randomize=True,
+        answers=[
+            (
+                None,
+                "a",
+            ),
+            (
+                2,
+                "a",
+            ),
+            (
+                3,
+                "a",
+            ),
+            ("a", "a"),
+            (
+                (2, 3),
+                "a",
+            ),
+            (
+                None,
+                "b",
+            ),
+            (
+                2,
+                "b",
+            ),
+            (
+                3,
+                "b",
+            ),
+            ((2, 3), "b"),
+            ("a", "b"),
+            (
+                None,
+                "c'",
+            ),
+            (
+                2,
+                "c'",
+            ),
+            (
+                3,
+                "c'",
+            ),
+            (
+                (2, 3),
+                "c'",
+            ),
+            ("a", "c'"),
+        ],
+    )
     assert len(runs) == 15
 
 
@@ -151,7 +200,19 @@ def test_grid_search_dict_val_is_propagated(randomize):
         }
     )
 
-    hashes = kernel_for_grid_search_tests([], config_const, randomize=randomize)
-
-    # assert that only 9 hyperparameter combos are iterated over, as there are 2 duplicates in v2
-    assert len(hashes) == 3 * 3
+    kernel_for_grid_search_tests(
+        [],
+        config_const,
+        randomize=randomize,
+        answers=[
+            ("a", {"a": "b"}),
+            ("a", {"c": "d", "b": "g"}),
+            ("a", {"e": {"f": "g"}}),
+            ("b", {"a": "b"}),
+            ("b", {"c": "d", "b": "g"}),
+            ("b", {"e": {"f": "g"}}),
+            ("c'", {"a": "b"}),
+            ("c'", {"c": "d", "b": "g"}),
+            ("c'", {"e": {"f": "g"}}),
+        ],
+    )
