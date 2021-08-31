@@ -165,7 +165,18 @@ def next_runs(
         sweep_config = SweepConfig(sweep_config)
 
     if "method" not in sweep_config:
-        raise ValueError("Sweep config must contain metric section")
+        raise ValueError("Sweep config must contain method section")
+
+    if "parameters" not in sweep_config:
+        raise ValueError("Sweep config must contain parameters section")
+
+    if not (
+        isinstance(sweep_config["parameters"], dict)
+        and len(sweep_config["parameters"]) > 0
+    ):
+        raise ValueError(
+            "Parameters section of sweep config must be a dict of at least length 1"
+        )
 
     method = sweep_config["method"]
 

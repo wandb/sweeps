@@ -1,18 +1,18 @@
 import itertools
 import random
-from typing import List, Optional, Union, Any
+import hashlib
+import yaml
+from typing import Any, List, Optional, Union
 
 from .config.cfg import SweepConfig
 from .run import SweepRun
 from .params import HyperParameter, HyperParameterSet
 
 
-def list_to_tuple(obj: Any) -> Any:
-    return tuple(list_to_tuple(x) for x in obj) if type(obj) is list else obj
-
-
-def tuple_to_list(obj: Any) -> Any:
-    return list(tuple_to_list(x) for x in obj) if type(obj) is tuple else obj
+def yaml_hash(value: Any) -> str:
+    return hashlib.md5(
+        yaml.dump(value, default_flow_style=True, sort_keys=True).encode("ascii")
+    ).hexdigest()
 
 
 def grid_search_next_runs(
@@ -70,13 +70,20 @@ def grid_search_next_runs(
 
     # build an iterator over all combinations of param values
     param_names = [p.name for p in discrete_params]
-    param_values = [list_to_tuple(p.config["values"]) for p in discrete_params]
+    param_values = [p.config["values"] for p in discrete_params]
+    param_hashes = [
+        [yaml_hash(value) for value in p.config["values"]] for p in discrete_params
+    ]
+    value_hash_lookup = {
+        name: dict(zip(hashes, vals))
+        for name, vals, hashes in zip(param_names, param_values, param_hashes)
+    }
 
-    all_param_values = set(itertools.product(*param_values))
-    param_values_seen = set(
+    all_param_hashes = set(itertools.product(*param_hashes))
+    param_hashes_seen = set(
         [
             tuple(
-                list_to_tuple(run.config[name]["value"])
+                yaml_hash(run.config[name]["value"])
                 for name in param_names
                 if name in run.config
             )
@@ -85,17 +92,17 @@ def grid_search_next_runs(
     )
 
     # this is O(N) due to the O(1) complexity of individual hash lookups; previous implementation was O(N^2)
-    remaining_params = list(all_param_values - param_values_seen)
-    n_remaining = len(remaining_params)
+    remaining_hashes = list(all_param_hashes - param_hashes_seen)
+    n_remaining = len(remaining_hashes)
 
     if randomize_order:
-        random.shuffle(remaining_params)
+        random.shuffle(remaining_hashes)
 
     retval: List[Optional[SweepRun]] = []
-    for i in range(min(n, n_remaining)):
-        next_value = remaining_params.pop(0)
-        for param, value in zip(discrete_params, next_value):
-            param.value = tuple_to_list(value)
+    for _ in range(min(n, n_remaining)):
+        next_hash = remaining_hashes.pop(0)
+        for param, hash_val in zip(discrete_params, next_hash):
+            param.value = value_hash_lookup[param.name][hash_val]
 
         output_config = discrete_params.to_config()
         output_config.update(constant_config)
