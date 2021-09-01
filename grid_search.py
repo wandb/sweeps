@@ -1,10 +1,18 @@
 import itertools
 import random
-from typing import List, Optional, Union
+import hashlib
+import yaml
+from typing import Any, List, Optional, Union
 
 from .config.cfg import SweepConfig
 from .run import SweepRun
 from .params import HyperParameter, HyperParameterSet
+
+
+def yaml_hash(value: Any) -> str:
+    return hashlib.md5(
+        yaml.dump(value, default_flow_style=True, sort_keys=True).encode("ascii")
+    ).hexdigest()
 
 
 def grid_search_next_run(
@@ -50,45 +58,44 @@ def grid_search_next_run(
             )
 
     # we can only deal with discrete params in a grid search
-    discrete_params = [p for p in params if p.type == HyperParameter.CATEGORICAL]
+    discrete_params = HyperParameterSet(
+        [p for p in params if p.type == HyperParameter.CATEGORICAL]
+    )
 
     # build an iterator over all combinations of param values
     param_names = [p.name for p in discrete_params]
     param_values = [p.config["values"] for p in discrete_params]
-    param_value_set = list(itertools.product(*param_values))
+    param_hashes = [
+        [yaml_hash(value) for value in p.config["values"]] for p in discrete_params
+    ]
+    value_hash_lookup = {
+        name: dict(zip(hashes, vals))
+        for name, vals, hashes in zip(param_names, param_values, param_hashes)
+    }
 
-    if randomize_order:
-        random.shuffle(param_value_set)
-
-    new_value_set = next(
-        (
-            value_set
-            for value_set in param_value_set
-            # check if parameter set is contained in some run
-            if not _runs_contains_param_values(runs, dict(zip(param_names, value_set)))
-        ),
-        None,
+    all_param_hashes = set(itertools.product(*param_hashes))
+    param_hashes_seen = set(
+        [
+            tuple(
+                yaml_hash(run.config[name]["value"])
+                for name in param_names
+                if name in run.config
+            )
+            for run in runs
+        ]
     )
 
-    # handle the case where we couldn't find a unique parameter set
-    if new_value_set is None:
+    # this is O(N) due to the O(1) complexity of individual hash lookups; previous implementation was O(N^2)
+    remaining_hashes = list(all_param_hashes - param_hashes_seen)
+
+    if randomize_order:
+        random.shuffle(remaining_hashes)
+
+    # we have searched over the entire parameter space
+    if len(remaining_hashes) == 0:
         return None
 
-    # set next_run_params based on our new set of params
-    for param, value in zip(discrete_params, new_value_set):
-        param.value = value
+    for param, hash_val in zip(discrete_params, remaining_hashes[0]):
+        param.value = value_hash_lookup[param.name][hash_val]
 
     return SweepRun(config=params.to_config())
-
-
-def _run_contains_param_values(run, params):
-    for key, value in params.items():
-        if key not in run.config:
-            return False
-        if not run.config[key]["value"] == value:
-            return False
-    return True
-
-
-def _runs_contains_param_values(runs, params):
-    return any(_run_contains_param_values(run, params) for run in runs)
