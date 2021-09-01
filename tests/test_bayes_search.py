@@ -875,3 +875,48 @@ def test_metric_extremum_in_bayes_search():
         data["jsonPayload"]["data"]["config"],
     )
     np.testing.assert_array_less(np.abs(y + 98), 5)
+
+
+# search with 2 finished runs - metrics are ignored because they are boolean
+def test_runs_bayes_runs2_boolmetric():
+
+    config = SweepConfig(
+        {
+            "metric": {"name": "xloss", "goal": "minimize"},
+            "method": "bayes",
+            "parameters": {
+                "v2": {"min": 1, "max": 10},
+            },
+        }
+    )
+
+    r1 = SweepRun(
+        name="b",
+        state=RunState.finished,
+        history=[
+            {"xloss": True},
+        ],
+        config={"v2": {"value": 6}},
+        summary_metrics={"zloss": 1.2},
+    )
+    r2 = SweepRun(
+        name="b2",
+        state=RunState.finished,
+        config={"v2": {"value": 8}},
+        summary_metrics={"xloss": False},
+        history=[],
+    )
+
+    runs = [r1, r2]
+    for _ in range(200):
+        suggestion = next_run(config, runs)
+        suggestion.state = RunState.finished
+        runs.append(suggestion)
+
+    # should just choose random runs in this case as they are all imputed with the same value (zero)
+    # for the loss function
+    check_that_samples_are_from_the_same_distribution(
+        [run.config["v2"]["value"] for run in runs],
+        np.random.uniform(1, 10, 202),
+        np.linspace(1, 10, 11),
+    )
