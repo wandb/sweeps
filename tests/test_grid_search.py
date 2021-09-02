@@ -10,6 +10,7 @@ def kernel_for_grid_search_tests(
     config: SweepConfig,
     answers: Sequence[Tuple],
     randomize: bool,
+    check_order: bool = False,
 ) -> None:
     """This kernel assumes that sweep config has two categorical parameters
     named v1 and v2."""
@@ -37,8 +38,11 @@ def kernel_for_grid_search_tests(
         )
 
     assert len(answers) == len(suggested_parameters)
-    for key in suggested_parameters:
-        assert key in answers
+    for i, key in enumerate(suggested_parameters):
+        if check_order:
+            assert answers[i] == key
+        else:
+            assert key in answers
 
 
 @pytest.mark.parametrize("randomize", [True, False])
@@ -215,4 +219,36 @@ def test_grid_search_dict_val_is_propagated(randomize):
             ("c'", {"c": "d", "b": "g"}),
             ("c'", {"e": {"f": "g"}}),
         ],
+    )
+
+
+def test_grid_search_anaconda1_order():
+    config_const = SweepConfig(
+        {
+            "name": "SYNTHETIC_Mean_train_p_0.25_test_p_0.25_h_0.0_v_0.0",
+            "method": "grid",
+            "metric": {"goal": "minimize", "name": "loss"},
+            "parameters": {
+                "v1": {"values": ["a", "b", "c"]},
+                "v2": {"values": [1, 2, 3]},
+            },
+        }
+    )
+
+    kernel_for_grid_search_tests(
+        [],
+        config_const,
+        randomize=False,
+        answers=[
+            ("a", 1),
+            ("a", 2),
+            ("a", 3),
+            ("b", 1),
+            ("b", 2),
+            ("b", 3),
+            ("c", 1),
+            ("c", 2),
+            ("c", 3),
+        ],
+        check_order=True,
     )
