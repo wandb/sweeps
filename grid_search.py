@@ -73,7 +73,10 @@ def grid_search_next_run(
         for name, vals, hashes in zip(param_names, param_values, param_hashes)
     }
 
-    all_param_hashes = set(itertools.product(*param_hashes))
+    all_param_hashes = list(itertools.product(*param_hashes))
+    if randomize_order:
+        random.shuffle(all_param_hashes)
+
     param_hashes_seen = set(
         [
             tuple(
@@ -86,16 +89,20 @@ def grid_search_next_run(
     )
 
     # this is O(N) due to the O(1) complexity of individual hash lookups; previous implementation was O(N^2)
-    remaining_hashes = list(all_param_hashes - param_hashes_seen)
-
-    if randomize_order:
-        random.shuffle(remaining_hashes)
+    next_hash = next(
+        (
+            hash_val
+            for hash_val in all_param_hashes
+            if hash_val not in param_hashes_seen
+        ),
+        None,
+    )
 
     # we have searched over the entire parameter space
-    if len(remaining_hashes) == 0:
+    if next_hash is None:
         return None
 
-    for param, hash_val in zip(discrete_params, remaining_hashes[0]):
+    for param, hash_val in zip(discrete_params, next_hash):
         param.value = value_hash_lookup[param.name][hash_val]
 
     return SweepRun(config=params.to_config())
