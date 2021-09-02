@@ -227,7 +227,7 @@ def test_grid_search_anaconda1_order():
         {
             "method": "grid",
             "parameters": {
-                "v1": {"values": ["a", "b", "c"]},
+                "v1": {"values": ["a", "b", "c", "a"]},
                 "v2": {"values": [1, 2, 3]},
             },
         }
