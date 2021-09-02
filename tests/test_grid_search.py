@@ -225,9 +225,7 @@ def test_grid_search_dict_val_is_propagated(randomize):
 def test_grid_search_anaconda1_order():
     config_const = SweepConfig(
         {
-            "name": "SYNTHETIC_Mean_train_p_0.25_test_p_0.25_h_0.0_v_0.0",
             "method": "grid",
-            "metric": {"goal": "minimize", "name": "loss"},
             "parameters": {
                 "v1": {"values": ["a", "b", "c"]},
                 "v2": {"values": [1, 2, 3]},
