@@ -23,7 +23,12 @@ class RunState(str, Enum):
 def is_number(x: Any) -> bool:
     """Check if a value is a finite number."""
     try:
-        return np.isscalar(x) and np.isfinite(x) and isinstance(x, Number)
+        return (
+            np.isscalar(x)
+            and np.isfinite(x)
+            and isinstance(x, Number)
+            and not isinstance(x, bool)
+        )
     except TypeError:
         return False
 
