@@ -93,7 +93,7 @@ def grid_search_next_runs(
     retval: List[Optional[SweepRun]] = []
     for _ in range(n):
 
-        # this is O(N) due to the O(1) complexity of individual hash lookups; previous implementation was O(N^2)
+        # this is O(1)
         next_hash = next(
             (
                 hash_val
