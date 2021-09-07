@@ -180,22 +180,13 @@ def test_grid_search_constant_val_is_propagated():
     assert "v2" in run.config
 
 
-@pytest.mark.parametrize("randomize", [True, False])
-def test_grid_search_dict_val_is_propagated(randomize):
+def test_grid_search_constant_vals_only():
     config_const = SweepConfig(
         {
             "method": "grid",
             "parameters": {
-                "v1": {"values": ["a", "b", "c'"]},
-                "v2": {
-                    "values": [
-                        {"a": "b"},
-                        {"c": "d", "b": "g"},
-                        {"e": {"f": "g"}},
-                        {"a": "b"},
-                        {"b": "g", "c": "d"},
-                    ]
-                },
+                "v1": {"value": "a"},
+                "v2": {"value": "b"},
             },
         }
     )
@@ -203,16 +194,8 @@ def test_grid_search_dict_val_is_propagated(randomize):
     kernel_for_grid_search_tests(
         [],
         config_const,
-        randomize=randomize,
         answers=[
-            ("a", {"a": "b"}),
-            ("a", {"c": "d", "b": "g"}),
-            ("a", {"e": {"f": "g"}}),
-            ("b", {"a": "b"}),
-            ("b", {"c": "d", "b": "g"}),
-            ("b", {"e": {"f": "g"}}),
-            ("c'", {"a": "b"}),
-            ("c'", {"c": "d", "b": "g"}),
-            ("c'", {"e": {"f": "g"}}),
+            ("a", "b"),
         ],
+        randomize=False,
     )
