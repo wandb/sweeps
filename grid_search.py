@@ -63,10 +63,6 @@ def grid_search_next_runs(
     discrete_params = HyperParameterSet(
         [p for p in params if p.type == HyperParameter.CATEGORICAL]
     )
-    constant_params = HyperParameterSet(
-        [p for p in params if p.type == HyperParameter.CONSTANT]
-    )
-    constant_config = constant_params.to_config()
 
     # build an iterator over all combinations of param values
     param_names = [p.name for p in discrete_params]
@@ -115,9 +111,7 @@ def grid_search_next_runs(
         for param, hash_val in zip(discrete_params, next_hash):
             param.value = value_hash_lookup[param.name][hash_val]
 
-        output_config = discrete_params.to_config()
-        output_config.update(constant_config)
-        run = SweepRun(config=output_config)
+        run = SweepRun(config=params.to_config())
         retval.append(run)
 
     return retval
