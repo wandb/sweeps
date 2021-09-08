@@ -1,6 +1,6 @@
 import pytest
 
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Sequence, Tuple
 from ..run import RunState, SweepRun, next_run, next_runs
 from ..config import SweepConfig
 
@@ -24,7 +24,7 @@ def kernel_for_grid_search_tests(
         for run in runs
     ]
 
-    def handle_suggestion(suggestion: Optional[SweepRun]):
+    def handle_suggestion(suggestion: SweepRun):
         assert suggestion.search_info is None
         assert suggestion.state == RunState.pending
         runs.append(suggestion)
