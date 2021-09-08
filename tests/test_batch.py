@@ -33,10 +33,7 @@ def test_batch_grid_search_same_answer_as_single_search(
         runs.append(suggestion)
 
     suggestions = next_runs(sweep_config_2params_grid_search, [], n=7)
-
-    assert len(suggestions) == len(runs)
-    for s in suggestions:
-        assert s in runs
+    assert suggestions == runs
 
 
 def test_batch_random_search_same_answer_as_single_search():
