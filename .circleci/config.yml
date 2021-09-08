@@ -103,6 +103,8 @@ jobs:
 workflows:
   main:
     jobs:
+      - linux36
+      - linux37
       - linux38
       - linux39
       - linters
