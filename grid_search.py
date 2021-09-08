@@ -90,18 +90,15 @@ def grid_search_next_runs(
         ]
     )
 
+    hash_gen = (
+        hash_val for hash_val in all_param_hashes if hash_val not in param_hashes_seen
+    )
+
     retval: List[Optional[SweepRun]] = []
     for _ in range(n):
 
         # this is O(1)
-        next_hash = next(
-            (
-                hash_val
-                for hash_val in all_param_hashes
-                if hash_val not in param_hashes_seen
-            ),
-            None,
-        )
+        next_hash = next(hash_gen, None)
 
         # we have searched over the entire parameter space
         if next_hash is None:
@@ -113,5 +110,7 @@ def grid_search_next_runs(
 
         run = SweepRun(config=params.to_config())
         retval.append(run)
+
+        param_hashes_seen.add(next_hash)
 
     return retval
