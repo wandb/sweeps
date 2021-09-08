@@ -15,27 +15,29 @@ def yaml_hash(value: Any) -> str:
     ).hexdigest()
 
 
-def grid_search_next_run(
+def grid_search_next_runs(
     runs: List[SweepRun],
     sweep_config: Union[dict, SweepConfig],
     validate: bool = False,
+    n: int = 1,
     randomize_order: bool = False,
-) -> Optional[SweepRun]:
+) -> List[Optional[SweepRun]]:
     """Suggest runs with Hyperparameters drawn from a grid.
 
-    >>> suggestion = grid_search_next_run([], {'method': 'grid', 'parameters': {'a': {'values': [1, 2, 3]}}})
-    >>> assert suggestion.config['a']['value'] == 1
+    >>> suggestion = grid_search_next_runs([], {'method': 'grid', 'parameters': {'a': {'values': [1, 2, 3]}}})
+    >>> assert suggestion[0].config['a']['value'] == 1
 
     Args:
         runs: The runs in the sweep.
         sweep_config: The sweep's config.
         randomize_order: Whether to randomize the order of the grid search.
+        n: The number of runs to draw
         validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
            If true, will raise a Validation error if `sweep_config` does not conform to
            the schema. If false, will attempt to run the sweep with an unvalidated schema.
 
     Returns:
-        The suggested run.
+        The suggested runs.
     """
 
     # make sure the sweep config is valid
@@ -88,21 +90,27 @@ def grid_search_next_run(
         ]
     )
 
-    # this is O(N) due to the O(1) complexity of individual hash lookups; previous implementation was O(N^2)
-    next_hash = next(
-        (
-            hash_val
-            for hash_val in all_param_hashes
-            if hash_val not in param_hashes_seen
-        ),
-        None,
+    hash_gen = (
+        hash_val for hash_val in all_param_hashes if hash_val not in param_hashes_seen
     )
 
-    # we have searched over the entire parameter space
-    if next_hash is None:
-        return None
+    retval: List[Optional[SweepRun]] = []
+    for _ in range(n):
 
-    for param, hash_val in zip(discrete_params, next_hash):
-        param.value = value_hash_lookup[param.name][hash_val]
+        # this is O(1)
+        next_hash = next(hash_gen, None)
 
-    return SweepRun(config=params.to_config())
+        # we have searched over the entire parameter space
+        if next_hash is None:
+            retval.append(None)
+            return retval
+
+        for param, hash_val in zip(discrete_params, next_hash):
+            param.value = value_hash_lookup[param.name][hash_val]
+
+        run = SweepRun(config=params.to_config())
+        retval.append(run)
+
+        param_hashes_seen.add(next_hash)
+
+    return retval
