@@ -16,7 +16,7 @@ setup(
     author_email="support@wandb.com",
     url="https://github.com/wandb/sweeps",
     packages=["sweeps", "sweeps.config"],
-    package_dir={"sweeps": "."},
+    package_dir={"sweeps": "sweeps"},
     package_data={"sweeps": ["config/schema.json"]},
     install_requires=requirements,
     license="MIT license",
