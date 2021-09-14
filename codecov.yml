@@ -16,3 +16,6 @@ coverage:
         if_ci_failed: error #success, failure, error, ignore
         informational: true
         only_pulls: false
+
+ignore:
+  - setup.py
