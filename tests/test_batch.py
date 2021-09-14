@@ -1,7 +1,7 @@
 import random
 
 import numpy as np
-from ..run import next_run, next_runs
+from sweeps.run import next_run, next_runs
 
 
 def reset_seed(init_seed):
