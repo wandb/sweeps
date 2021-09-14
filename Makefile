@@ -30,9 +30,11 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '__pycache__' -exec rm -fr {} +
 
 release: dist ## package and upload release
+	pip install -qq twine
 	twine upload dist/*
 
 release-test: dist ## package and upload test release
+	pip install -qq twine
 	twine upload --repository testpypi dist/*
 
 bumpversion-to-dev:
