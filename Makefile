@@ -31,3 +31,14 @@ clean-pyc: ## remove Python file artifacts
 
 release: dist ## package and upload release
 	twine upload dist/*
+
+release-test: dist ## package and upload test release
+	twine upload --repository testpypi dist/*
+
+bumpversion-to-dev:
+	pip install -qq bumpversion==0.5.3
+	python ./tools/bumpversion-tool.py --to-dev
+
+bumpversion-from-dev:
+	pip install -qq bumpversion==0.5.3
+	python ./tools/bumpversion-tool.py --from-dev
