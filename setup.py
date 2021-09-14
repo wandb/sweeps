@@ -3,9 +3,6 @@ from setuptools import setup
 with open("requirements.txt") as requirements_file:
     requirements = requirements_file.read().splitlines()
 
-with open("requirements.test.txt") as requirements_file:
-    test_requirements = requirements_file.read().splitlines()
-
 with open("README.md") as readme_file:
     readme = readme_file.read()
 
@@ -40,6 +37,4 @@ setup(
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    test_suite="tests",
-    tests_require=test_requirements,
 )
