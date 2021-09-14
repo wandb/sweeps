@@ -1,0 +1,6 @@
+pytest==6.2.3
+pytest-cov==2.11.1
+pytest-randomly==3.8.0
+matplotlib>=3
+pytest-xdist>=2.2.1
+pytest-profiling>=1.7.0
