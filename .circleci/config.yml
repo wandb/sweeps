@@ -10,8 +10,9 @@ jobs:
       image: ubuntu-1604:202007-01
     steps:
       - checkout
-      - run: Install python
-        command: pyenv install 3.6.14
+      - run:
+          name: Install python
+          command: pyenv install 3.6.14
       - run:
           name: Load python
           command: pyenv global 3.6.14
@@ -30,8 +31,9 @@ jobs:
       image: ubuntu-1604:202007-01
     steps:
       - checkout
-      - run: Install python
-        command: pyenv install 3.7.11
+      - run:
+          name: Install python
+          command: pyenv install 3.7.11
       - run:
           name: Load python
           command: pyenv global 3.7.11
