@@ -1,7 +1,7 @@
 include README.md
 include requirements.txt
 
-recursive-include sweeps *.py
-recursive-include sweeps *.sh
+recursive-include src/sweeps *.py
+recursive-include src/sweeps *.sh
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
