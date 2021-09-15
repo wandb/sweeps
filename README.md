@@ -1,4 +1,4 @@
-# W&B Hyperparameter Sweeps Engine
+[0;95;0c# W&B Hyperparameter Sweeps Engine
 
 This repo contains the routines that generate hyperparameter sweep suggestions in
 the W&B backend and [client](https://github.com/wandb/client) local controller.
@@ -149,8 +149,7 @@ to_stop = stop_runs(config, runs)
 To run tests:
 
 ```
-pip install -r requirements.dev.txt
-pytest
+tox
 ```
 
 
