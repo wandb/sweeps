@@ -1,4 +1,4 @@
-from .. import stop_runs, next_run, RunState, SweepRun
+from sweeps import stop_runs, next_run, RunState, SweepRun
 
 
 def test_hyperband_min_iter_bands():

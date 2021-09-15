@@ -1,5 +1,5 @@
 import pytest
-from .. import SweepRun, RunState
+from sweeps import SweepRun, RunState
 
 
 def test_skipped_steps():

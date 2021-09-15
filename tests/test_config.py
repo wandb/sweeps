@@ -1,6 +1,6 @@
 import pytest
 import jsonschema
-from .. import config
+from sweeps import config
 
 
 def test_invalid_sweep_config_nonuniform_array_elements_categorical():

@@ -5,9 +5,9 @@ from typing import Callable, Optional, Tuple, Iterable, Dict, Union
 import pytest
 import numpy as np
 
-from .. import bayes_search as bayes
-from .._types import integer, floating, ArrayLike
-from .. import SweepRun, RunState, next_run, SweepConfig
+from sweeps import bayes_search as bayes
+from sweeps._types import integer, floating, ArrayLike
+from sweeps import SweepRun, RunState, next_run, SweepConfig
 
 from .test_random_search import check_that_samples_are_from_the_same_distribution
 
