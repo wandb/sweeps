@@ -17,6 +17,7 @@ setup(
     url="https://github.com/wandb/sweeps",
     packages=["sweeps", "sweeps.config"],
     package_dir={"sweeps": "src/sweeps"},
+    include_package_data=True,
     install_requires=requirements,
     license="MIT license",
     zip_safe=False,
