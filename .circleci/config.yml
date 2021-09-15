@@ -5,6 +5,47 @@ orbs:
   codecov: codecov/codecov@1.1.0
 
 jobs:
+  linux36:
+    machine:
+      image: ubuntu-1604:202007-01
+    steps:
+      - checkout
+      - run: Install python
+        command: pyenv install 3.6.14
+      - run:
+          name: Load python
+          command: pyenv global 3.6.14
+      - run:
+          name: Run tests
+          command: tox -e py36
+      - codecov/upload:
+          file: coverage.xml
+      - store_artifacts:
+          path: prof/
+      - store_test_results:
+          path: .
+    resource_class: large
+  linux37:
+    machine:
+      image: ubuntu-1604:202007-01
+    steps:
+      - checkout
+      - run: Install python
+        command: pyenv install 3.7.11
+      - run:
+          name: Load python
+          command: pyenv global 3.7.11
+      - run:
+          name: Run tests
+          command: tox -e py37
+      - codecov/upload:
+          file: coverage.xml
+      - store_artifacts:
+          path: prof/
+      - store_test_results:
+          path: .
+    resource_class: large
+
   linux38:
     machine:
       image: ubuntu-1604:202007-01
@@ -14,11 +55,8 @@ jobs:
           name: Load python
           command: pyenv global 3.8.3
       - run:
-          name: Install dependencies
-          command: pip install -r requirements.dev.txt
-      - run:
           name: Run Tests
-          command: pytest --cov=./ --cov-report=xml
+          command: tox -e py38
       - codecov/upload:
           file: coverage.xml
       - store_artifacts:
@@ -38,11 +76,8 @@ jobs:
           name: Load python
           command: pyenv global 3.9.5
       - run:
-          name: Install dependencies
-          command: pip install -r requirements.dev.txt
-      - run:
-          name: Run Tests
-          command: pytest --cov=./ --cov-report=xml
+          name: Run tests
+          command: tox -e py39
     resource_class: large
   linters:
     executor:
@@ -61,6 +96,8 @@ jobs:
 workflows:
   main:
     jobs:
+      - linux36
+      - linux37
       - linux38
       - linux39
       - linters
