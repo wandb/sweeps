@@ -298,3 +298,25 @@ def test_grid_search_anaconda1_order(vectorize):
         check_order=True,
         vectorize=vectorize,
     )
+
+
+@pytest.mark.parametrize("vectorize", [True, False])
+@pytest.mark.parametrize("randomize", [True, False])
+def test_int_uniform_bounded_grid_search(randomize, vectorize):
+    int_uniform_config = SweepConfig(
+        {
+            "method": "grid",
+            "parameters": {
+                "v1": {"distribution": "int_uniform", "min": -52, "max": 10},
+                "v2": {"value": "test"},
+            },
+        }
+    )
+
+    kernel_for_grid_search_tests(
+        [],
+        int_uniform_config,
+        randomize=randomize,
+        vectorize=vectorize,
+        answers=[(v, "test") for v in range(-52, 11)],
+    )

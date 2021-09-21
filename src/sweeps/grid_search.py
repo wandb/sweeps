@@ -72,7 +72,7 @@ def grid_search_next_runs(
             params[i] = HyperParameter(
                 p.name,
                 {
-                    "type": "categorical",
+                    "distribution": "categorical",
                     "values": [
                         val for val in range(p.config["min"], p.config["max"] + 1)
                     ],
@@ -82,7 +82,7 @@ def grid_search_next_runs(
             params[i] = HyperParameter(
                 p.name,
                 {
-                    "type": "categorical",
+                    "distribution": "categorical",
                     "values": np.linspace(
                         p.config["min"], p.config["max"], p.config["q"]
                     ).tolist(),
