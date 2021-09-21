@@ -4,6 +4,8 @@ from typing import List, Sequence, Tuple
 from sweeps.run import RunState, SweepRun, next_run, next_runs
 from sweeps.config import SweepConfig
 
+import numpy as np
+
 
 def kernel_for_grid_search_tests(
     runs: List[SweepRun],
@@ -319,4 +321,31 @@ def test_int_uniform_bounded_grid_search(randomize, vectorize):
         randomize=randomize,
         vectorize=vectorize,
         answers=[(v, "test") for v in range(-52, 11)],
+    )
+
+
+@pytest.mark.parametrize("vectorize", [True, False])
+@pytest.mark.parametrize("randomize", [True, False])
+def test_q_uniform_bounded_grid_search(randomize, vectorize):
+    int_uniform_config = SweepConfig(
+        {
+            "method": "grid",
+            "parameters": {
+                "v1": {
+                    "distribution": "q_uniform",
+                    "min": -9.211,
+                    "max": 23.23,
+                    "q": 2.341,
+                },
+                "v2": {"value": "test"},
+            },
+        }
+    )
+
+    kernel_for_grid_search_tests(
+        [],
+        int_uniform_config,
+        randomize=randomize,
+        vectorize=vectorize,
+        answers=[(v, "test") for v in np.arange(-9.211, 23.23, 2.341)],
     )

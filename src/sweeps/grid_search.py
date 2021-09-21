@@ -83,7 +83,7 @@ def grid_search_next_runs(
                 p.name,
                 {
                     "distribution": "categorical",
-                    "values": np.linspace(
+                    "values": np.arange(
                         p.config["min"], p.config["max"], p.config["q"]
                     ).tolist(),
                 },
