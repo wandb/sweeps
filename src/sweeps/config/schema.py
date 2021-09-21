@@ -92,6 +92,12 @@ def fill_parameter(config: Dict) -> Optional[Tuple[str, Dict]]:
             filler.validate(config)
             return schema_name, config
 
+    # recursive case
+    config = deepcopy(config)
+    for key, value in config.items():
+        if isinstance(value, dict):
+
+
     return None
 
 

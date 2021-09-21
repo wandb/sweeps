@@ -470,6 +470,20 @@
         }
       ]
     },
+    "parameter_maybe_nested": {
+      "anyOf": [{"$ref":  "#/definitions/parameter"},
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/parameter_maybe_nested"
+          },
+          "propertyNames": {
+            "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
+          },
+          "minProperties": 1
+        }
+      ]
+    },
     "hyperband_stopping": {
       "type": "object",
       "description": "Speed up hyperparameter search by killing off runs that appear to have lower performance than successful training runs",
@@ -622,9 +636,7 @@
       "propertyNames": {
         "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
       },
-      "additionalProperties": {
-        "$ref": "#/definitions/parameter"
-      },
+      "additionalProperties": {"$ref": "#/definitions/parameter_maybe_nested"},
       "minProperties": 1
     }
   }

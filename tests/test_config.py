@@ -40,6 +40,7 @@ def test_negative_sigma_validation():
         _ = config.SweepConfig(invalid_config)
 
 
+
 def test_missing_parameters_section():
     invalid_config = {
         "method": "random",
@@ -47,3 +48,18 @@ def test_missing_parameters_section():
 
     warnings = config.schema_violations_from_proposed_config(invalid_config)
     assert len(warnings) == 1
+
+    
+def test_nested_parameters():
+    nested_config = {
+        "method": "random",
+        "parameters": {
+            "v1": {
+                "v2": {"mu": 0.1, "sigma": 0.1, "distribution": "normal"},
+                "v3": {"value": "constant"}
+            },
+            "v2": {"values": [1, 2, 3]}
+        },
+    }
+
+    _ = config.SweepConfig(nested_config)
