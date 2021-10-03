@@ -927,7 +927,7 @@ def test_metric_extremum_in_bayes_search():
     data_path = f"{os.path.dirname(__file__)}/data/ygnwe8ptupj33get.decoded.json"
     with open(data_path, "r") as f:
         data = json.load(f)
-    _, _, _, y = bayes._construct_gp_data(
+    _, _, _, y = bayes._construct_bayes_data(
         [SweepRun(**r) for r in data["jsonPayload"]["data"]["runs"]],
         data["jsonPayload"]["data"]["config"],
     )

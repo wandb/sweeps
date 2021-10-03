@@ -553,52 +553,9 @@ def next_sample_tpe(
     )
 
 
-def bayes_search_next_run(
-    runs: List[SweepRun],
-    config: Union[dict, SweepConfig],
-    validate: bool = False,
-    minimum_improvement: floating = 0.1,
-) -> SweepRun:
-    """Suggest runs using Bayesian optimization.
-
-    >>> suggestion = bayes_search_next_run([], {
-    ...    'method': 'bayes',
-    ...    'parameters': {'a': {'min': 1., 'max': 2.}},
-    ...    'metric': {'name': 'loss', 'goal': 'maximize'}
-    ... })
-
-    Args:
-        runs: The runs in the sweep.
-        config: The sweep's config.
-        minimum_improvement: The minimium improvement to optimize for. Higher means take more exploratory risks.
-        validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
-           If true, will raise a Validation error if `sweep_config` does not conform to
-           the schema. If false, will attempt to run the sweep with an unvalidated schema.
-
-    Returns:
-        The suggested run.
-    """
-
-    if validate:
-        config = SweepConfig(config)
-
-    if "metric" not in config:
-        raise ValueError('Bayesian search requires "metric" section')
-
-    if "method" not in config:
-        raise ValueError("Method must be specified")
-
-    if config["method"] == "bayes":
-        model = "gp"
-    elif config["method"] == "bayes-tpe":
-        model = "tpe"
-    elif config["method"] == "bayes-tpe-multi":
-        model = "tpe_multi"
-    else:
-        raise ValueError(
-            'Invalid method for bayes_search_next_run, must be one of "bayes", "bayes-tpe", "bayes-tpe-multi"'
-        )
-
+def _construct_bayes_data(
+    runs: List[SweepRun], config: Union[dict, SweepConfig]
+) -> Tuple[HyperParameterSet, ArrayLike, ArrayLike, ArrayLike]:
     goal = config["metric"]["goal"]
     metric_name = config["metric"]["name"]
     worst_func = min if goal == "maximize" else max
@@ -610,8 +567,6 @@ def bayes_search_next_run(
     sample_X: ArrayLike = []
     current_X: ArrayLike = []
     y: ArrayLike = []
-
-    X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
 
     # we calc the max metric to put as the metric for failed runs
     # so that our bayesian search stays away from them
@@ -673,6 +628,58 @@ def bayes_search_next_run(
     # next_sample is a minimizer, so if we are trying to
     # maximize, we need to negate y
     y *= -1 if goal == "maximize" else 1
+
+    return params, sample_X, current_X, y
+
+
+def bayes_search_next_run(
+    runs: List[SweepRun],
+    config: Union[dict, SweepConfig],
+    validate: bool = False,
+    minimum_improvement: floating = 0.1,
+) -> SweepRun:
+    """Suggest runs using Bayesian optimization.
+
+    >>> suggestion = bayes_search_next_run([], {
+    ...    'method': 'bayes',
+    ...    'parameters': {'a': {'min': 1., 'max': 2.}},
+    ...    'metric': {'name': 'loss', 'goal': 'maximize'}
+    ... })
+
+    Args:
+        runs: The runs in the sweep.
+        config: The sweep's config.
+        minimum_improvement: The minimium improvement to optimize for. Higher means take more exploratory risks.
+        validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
+           If true, will raise a Validation error if `sweep_config` does not conform to
+           the schema. If false, will attempt to run the sweep with an unvalidated schema.
+
+    Returns:
+        The suggested run.
+    """
+
+    if validate:
+        config = SweepConfig(config)
+
+    if "metric" not in config:
+        raise ValueError('Bayesian search requires "metric" section')
+
+    if "method" not in config:
+        raise ValueError("Method must be specified")
+
+    if config["method"] == "bayes":
+        model = "gp"
+    elif config["method"] == "bayes-tpe":
+        model = "tpe"
+    elif config["method"] == "bayes-tpe-multi":
+        model = "tpe_multi"
+    else:
+        raise ValueError(
+            'Invalid method for bayes_search_next_run, must be one of "bayes", "bayes-tpe", "bayes-tpe-multi"'
+        )
+
+    params, sample_X, current_X, y = _construct_bayes_data(runs, config)
+    X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
 
     (
         suggested_X,
