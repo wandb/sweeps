@@ -1,9 +1,9 @@
 import pytest
 
-from ..config import SweepConfig
+from sweeps.config import SweepConfig
 import numpy as np
-from ..run import next_run
-from .._types import ArrayLike
+from sweeps.run import next_run
+from sweeps._types import ArrayLike
 import os
 from scipy import stats
 

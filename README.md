@@ -7,17 +7,11 @@ Issues are not enabled in this repository.
 __Please [open issues related to sweeps in the wandb client library github issues page](https://github.com/wandb/client/issues/new/choose).__
 
 ### Installation
-This repository is designed to be pinned as a submodule by repos that depend on it.
 To install:
 
-```shell script
-cd repository_that_requires_sweeps
-git submodule add https://github.com/wandb/sweeps.git
-```
 
-To install `sweeps` dependencies when you install your repository's dependencies, add a line to your repository's `requirements.txt` that points to `sweeps`'s requirements.txt:
 ```
--r sweeps/requirements.txt
+pip install sweeps
 ```
 
 ### Examples
@@ -155,8 +149,7 @@ to_stop = stop_runs(config, runs)
 To run tests:
 
 ```
-pip install -r requirements.dev.txt
-pytest
+tox
 ```
 
 

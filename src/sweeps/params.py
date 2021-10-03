@@ -47,7 +47,9 @@ class HyperParameter:
 
         result = fill_parameter(config)
         if result is None:
-            raise jsonschema.ValidationError("invalid hyperparameter configuration")
+            raise jsonschema.ValidationError(
+                f"invalid hyperparameter configuration: {name}"
+            )
 
         self.type, self.config = result
         if self.config is None or self.type is None:
@@ -79,7 +81,10 @@ class HyperParameter:
             if value == test_value:
                 return ii
 
-        raise ValueError("Couldn't find {}".format(value))
+        raise ValueError(
+            f"{value} is not a permitted value of the categorical hyperparameter {self.name} "
+            f"in the current sweep."
+        )
 
     def cdf(self, x: ArrayLike) -> ArrayLike:
         """Cumulative distribution function (CDF).

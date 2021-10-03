@@ -1,8 +1,10 @@
 import numpy as np
 
-from typing import List, Tuple, Optional, Union
+from copy import deepcopy
+from typing import List, Tuple, Optional, Union, Dict
 
 from .config.cfg import SweepConfig
+from .config.schema import fill_validate_metric
 from .run import SweepRun, RunState
 from .params import HyperParameter, HyperParameterSet
 from sklearn import gaussian_process as sklearn_gaussian
@@ -11,6 +13,20 @@ from scipy import stats as scipy_stats
 from ._types import floating, integer, ArrayLike
 
 NUGGET = 1e-10
+
+
+def bayes_baseline_validate_and_fill(config: Dict) -> Dict:
+    config = deepcopy(config)
+
+    if "metric" not in config:
+        raise ValueError('Bayesian search requires "metric" section')
+
+    if config["method"] != "bayes":
+        raise ValueError("Invalid sweep configuration for bayes_search_next_run.")
+
+    config = fill_validate_metric(config)
+
+    return config
 
 
 def fit_normalized_gaussian_process(
@@ -587,7 +603,7 @@ def bayes_search_next_run(
 
     # we calc the max metric to put as the metric for failed runs
     # so that our bayesian search stays away from them
-    worst_metric: floating = 0.0
+    worst_metric: floating = np.inf if goal == "maximize" else -np.inf
     for run in runs:
         if run.state == RunState.finished:
             try:
@@ -597,6 +613,8 @@ def bayes_search_next_run(
             except ValueError:
                 run_extremum = 0.0  # default
             worst_metric = worst_func(worst_metric, run_extremum)
+    if not np.isfinite(worst_metric):
+        worst_metric = 0.0
 
     X_norms = params.convert_runs_to_normalized_vector(runs)
     for run, X_norm in zip(runs, X_norms):
@@ -606,10 +624,15 @@ def bayes_search_next_run(
                     metric_name, kind="maximum" if goal == "maximize" else "minimum"
                 )
             except ValueError:
-                metric = 0.0  # default
+                metric = worst_metric  # default
             y.append(metric)
             sample_X.append(X_norm)
-        elif run.state in [RunState.running, RunState.preempting, RunState.preempted]:
+        elif run.state in [
+            RunState.running,
+            RunState.preempting,
+            RunState.preempted,
+            RunState.pending,
+        ]:
             # run is in progress
             # we wont use the metric, but we should pass it into our optimizer to
             # account for the fact that it is running
@@ -670,3 +693,19 @@ def bayes_search_next_run(
         "expected_improvement": suggested_X_expected_improvement,
     }
     return SweepRun(config=ret_dict, search_info=info)
+
+
+def bayes_search_next_runs(
+    runs: List[SweepRun],
+    config: Union[dict, SweepConfig],
+    validate: bool = False,
+    n: int = 1,
+    minimum_improvement: floating = 0.1,
+):
+    ret: List[SweepRun] = []
+    for _ in range(n):
+        suggestion = bayes_search_next_run(
+            runs + ret, config, validate, minimum_improvement
+        )
+        ret.append(suggestion)
+    return ret

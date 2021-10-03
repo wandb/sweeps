@@ -15,7 +15,6 @@
         "values": {
           "type": "array",
           "description": "Discrete values",
-          "uniqueItems": true,
           "minItems": 1
         },
         "distribution": {
@@ -107,9 +106,9 @@
       "properties": {
         "q": {
           "type": "number",
-          "default": 1,
+          "default": 1.0,
           "description": "Quantization parameter for quantized distributions",
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "mu": {
           "type": "number",
@@ -139,9 +138,9 @@
       "properties": {
         "q": {
           "type": "number",
-          "default": 1,
+          "default": 1.0,
           "description": "Quantization parameter for quantized distributions",
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "mu": {
           "type": "number",
@@ -211,6 +210,54 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "uniform distribution on real numbers",
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number",
+              "format": "float"
+            },
+            "distribution": {
+              "enum": [
+                "uniform"
+              ],
+              "default": "uniform"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "uniform distribution on real numbers",
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "number",
+              "format": "float"
+            },
+            "max": {
+              "type": "number"
+            },
+            "distribution": {
+              "enum": [
+                "uniform"
+              ],
+              "default": "uniform"
+            }
+          },
+          "additionalProperties": false
         }
       ]
     },
@@ -258,9 +305,9 @@
         },
         "q": {
           "type": "number",
-          "default": 1,
+          "default": 1.0,
           "description": "Quantization parameter for quantized distributions",
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "distribution": {
           "enum": [
@@ -287,9 +334,9 @@
         },
         "q": {
           "type": "number",
-          "default": 1,
+          "default": 1.0,
           "description": "Quantization parameter for quantized distributions",
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "distribution": {
           "enum": [
@@ -365,9 +412,9 @@
         },
         "q": {
           "type": "number",
-          "default": 1,
+          "default": 1.0,
           "description": "Quantization parameter for quantized distributions",
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "distribution": {
           "enum": [
@@ -565,8 +612,7 @@
       "type": "object",
       "description": "Metric to optimize",
       "required": [
-        "name",
-        "goal"
+        "name"
       ],
       "additionalProperties": false,
       "properties": {
@@ -580,7 +626,8 @@
           "enum": [
             "minimize",
             "maximize"
-          ]
+          ],
+          "default": "minimize"
         },
         "target": {
           "type": "number",

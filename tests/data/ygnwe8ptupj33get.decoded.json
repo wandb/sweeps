@@ -1,0 +1,2000 @@
+{
+  "insertId": "ygnwe8ptupj33get",
+  "jsonPayload": {
+    "message": "Mismatch detected in shadow sweep provider",
+    "info": {
+      "source": "mnt/ramdisk/core/services/gorilla/shadow_sweep_gen.go:109",
+      "pid": 1,
+      "program": "gorilla"
+    },
+    "data": {
+      "requestId": "03456dd0-ccbe-475d-a547-d2f49fda5aea",
+      "mismatchIn": "NextArgs",
+      "ctx": {},
+      "errShadow": "%!s(<nil>)",
+      "config": {
+        "method": "bayes",
+        "metric": {
+          "goal": "maximize",
+          "name": "test_accuracy"
+        },
+        "program": "demo_classification.py",
+        "parameters": {
+          "epochs": {
+            "values": [
+              120
+            ]
+          },
+          "wdecay": {
+            "values": [
+              0.001,
+              0.0001,
+              1e-05,
+              0
+            ]
+          },
+          "sam_rho": {
+            "values": [
+              0.01,
+              0.02,
+              0.05,
+              0.1,
+              0.2,
+              0.5
+            ]
+          },
+          "algorithm": {
+            "values": [
+              "sam",
+              "sgd"
+            ]
+          },
+          "batch_size": {
+            "values": [
+              5,
+              10,
+              50,
+              100
+            ]
+          },
+          "learning_rate": {
+            "values": [
+              0.1,
+              0.05,
+              0.01
+            ]
+          }
+        },
+        "early_terminate": {
+          "type": "hyperband",
+          "min_iter": 3
+        }
+      },
+      "errBase": "%!s(<nil>)",
+      "runs": [
+        {
+          "name": "eeu8g8t0",
+          "state": "crashed",
+          "summaryMetrics": {},
+          "config": {
+            "epochs": {
+              "value": 120
+            },
+            "wdecay": {
+              "value": 0.0001
+            },
+            "sam_rho": {
+              "value": 0.02
+            },
+            "algorithm": {
+              "value": "sam"
+            },
+            "batch_size": {
+              "value": 5
+            },
+            "learning_rate": {
+              "value": 0.01
+            }
+          }
+        },
+        {
+          "name": "utg1cm9n",
+          "config": {
+            "epochs": {
+              "value": 120
+            },
+            "wdecay": {
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "value": 0.02
+            },
+            "algorithm": {
+              "value": "sam"
+            },
+            "batch_size": {
+              "value": 50
+            },
+            "learning_rate": {
+              "value": 0.05
+            }
+          },
+          "state": "crashed",
+          "summaryMetrics": {}
+        },
+        {
+          "summaryMetrics": {},
+          "state": "crashed",
+          "config": {
+            "epochs": {
+              "value": 120
+            },
+            "wdecay": {
+              "value": 0
+            },
+            "sam_rho": {
+              "value": 0.2
+            },
+            "algorithm": {
+              "value": "sam"
+            },
+            "batch_size": {
+              "value": 50
+            },
+            "learning_rate": {
+              "value": 0.05
+            }
+          },
+          "name": "fdrsmcyz"
+        },
+        {
+          "state": "running",
+          "name": "zjc4ap1k",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0.0001
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.1
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "summaryMetrics": {
+            "_step": 49,
+            "_runtime": 127,
+            "_timestamp": 1628026483,
+            "test_accuracy": 98.10999631881714,
+            "train_accuracy": 99.99833703041077,
+            "full_batch_loss": 0.03592310845851898
+          }
+        },
+        {
+          "summaryMetrics": {
+            "_step": 11,
+            "_runtime": 771,
+            "_timestamp": 1628026454,
+            "test_accuracy": 98.56999516487122,
+            "train_accuracy": 99.82666969299316,
+            "full_batch_loss": 0.007927557453513145
+          },
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.1
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sam"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 10
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.05
+            }
+          },
+          "state": "running",
+          "name": "e0tmijv4"
+        },
+        {
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "2": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0.0001
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.5
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "summaryMetrics": {
+            "_step": 119,
+            "_runtime": 299,
+            "_timestamp": 1628026347,
+            "test_accuracy": 98.1499969959259,
+            "train_accuracy": 100,
+            "full_batch_loss": 0.025709226727485657
+          },
+          "name": "bvdcxmis",
+          "state": "finished"
+        },
+        {
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.01
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 10
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "summaryMetrics": {
+            "_step": 37,
+            "_runtime": 786,
+            "_timestamp": 1628026470,
+            "test_accuracy": 98.60000014305116,
+            "train_accuracy": 100,
+            "full_batch_loss": 0.007409858051687479
+          },
+          "name": "612sjlq3",
+          "state": "running"
+        },
+        {
+          "summaryMetrics": {
+            "_step": 23,
+            "_runtime": 66,
+            "_timestamp": 1628025665,
+            "test_accuracy": 97.92999625205994,
+            "train_accuracy": 99.55500364303587,
+            "full_batch_loss": 0.021508807316422462
+          },
+          "state": "finished",
+          "name": "kibosr4x",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.1
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.05
+            }
+          }
+        },
+        {
+          "summaryMetrics": {
+            "_step": 119,
+            "_runtime": 289,
+            "_timestamp": 1628026097,
+            "test_accuracy": 98.0299949645996,
+            "train_accuracy": 100,
+            "full_batch_loss": 0.00023318178136833012
+          },
+          "name": "crgwv61x",
+          "state": "finished",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "2": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.05
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "name": "qekifhup",
+          "state": "finished",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0.001
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.02
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sam"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 50
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.01
+            }
+          },
+          "summaryMetrics": {
+            "_step": 6,
+            "_runtime": 98,
+            "_timestamp": 1628025781,
+            "test_accuracy": 93.88999938964844,
+            "train_accuracy": 93.89333724975586,
+            "full_batch_loss": 0.5203298926353455
+          }
+        },
+        {
+          "config": {
+            "epochs": {
+              "value": 120
+            },
+            "wdecay": {
+              "value": 0.0001
+            },
+            "sam_rho": {
+              "value": 0.2
+            },
+            "algorithm": {
+              "value": "sam"
+            },
+            "batch_size": {
+              "value": 5
+            },
+            "learning_rate": {
+              "value": 0.05
+            }
+          },
+          "summaryMetrics": {},
+          "state": "crashed",
+          "name": "45ecejro"
+        },
+        {
+          "summaryMetrics": {
+            "_step": 23,
+            "_runtime": 68,
+            "_timestamp": 1628025667,
+            "test_accuracy": 97.89999723434448,
+            "train_accuracy": 99.54333305358888,
+            "full_batch_loss": 0.0259194727987051
+          },
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.02
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.05
+            }
+          },
+          "state": "finished",
+          "name": "4vmethiq"
+        },
+        {
+          "name": "wldc5dxb",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.5
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "state": "running",
+          "summaryMetrics": {
+            "_step": 43,
+            "_runtime": 117,
+            "_timestamp": 1628026484,
+            "test_accuracy": 98.03999662399292,
+            "train_accuracy": 99.99833703041077,
+            "full_batch_loss": 0.006160160526633263
+          }
+        },
+        {
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "2": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.2
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "name": "xj1vv4zm",
+          "summaryMetrics": {
+            "_step": 119,
+            "_runtime": 287,
+            "_timestamp": 1628026409,
+            "test_accuracy": 98.0299949645996,
+            "train_accuracy": 100,
+            "full_batch_loss": 0.005147997755557299
+          },
+          "state": "finished"
+        },
+        {
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0.001
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.1
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 10
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "summaryMetrics": {
+            "_step": 10,
+            "_runtime": 224,
+            "_timestamp": 1628025837,
+            "test_accuracy": 96.95000052452087,
+            "train_accuracy": 97.80666828155518,
+            "full_batch_loss": 0.1969844400882721
+          },
+          "name": "eifovze5",
+          "state": "finished"
+        },
+        {
+          "summaryMetrics": {
+            "_step": 66,
+            "_runtime": 167,
+            "_timestamp": 1628025974,
+            "test_accuracy": 98.01999926567078,
+            "train_accuracy": 100,
+            "full_batch_loss": 0.0005674541462212801
+          },
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.01
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "state": "finished",
+          "name": "pvz1wz1x"
+        },
+        {
+          "state": "running",
+          "summaryMetrics": {
+            "_step": 20,
+            "_runtime": 841,
+            "_timestamp": 1628026437,
+            "test_accuracy": 98.57999682426453,
+            "train_accuracy": 100,
+            "full_batch_loss": 5.3900774219073355e-05
+          },
+          "name": "ttb9ql2k",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.2
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 5
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.05
+            }
+          }
+        },
+        {
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0.0001
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.05
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 5
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.01
+            }
+          },
+          "state": "running",
+          "summaryMetrics": {
+            "_step": 21,
+            "_runtime": 877,
+            "_timestamp": 1628026477,
+            "test_accuracy": 98.17000031471252,
+            "train_accuracy": 99.99666810035706,
+            "full_batch_loss": 0.038693614304065704
+          },
+          "name": "q40hyuun"
+        },
+        {
+          "config": {
+            "epochs": {
+              "value": 120
+            },
+            "wdecay": {
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "value": 0.2
+            },
+            "algorithm": {
+              "value": "sgd"
+            },
+            "batch_size": {
+              "value": 5
+            },
+            "learning_rate": {
+              "value": 0.05
+            }
+          },
+          "name": "9gpzi2mb",
+          "summaryMetrics": {},
+          "state": "crashed"
+        },
+        {
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "2": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0.0001
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.1
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "state": "finished",
+          "summaryMetrics": {
+            "_step": 119,
+            "_runtime": 288,
+            "_timestamp": 1628026336,
+            "test_accuracy": 98.089998960495,
+            "train_accuracy": 100,
+            "full_batch_loss": 0.025720926001667976
+          },
+          "name": "4rgcyyt3"
+        },
+        {
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.5
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.05
+            }
+          },
+          "name": "n6kajq0z",
+          "summaryMetrics": {
+            "_step": 12,
+            "_runtime": 42,
+            "_timestamp": 1628026033,
+            "test_accuracy": 97.5499987602234,
+            "train_accuracy": 98.43167066574097,
+            "full_batch_loss": 0.06272362172603607
+          },
+          "state": "finished"
+        },
+        {
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.5
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sam"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 5
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.05
+            }
+          },
+          "state": "finished",
+          "summaryMetrics": {
+            "_step": 3,
+            "_runtime": 429,
+            "_timestamp": 1628026038,
+            "test_accuracy": 95.95999717712402,
+            "train_accuracy": 96.28833532333374,
+            "full_batch_loss": 0.1510598510503769
+          },
+          "name": "uvau98w4"
+        },
+        {
+          "state": "finished",
+          "name": "cwc2hr32",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "2": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.9.6",
+                  "5": "0.11.2",
+                  "8": [
+                    4,
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.9.6",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.05
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 50
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "summaryMetrics": {
+            "_step": 119,
+            "_runtime": 453,
+            "_timestamp": 1628025693,
+            "test_accuracy": 98.10999631881714,
+            "train_accuracy": 100,
+            "full_batch_loss": 8.829821308609098e-05
+          }
+        },
+        {
+          "name": "ewnd9dgt",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.1
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "summaryMetrics": {
+            "_step": 40,
+            "_runtime": 109,
+            "_timestamp": 1628025974,
+            "test_accuracy": 98.09999465942384,
+            "train_accuracy": 99.99833703041077,
+            "full_batch_loss": 0.006241258699446917
+          },
+          "state": "finished"
+        },
+        {
+          "state": "crashed",
+          "config": {
+            "epochs": {
+              "value": 120
+            },
+            "wdecay": {
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "value": 0.05
+            },
+            "algorithm": {
+              "value": "sgd"
+            },
+            "batch_size": {
+              "value": 5
+            },
+            "learning_rate": {
+              "value": 0.05
+            }
+          },
+          "name": "qmeb0bwu",
+          "summaryMetrics": {}
+        },
+        {
+          "name": "tzvbsl2u",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "2": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.1
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "state": "finished",
+          "summaryMetrics": {
+            "_step": 119,
+            "_runtime": 290,
+            "_timestamp": 1628026407,
+            "test_accuracy": 98.05999994277954,
+            "train_accuracy": 100,
+            "full_batch_loss": 0.005147087853401899
+          }
+        },
+        {
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0.0001
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.05
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sam"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 50
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "summaryMetrics": {
+            "_step": 66,
+            "_runtime": 957,
+            "_timestamp": 1628026455,
+            "test_accuracy": 98.42999577522278,
+            "train_accuracy": 100,
+            "full_batch_loss": 0.03103597462177277
+          },
+          "name": "t9q2lpnx",
+          "state": "running"
+        },
+        {
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.2
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sam"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.05
+            }
+          },
+          "state": "finished",
+          "summaryMetrics": {
+            "_step": 6,
+            "_runtime": 58,
+            "_timestamp": 1628025669,
+            "test_accuracy": 96.2499976158142,
+            "train_accuracy": 96.60000205039978,
+            "full_batch_loss": 0.1305772364139557
+          },
+          "name": "o7aiv1gf"
+        },
+        {
+          "config": {
+            "epochs": {
+              "value": 120
+            },
+            "wdecay": {
+              "value": 0.001
+            },
+            "sam_rho": {
+              "value": 0.1
+            },
+            "algorithm": {
+              "value": "sgd"
+            },
+            "batch_size": {
+              "value": 5
+            },
+            "learning_rate": {
+              "value": 0.1
+            }
+          },
+          "name": "pa07ftus",
+          "summaryMetrics": {},
+          "state": "crashed"
+        },
+        {
+          "name": "9kmds7d5",
+          "summaryMetrics": {
+            "_step": 18,
+            "_runtime": 55,
+            "_timestamp": 1628026486,
+            "test_accuracy": 98.0299949645996,
+            "train_accuracy": 99.87833499908449,
+            "full_batch_loss": 0.01463717594742775
+          },
+          "state": "running",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.5
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "summaryMetrics": {
+            "_step": 37,
+            "_runtime": 178,
+            "_timestamp": 1628025791,
+            "test_accuracy": 98.0299949645996,
+            "train_accuracy": 99.99833703041077,
+            "full_batch_loss": 0.006438950542360544
+          },
+          "state": "finished",
+          "name": "dh6zdb75",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.5
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 50
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.05
+            }
+          }
+        },
+        {
+          "summaryMetrics": {
+            "_step": 12,
+            "_runtime": 41,
+            "_timestamp": 1628026031,
+            "test_accuracy": 97.5499987602234,
+            "train_accuracy": 98.43167066574097,
+            "full_batch_loss": 0.06272362172603607
+          },
+          "name": "iyb5h338",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 1e-05
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.2
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.05
+            }
+          },
+          "state": "finished"
+        },
+        {
+          "state": "finished",
+          "summaryMetrics": {
+            "_step": 119,
+            "_runtime": 323,
+            "_timestamp": 1628026030,
+            "test_accuracy": 98.01999926567078,
+            "train_accuracy": 100,
+            "full_batch_loss": 0.0002330469142179936
+          },
+          "name": "alui0135",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "2": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.9.6",
+                  "5": "0.11.2",
+                  "8": [
+                    4,
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.9.6",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.02
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "name": "do6ycvk0",
+          "state": "finished",
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "2": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0.001
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.1
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sam"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "summaryMetrics": {
+            "_step": 119,
+            "_runtime": 861,
+            "_timestamp": 1628026472,
+            "test_accuracy": 98.35999608039856,
+            "train_accuracy": 99.66500401496889,
+            "full_batch_loss": 0.12903398275375366
+          }
+        },
+        {
+          "config": {
+            "_wandb": {
+              "desc": null,
+              "value": {
+                "t": {
+                  "1": [
+                    1,
+                    5,
+                    12
+                  ],
+                  "4": "3.8.8",
+                  "5": "0.11.2",
+                  "8": [
+                    5
+                  ]
+                },
+                "framework": "torch",
+                "cli_version": "0.11.2",
+                "is_jupyter_run": false,
+                "python_version": "3.8.8",
+                "is_kaggle_kernel": false
+              }
+            },
+            "epochs": {
+              "desc": null,
+              "value": 120
+            },
+            "wdecay": {
+              "desc": null,
+              "value": 0.0001
+            },
+            "sam_rho": {
+              "desc": null,
+              "value": 0.2
+            },
+            "algorithm": {
+              "desc": null,
+              "value": "sgd"
+            },
+            "batch_size": {
+              "desc": null,
+              "value": 100
+            },
+            "learning_rate": {
+              "desc": null,
+              "value": 0.1
+            }
+          },
+          "summaryMetrics": {
+            "_step": 18,
+            "_runtime": 56,
+            "_timestamp": 1628026487,
+            "test_accuracy": 98.05999994277954,
+            "train_accuracy": 99.85166788101196,
+            "full_batch_loss": 0.05074382573366165
+          },
+          "name": "ibp89gtj",
+          "state": "running"
+        }
+      ],
+      "diff": "  strings.Join({\n  \t`{\"args\":{\"algorithm\":{\"value\":\"sgd\"},\"batch_size\":{\"value\":100},`,\n  \t`\"epochs\":{\"value\":120},\"learning_rate\":{\"value\":0.`,\n- \t\"05\",\n+ \t\"1\",\n  \t`},\"sam_rho\":{\"value\":0.`,\n- \t\"2\",\n+ \t\"5\",\n  \t`},\"wdecay\":{\"value\":0.001}},\"logs\":[\"expected_improvement: `,\n- \t\"4.584666\",\n+ \t\"2.427508\",\n  \t`e-01\",\"predicted_value: -`,\n- \t\"1.116970e+02\",\n+ \t\"9.825622e+01\",\n  \t`\",\"predicted_value_std_dev: `,\n- \t\"2.728434e+01\",\n+ \t\"1.223969e+00\",\n  \t`\",\"success_probability: `,\n- \t\"6.87513\",\n+ \t\"4.66214\",\n  \t\"8e-01\\\"]}\\n\",\n  }, \"\")\n"
+    },
+    "level": "INFO"
+  },
+  "resource": {
+    "type": "k8s_container",
+    "labels": {
+      "location": "us-central1-c",
+      "project_id": "wandb-production",
+      "cluster_name": "jungle",
+      "pod_name": "gorilla-64cc4d866-pjmpr",
+      "namespace_name": "default",
+      "container_name": "gorilla"
+    }
+  },
+  "timestamp": "2021-08-03T21:34:51.189649752Z",
+  "severity": "INFO",
+  "labels": {
+    "compute.googleapis.com/resource_name": "gke-jungle-pool8-e40b065a-mbl5",
+    "k8s-pod/ts": 1627942715,
+    "k8s-pod/pod-template-hash": "64cc4d866",
+    "k8s-pod/app": "gorilla",
+    "k8s-pod/release": "gorilla"
+  },
+  "logName": "projects/wandb-production/logs/stdout",
+  "trace": "cf29c0cb-ef40-48cb-ab1b-6feb90c87b69",
+  "receiveTimestamp": "2021-08-03T21:34:56.082097991Z"
+}

@@ -1,7 +1,8 @@
 import pytest
 import jsonschema
-from ..params import HyperParameter
-from ..config import SweepConfig
+from sweeps.params import HyperParameter
+from sweeps.config import SweepConfig, fill_validate_early_terminate
+from sweeps.hyperband_stopping import hyperband_baseline_validate_and_fill
 
 
 def test_json_type_inference_int_uniform():
@@ -15,6 +16,22 @@ def test_json_type_inference_int_uniform():
 
 def test_json_type_inference_uniform():
     config = {"min": 0.0, "max": 1.0}
+    param = HyperParameter("unif_param", config)
+    assert param.type == HyperParameter.UNIFORM
+
+    # len is 3 because distribution key is inferred via default
+    assert len(param.config) == 3
+
+
+def test_json_type_inference_uniform_mixed():
+    config = {"min": 0.0, "max": 1}
+    param = HyperParameter("unif_param", config)
+    assert param.type == HyperParameter.UNIFORM
+
+    # len is 3 because distribution key is inferred via default
+    assert len(param.config) == 3
+
+    config = {"min": 0, "max": 1.0}
     param = HyperParameter("unif_param", config)
     assert param.type == HyperParameter.UNIFORM
 
@@ -85,6 +102,12 @@ def test_json_type_inference_beta():
     assert len(param.config) == 3
 
 
+def test_totally_invalid_config():
+    config = {"invalid": "this config is not valid"}
+    with pytest.raises(jsonschema.ValidationError):
+        HyperParameter("invalid", config)
+
+
 def test_validate_does_not_modify_passed_config():
     config = {"distribution": "normal"}
     config_save = config.copy()
@@ -138,3 +161,72 @@ def test_hyperband_missing_eta_imputed():
 
     sc = SweepConfig(config)
     assert sc["early_terminate"]["eta"] == 3
+
+
+def test_hyperband_missing_eta_imputed_incremental():
+    # sentry https://sentry.io/organizations/weights-biases/issues/2500192925/?referrer=slack
+    config = {
+        "command": [
+            "${env}",
+            "${interpreter}",
+            "${program}",
+            "sweep",
+            "2dconv_lstm.stat.ac",
+            "--dataset",
+            "deam",
+            "--temp_folder",
+            "a_deam",
+            "--batch-size",
+        ],
+        "early_terminate": {"min_iter": 3, "type": "hyperband"},
+        "method": "random",
+        "metric": {"goal": "minimize", "name": "val/loss"},
+        "name": "AC-2DConvLSTM-Stat-DEAM",
+        "parameters": {
+            "dropout": {"values": ["0.15", "0.2", "0.25", "0.3", "0.4", "0.5"]},
+            "lr": {"values": ["0.001", "0.005", "0.01"]},
+            "momentum": {"values": ["0.8", "0.9", "0.95"]},
+            "n_fft": {"value": 1024},
+            "n_mels": {"value": 128},
+        },
+        "program": "exec.py",
+        "project": "mer",
+    }
+
+    sc = fill_validate_early_terminate(config)
+    assert sc["early_terminate"]["eta"] == 3
+
+
+def test_hyperband_incremental_corrects_goal():
+    # sentry https://sentry.io/organizations/weights-biases/issues/2500192925/?referrer=slack
+    config = {
+        "command": [
+            "${env}",
+            "${interpreter}",
+            "${program}",
+            "sweep",
+            "2dconv_lstm.stat.ac",
+            "--dataset",
+            "deam",
+            "--temp_folder",
+            "a_deam",
+            "--batch-size",
+        ],
+        "early_terminate": {"min_iter": 3, "type": "hyperband"},
+        "method": "random",
+        "metric": {"goal": "minimise", "name": "val/loss"},
+        "name": "AC-2DConvLSTM-Stat-DEAM",
+        "parameters": {
+            "dropout": {"values": ["0.15", "0.2", "0.25", "0.3", "0.4", "0.5"]},
+            "lr": {"values": ["0.001", "0.005", "0.01"]},
+            "momentum": {"values": ["0.8", "0.9", "0.95"]},
+            "n_fft": {"value": 1024},
+            "n_mels": {"value": 128},
+        },
+        "program": "exec.py",
+        "project": "mer",
+    }
+
+    sc = hyperband_baseline_validate_and_fill(config)
+    assert sc["early_terminate"]["eta"] == 3
+    assert sc["metric"]["goal"] == "minimize"

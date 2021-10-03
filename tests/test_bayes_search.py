@@ -1,11 +1,13 @@
+import os
+import json
 from typing import Callable, Optional, Tuple, Iterable, Dict, Union
 
 import pytest
 import numpy as np
 
-from .. import bayes_search as bayes
-from .._types import integer, floating, ArrayLike
-from .. import SweepRun, RunState, next_run, SweepConfig
+from sweeps import bayes_search as bayes
+from sweeps._types import integer, floating, ArrayLike
+from sweeps import SweepRun, RunState, next_run, SweepConfig
 
 from .test_random_search import check_that_samples_are_from_the_same_distribution
 
@@ -918,3 +920,60 @@ def test_that_constant_parameters_are_sampled_correctly():
     for key in suggestion.config:
         if key in config["parameters"] and key != "ppf_target_by":
             assert suggestion.config[key]["value"] is not None
+
+
+def test_metric_extremum_in_bayes_search():
+    # from https://console.cloud.google.com/logs/query;query=ygnwe8ptupj33get%0A;timeRange=2021-08-03T21:34:50.082Z%2F2021-08-03T21:34:59.082Z;summaryFields=:false:32:beginning;cursorTimestamp=2021-08-03T21:34:51.189649752Z?project=wandb-production
+    data_path = f"{os.path.dirname(__file__)}/data/ygnwe8ptupj33get.decoded.json"
+    with open(data_path, "r") as f:
+        data = json.load(f)
+    _, _, _, y = bayes._construct_gp_data(
+        [SweepRun(**r) for r in data["jsonPayload"]["data"]["runs"]],
+        data["jsonPayload"]["data"]["config"],
+    )
+    np.testing.assert_array_less(np.abs(y + 98), 5)
+
+
+# search with 2 finished runs - metrics are ignored because they are boolean
+def test_runs_bayes_runs2_boolmetric():
+
+    config = SweepConfig(
+        {
+            "metric": {"name": "xloss", "goal": "minimize"},
+            "method": "bayes",
+            "parameters": {
+                "v2": {"min": 1, "max": 10},
+            },
+        }
+    )
+
+    r1 = SweepRun(
+        name="b",
+        state=RunState.finished,
+        history=[
+            {"xloss": True},
+        ],
+        config={"v2": {"value": 6}},
+        summary_metrics={"zloss": 1.2},
+    )
+    r2 = SweepRun(
+        name="b2",
+        state=RunState.finished,
+        config={"v2": {"value": 8}},
+        summary_metrics={"xloss": False},
+        history=[],
+    )
+
+    runs = [r1, r2]
+    for _ in range(200):
+        suggestion = next_run(config, runs)
+        suggestion.state = RunState.finished
+        runs.append(suggestion)
+
+    # should just choose random runs in this case as they are all imputed with the same value (zero)
+    # for the loss function
+    check_that_samples_are_from_the_same_distribution(
+        [run.config["v2"]["value"] for run in runs],
+        np.random.uniform(1, 10, 202),
+        np.linspace(1, 10, 11),
+    )

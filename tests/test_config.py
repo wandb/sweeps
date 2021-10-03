@@ -1,20 +1,11 @@
 import pytest
 import jsonschema
-from .. import config
+from sweeps import config
 
 
-def test_nvalid_sweep_config_nonuniform_array_elements_categorical():
-    invalid_config = {
-        "method": "grid",
-        "parameters": {
-            "v1": {"values": [None, 2, 3, "a", (2, 3), 3]},
-        },
-    }
+def test_invalid_sweep_config_nonuniform_array_elements_categorical():
 
-    with pytest.raises(jsonschema.ValidationError):
-        _ = config.SweepConfig(invalid_config)
-
-    invalid_config = {
+    valid_config = {
         "method": "grid",
         "parameters": {
             "v1": {"values": [None, 2, 3, "a", (2, 3)]},
@@ -22,7 +13,7 @@ def test_nvalid_sweep_config_nonuniform_array_elements_categorical():
     }
 
     # doesn't raise
-    _ = config.SweepConfig(invalid_config)
+    _ = config.SweepConfig(valid_config)
 
 
 def test_min_max_validation():
@@ -47,3 +38,12 @@ def test_negative_sigma_validation():
     }
     with pytest.raises(jsonschema.ValidationError):
         _ = config.SweepConfig(invalid_config)
+
+
+def test_missing_parameters_section():
+    invalid_config = {
+        "method": "random",
+    }
+
+    warnings = config.schema_violations_from_proposed_config(invalid_config)
+    assert len(warnings) == 1

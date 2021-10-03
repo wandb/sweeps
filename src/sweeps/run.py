@@ -1,5 +1,6 @@
-from typing import List, Optional, Union, Any, Dict
+from typing import Sequence, List, Optional, Union, Any, Dict
 from enum import Enum
+from numbers import Number
 import numpy as np
 import datetime
 
@@ -17,6 +18,19 @@ class RunState(str, Enum):
     failed = "failed"
     preempted = "preempted"
     preempting = "preempting"
+
+
+def is_number(x: Any) -> bool:
+    """Check if a value is a finite number."""
+    try:
+        return (
+            np.isscalar(x)
+            and np.isfinite(x)
+            and isinstance(x, Number)
+            and not isinstance(x, bool)
+        )
+    except TypeError:
+        return False
 
 
 class SweepRun(BaseModel):
@@ -62,8 +76,15 @@ class SweepRun(BaseModel):
         use_enum_values = True
         allow_population_by_field_name = True
 
-    def metric_history(self, metric_name: str) -> List[floating]:
-        return [d[metric_name] for d in self.history if metric_name in d]
+    def metric_history(
+        self, metric_name: str, filter_invalid: bool = False
+    ) -> List[floating]:
+        return [
+            d[metric_name]
+            for d in self.history
+            if metric_name in d
+            and not (filter_invalid and not is_number(d[metric_name]))
+        ]
 
     def summary_metric(self, metric_name: str) -> floating:
         if self.summary_metrics is None:
@@ -96,13 +117,7 @@ class SweepRun(BaseModel):
         if len(all_metrics) == 0:
             raise ValueError(f"Cannot extract metric {metric_name} from run")
 
-        def filter_func(x: Any) -> bool:
-            try:
-                return np.isscalar(x) and np.isfinite(x)
-            except TypeError:
-                return False
-
-        all_metrics = list(filter(filter_func, all_metrics))
+        all_metrics = list(filter(is_number, all_metrics))
 
         if len(all_metrics) == 0:
             raise ValueError("Run does not have any finite metric values")
@@ -116,13 +131,23 @@ def next_run(
     validate: bool = False,
     **kwargs,
 ) -> Optional[SweepRun]:
-    """Calculate the next run in a sweep.
+    return next_runs(sweep_config, runs, validate, 1, **kwargs)[0]
 
-    >>> suggested_run = next_run({
+
+def next_runs(
+    sweep_config: Union[dict, SweepConfig],
+    runs: List[SweepRun],
+    validate: bool = False,
+    n: int = 1,
+    **kwargs,
+) -> Sequence[Optional[SweepRun]]:
+    """Calculate the next runs in a sweep.
+
+    >>> suggested_run = next_runs({
     ...    'method': 'grid',
     ...    'parameters': {'a': {'values': [1, 2, 3]}}
     ... }, [])
-    >>> assert suggested_run.config['a']['value'] == 1
+    >>> assert suggested_run[0].config['a']['value'] == 1
 
     Args:
         sweep_config: The config for the sweep.
@@ -130,28 +155,46 @@ def next_run(
         validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
            If true, will raise a Validation error if `sweep_config` does not conform to
            the schema. If false, will attempt to run the sweep with an unvalidated schema.
+        n: the number of runs to return
 
     Returns:
-        The suggested run.
+        The suggested runs.
     """
 
-    from .grid_search import grid_search_next_run
-    from .random_search import random_search_next_run
-    from .bayes_search import bayes_search_next_run
+    from .grid_search import grid_search_next_runs
+    from .random_search import random_search_next_runs
+    from .bayes_search import bayes_search_next_runs
 
     # validate the sweep config
     if validate:
         sweep_config = SweepConfig(sweep_config)
 
-    # this access is safe due to the jsonschema
+    if "method" not in sweep_config:
+        raise ValueError("Sweep config must contain method section")
+
+    if "parameters" not in sweep_config:
+        raise ValueError("Sweep config must contain parameters section")
+
+    if not (
+        isinstance(sweep_config["parameters"], dict)
+        and len(sweep_config["parameters"]) > 0
+    ):
+        raise ValueError(
+            "Parameters section of sweep config must be a dict of at least length 1"
+        )
+
     method = sweep_config["method"]
 
     if method == "grid":
-        return grid_search_next_run(runs, sweep_config, validate=validate, **kwargs)
+        return grid_search_next_runs(
+            runs, sweep_config, validate=validate, n=n, **kwargs
+        )
     elif method == "random":
-        return random_search_next_run(sweep_config, validate=validate)
-    elif method == "bayes" or isinstance(method, dict) and "bayes" in method.keys():
-        return bayes_search_next_run(runs, sweep_config, validate=validate, **kwargs)
+        return random_search_next_runs(sweep_config, validate=validate, n=n)
+    elif method == "bayes":
+        return bayes_search_next_runs(
+            runs, sweep_config, validate=validate, n=n, **kwargs
+        )
     else:
         raise ValueError(
             f'Invalid search type {method}, must be one of ["grid", "random", "bayes"]'
