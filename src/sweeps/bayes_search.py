@@ -486,7 +486,13 @@ def next_sample_tpe(
     test_X: Optional[ArrayLike] = None,
     multivariate: Optional[bool] = False,
     bw_multiplier: Optional[floating] = 1.0,
-) -> Tuple[ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
+) -> Tuple[
+    ArrayLike,
+    Optional[floating],
+    Optional[floating],
+    Optional[floating],
+    Optional[floating],
+]:
 
     if X_bounds is None:
         hp_min = np.min(filtered_X, axis=0)
@@ -579,13 +585,19 @@ def bayes_search_next_run(
     if "metric" not in config:
         raise ValueError('Bayesian search requires "metric" section')
 
-    if isinstance(config["method"], dict):
-        model = config["method"]["bayes"]["model"]
-        if model not in ("gp", "tpe", "tpe_multi"):
-            raise ValueError("Invalid sweep configuration for bayes_search_next_run.")
-    else:
-        config["method"] = {"bayes": {"model": "gp"}}
+    if "method" not in config:
+        raise ValueError("Method must be specified")
+
+    if config["method"] == "bayes":
         model = "gp"
+    elif config["method"] == "bayes-tpe":
+        model = "tpe"
+    elif config["method"] == "bayes-tpe-multi":
+        model = "tpe_multi"
+    else:
+        raise ValueError(
+            'Invalid method for bayes_search_next_run, must be one of "bayes", "bayes-tpe", "bayes-tpe-multi"'
+        )
 
     goal = config["metric"]["goal"]
     metric_name = config["metric"]["name"]

@@ -566,38 +566,15 @@
       "description": "The project for this sweep"
     },
     "method": {
-      "description": "Possible values: bayes, random, grid",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "bayes",
-            "random",
-            "grid",
-            "custom"
-          ]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "bayes": {
-              "type": "object",
-              "properties": {
-                "model": {
-                  "type": "string",
-                  "description": "The model type for the Bayesian optimizer",
-                  "enum": [
-                    "gp",
-                    "tpe",
-                    "tpe_multi"
-                  ]
-                }
-              },
-              "required": ["model"]
-            }
-          },
-          "required": ["bayes"]
-        }
+      "description": "Possible values: bayes, random, grid, bayes-tpe, bayes-tpe-multi, custom",
+      "type": "string",
+      "enum": [
+        "bayes",
+        "random",
+        "grid",
+        "bayes-tpe",
+        "bayes-tpe-multi",
+        "custom"
       ]
     },
     "command": {

@@ -8,7 +8,9 @@ from sweeps.random_search import random_search_next_runs
 from sweeps.hyperband_stopping import hyperband_stop_runs
 
 
-@pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
+@pytest.mark.parametrize(
+    "search_type", ["bayes", "grid", "random", "bayes-tpe", "bayes-tpe-multi"]
+)
 def test_validation_disable(search_type):
     invalid_schema = {
         "metric": {"name": "loss", "goal": "minimise"},
@@ -26,7 +28,7 @@ def test_validation_disable(search_type):
         _ = hyperband_stop_runs([], invalid_schema, validate=True)
 
     with pytest.raises(ValidationError):
-        if search_type == "bayes":
+        if "bayes" in search_type:
             _ = bayes_search_next_runs([], invalid_schema, validate=True)
         elif search_type == "grid":
             _ = grid_search_next_runs([], invalid_schema, validate=True)
@@ -40,7 +42,7 @@ def test_validation_disable(search_type):
 
 def test_bayes_methods():
     schema = {
-        "method": {"bayes": {"model": "tpex"}},
+        "method": "bayes-tpex",
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {"a": {"min": 0, "max": 1, "distribution": "uniform"}},
     }
@@ -48,7 +50,7 @@ def test_bayes_methods():
         SweepConfig(schema)
 
     schema = {
-        "method": {"bayes": "gp"},
+        "method": "bayes-gp",
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {"a": {"min": 0, "max": 1, "distribution": "uniform"}},
     }
@@ -64,7 +66,7 @@ def test_bayes_methods():
         SweepConfig(schema)
 
     schema = {
-        "method": {"bayes": {"model": "tpe"}},
+        "method": "bayes-tpe",
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {"a": {"min": 0, "max": 1, "distribution": "uniform"}},
     }

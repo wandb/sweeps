@@ -212,15 +212,15 @@ def test_squiggle_convergence():
     run_iterations(squiggle, [[0.0, 5.0]], 200, x_init, optimium=[3.6], atol=0.2)
 
 
-@pytest.mark.parametrize("model", ["gp", "tpe", "tpe_multi"])
-def test_squiggle_convergence_to_maximum(model):
+@pytest.mark.parametrize("method", ["bayes", "bayes-tpe", "bayes-tpe-multi"])
+def test_squiggle_convergence_to_maximum(method):
     # This test checks whether the bayes algorithm correctly explores the parameter space
     # we sample a ton of positive examples, ignoring the negative side
     def f(x):
         return -squiggle(x)
 
     x_init = np.random.uniform(0, 5, 1)[:, None]
-    if model == "tpe" or model == "tpe_multi":
+    if method == "bayes-tpe" or method == "bayes-tpe-multi":
         improvement = 0.15
     else:
         improvement = 0.1
@@ -233,7 +233,7 @@ def test_squiggle_convergence_to_maximum(model):
         improvement=improvement,
         optimium=[2],
         atol=0.2,
-        model=model,
+        model=method,
     )
 
 
@@ -260,12 +260,12 @@ def test_squiggle_int():
     assert np.isclose(sample % 1, 0)
 
 
-@pytest.mark.parametrize("model", ["gp", "tpe", "tpe_multi"])
-def test_iterations_rosenbrock(model):
+@pytest.mark.parametrize("method", ["bayes", "bayes-tpe", "bayes-tpe-multi"])
+def test_iterations_rosenbrock(method):
     dimensions = 3
     # x_init = np.random.uniform(0, 2, size=(1, dimensions))
     x_init = np.zeros((1, dimensions))
-    if model == "tpe" or model == "tpe_multi":
+    if method == "bayes-tpe" or method == "bayes-tpe-multi":
         improvement = 0.15
     else:
         improvement = 0.1
@@ -278,7 +278,7 @@ def test_iterations_rosenbrock(model):
         optimium=[1, 1, 1],
         atol=0.2,
         improvement=improvement,
-        model=model,
+        model=method,
     )
 
 
