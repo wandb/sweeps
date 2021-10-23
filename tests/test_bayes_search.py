@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from typing import Callable, Optional, Tuple, Iterable, Dict, Union
 
 import pytest
@@ -157,6 +158,7 @@ def run_iterations(
                 improvement=improvement,
                 model=model,
                 bw_multiplier=bw_multiplier,
+                max_samples_for_model=100,
             )
             if sample_X is None:
                 sample_X = np.array([sample])
@@ -213,7 +215,7 @@ def test_squiggle_convergence():
 
 
 @pytest.mark.parametrize("method", ["bayes", "bayes-tpe", "bayes-tpe-multi"])
-def test_squiggle_convergence_to_maximum(method):
+def test_squiggle_convergence_to_maximum(method, capsys):
     # This test checks whether the bayes algorithm correctly explores the parameter space
     # we sample a ton of positive examples, ignoring the negative side
     def f(x):
@@ -225,16 +227,21 @@ def test_squiggle_convergence_to_maximum(method):
     else:
         improvement = 0.1
 
+    start = time.time()
     run_iterations(
         f,
         [[0.0, 5.0]],
-        200,
+        2000,
         x_init,
         improvement=improvement,
         optimium=[2],
         atol=0.2,
         model=method,
     )
+    stop = time.time()
+
+    with capsys.disabled():
+        print(f"took {stop-start:0.2f} seconds")
 
 
 def test_nans():
@@ -261,7 +268,7 @@ def test_squiggle_int():
 
 
 @pytest.mark.parametrize("method", ["bayes", "bayes-tpe", "bayes-tpe-multi"])
-def test_iterations_rosenbrock(method):
+def test_iterations_rosenbrock(method, capsys):
     dimensions = 3
     # x_init = np.random.uniform(0, 2, size=(1, dimensions))
     x_init = np.zeros((1, dimensions))
@@ -270,6 +277,7 @@ def test_iterations_rosenbrock(method):
     else:
         improvement = 0.1
 
+    start = time.time()
     run_iterations(
         rosenbrock,
         [[0.0, 2.0]] * dimensions,
@@ -280,6 +288,10 @@ def test_iterations_rosenbrock(method):
         improvement=improvement,
         model=method,
     )
+    stop = time.time()
+
+    with capsys.disabled():
+        print(f"took {stop-start:0.2f} seconds")
 
 
 def test_iterations_squiggle_chunked():

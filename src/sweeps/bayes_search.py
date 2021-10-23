@@ -269,7 +269,7 @@ def next_sample(
             np.nan,
         )
 
-    if model == "tpe":
+    if model == "bayes-tpe":
         return next_sample_tpe(
             filtered_X=filtered_X,
             filtered_y=filtered_y,
@@ -281,7 +281,7 @@ def next_sample(
             test_X=test_X,
             multivariate=False,
         )
-    elif model == "tpe_multi":
+    elif model == "bayes-tpe-multi":
         return next_sample_tpe(
             filtered_X=filtered_X,
             filtered_y=filtered_y,
@@ -667,13 +667,7 @@ def bayes_search_next_run(
     if "method" not in config:
         raise ValueError("Method must be specified")
 
-    if config["method"] == "bayes":
-        model = "gp"
-    elif config["method"] == "bayes-tpe":
-        model = "tpe"
-    elif config["method"] == "bayes-tpe-multi":
-        model = "tpe_multi"
-    else:
+    if config["method"] not in ["bayes", "bayes-tpe", "bayes-tpe-multi"]:
         raise ValueError(
             'Invalid method for bayes_search_next_run, must be one of "bayes", "bayes-tpe", "bayes-tpe-multi"'
         )
@@ -692,7 +686,7 @@ def bayes_search_next_run(
         sample_y=y,
         X_bounds=X_bounds,
         current_X=current_X if len(current_X) > 0 else None,
-        model=model,
+        model=config["method"],
         improvement=minimum_improvement,
     )
 
