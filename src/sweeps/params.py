@@ -45,7 +45,7 @@ class HyperParameter:
 
         self.name = name
 
-        result = fill_parameter(config)
+        result = fill_parameter(name, config)
         if result is None:
             raise jsonschema.ValidationError(
                 f"invalid hyperparameter configuration: {name}"

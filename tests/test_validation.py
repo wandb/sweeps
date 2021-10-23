@@ -1,7 +1,11 @@
 import pytest
 from jsonschema import ValidationError
 from sweeps import next_run, stop_runs, SweepRun
-from sweeps.config import SweepConfig, schema_violations_from_proposed_config
+from sweeps.config import (
+    SweepConfig,
+    schema_violations_from_proposed_config,
+    fill_parameter,
+)
 from sweeps.bayes_search import bayes_search_next_runs
 from sweeps.grid_search import grid_search_next_runs
 from sweeps.random_search import random_search_next_runs
@@ -149,3 +153,10 @@ def test_invalid_run_parameter():
 
     with pytest.raises(ValueError):
         next_run(config, runs, validate=False)
+
+
+def test_invalid_minmax_with_no_sweepconfig_validation():
+    config = {"method": "random", "parameters": {"a": {"max": 0, "min": 1}}}
+
+    with pytest.raises(ValueError):
+        fill_parameter("a", config["parameters"]["a"])
