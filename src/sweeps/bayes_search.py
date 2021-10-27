@@ -320,7 +320,7 @@ def next_sample_gp(
     num_points_to_try: integer = 1000,
     opt_func: str = "expected_improvement",
     test_X: Optional[ArrayLike] = None,
-) -> Tuple[ArrayLike, floating, floating, Optional[floating], Optional[floating]]:
+) -> Tuple[ArrayLike, floating, floating, floating, floating]:
     # build the acquisition function
     gp, y_mean, y_stddev, = train_gaussian_process(
         filtered_X, filtered_y, X_bounds, current_X, nu, max_samples_for_model
@@ -486,13 +486,7 @@ def next_sample_tpe(
     test_X: Optional[ArrayLike] = None,
     multivariate: Optional[bool] = False,
     bw_multiplier: Optional[floating] = 1.0,
-) -> Tuple[
-    ArrayLike,
-    Optional[floating],
-    Optional[floating],
-    Optional[floating],
-    Optional[floating],
-]:
+) -> Tuple[ArrayLike, floating, floating, floating, floating]:
 
     if X_bounds is None:
         hp_min = np.min(filtered_X, axis=0)
@@ -507,9 +501,7 @@ def next_sample_tpe(
     num_hp = len(X_bounds)
     if multivariate:
         low_mus = low_X.copy()
-        low_sigmas = np.zeros((len(low_X), num_hp))
         high_mus = high_X.copy()
-        high_sigmas = np.zeros((len(high_X), num_hp))
 
         low_sigmas = fit_parzen_estimator_scott_bw(low_X, X_bounds, bw_multiplier)
         high_sigmas = fit_parzen_estimator_scott_bw(high_X, X_bounds)
@@ -544,12 +536,13 @@ def next_sample_tpe(
             )
             best_sample[i] = new_samples[np.argmax(low_llik - high_llik)]
 
+    # TODO: replace nans with actual values
     return (
         best_sample,
-        None,
-        None,
-        None,
-        None,
+        np.nan,
+        np.nan,
+        np.nan,
+        np.nan,
     )
 
 
