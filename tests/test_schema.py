@@ -2,6 +2,7 @@ import pytest
 import jsonschema
 from sweeps.params import HyperParameter
 from sweeps.config import SweepConfig, fill_validate_early_terminate
+from sweeps.config.schema import fill_validate_metric
 from sweeps.hyperband_stopping import hyperband_baseline_validate_and_fill
 
 
@@ -230,3 +231,14 @@ def test_hyperband_incremental_corrects_goal():
     sc = hyperband_baseline_validate_and_fill(config)
     assert sc["early_terminate"]["eta"] == 3
     assert sc["metric"]["goal"] == "minimize"
+
+
+def test_invalid_metric():
+    config = {
+        "method": "grid",
+        "metric": "{'goal': 'maximize', 'name': 'val/loss'}",
+        "parameters": {"a": {"values": [1, 2, 3, 4]}},
+    }
+
+    with pytest.raises(ValueError):
+        fill_validate_metric(config)

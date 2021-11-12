@@ -109,6 +109,10 @@ def fill_validate_metric(d: Dict) -> Dict:
     d = deepcopy(d)
 
     if "metric" in d:
+        if not isinstance(d["metric"], dict):
+            raise ValueError(
+                f"invalid type for metric: expected dict, got {type(d['metric'])}"
+            )
         if "goal" in d["metric"]:
             if (
                 d["metric"]["goal"]
