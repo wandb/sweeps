@@ -565,16 +565,21 @@
       ]
     },
     "controller": {
-	"type": "object",
-	"properties": {
-	    "type": {
-		"type": "string",
-		"description": "Which controller to use, local or cloud",
-		"enum": ["local", "cloud"],
-		"default": "cloud"
-	    }
-	},
-	"required": ["type"]
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Which controller to use, local or cloud",
+          "enum": [
+            "local",
+            "cloud"
+          ],
+          "default": "cloud"
+        }
+      },
+      "required": [
+        "type"
+      ]
     },
     "description": {
       "type": "string",

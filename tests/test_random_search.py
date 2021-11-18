@@ -230,9 +230,11 @@ def test_rand_inv_loguniform(plot):
         runs.append(suggestion)
 
     pred_samples = np.asarray([run.config["v2"]["value"] for run in runs])
-    true_samples = np.random.uniform(np.log(1/v2_max), np.log(1/v2_min), size=n_samples)
+    true_samples = np.random.uniform(
+        np.log(1 / v2_max), np.log(1 / v2_min), size=n_samples
+    )
     true_samples = np.exp(true_samples)
-    true_samples = 1/true_samples
+    true_samples = 1 / true_samples
 
     # the lhs needs to be >= 0 because
     bins = np.logspace(np.log10(v2_min), np.log10(v2_max), 10)
