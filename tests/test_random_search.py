@@ -204,6 +204,48 @@ def test_rand_loguniform(plot):
     assert pred_samples.max() <= v2_max
 
 
+def test_rand_inv_loguniform(plot):
+    # Calculates that the
+
+    v2_min = 0.5
+    v2_max = 1.0
+    n_samples = 1000
+
+    sweep_config_2params = SweepConfig(
+        {
+            "method": "random",
+            "parameters": {
+                "v2": {
+                    "min": v2_min,
+                    "max": v2_max,
+                    "distribution": "inv_log_uniform",
+                },
+            },
+        }
+    )
+
+    runs = []
+    for i in range(n_samples):
+        suggestion = next_run(sweep_config_2params, runs)
+        runs.append(suggestion)
+
+    pred_samples = np.asarray([run.config["v2"]["value"] for run in runs])
+    true_samples = np.random.uniform(np.log(1/v2_max), np.log(1/v2_min), size=n_samples)
+    true_samples = np.exp(true_samples)
+    true_samples = 1/true_samples
+
+    # the lhs needs to be >= 0 because
+    bins = np.logspace(np.log10(v2_min), np.log10(v2_max), 10)
+
+    if plot:
+        plot_two_distributions(true_samples, pred_samples, bins, xscale="log")
+
+    check_that_samples_are_from_the_same_distribution(pred_samples, true_samples, bins)
+
+    assert pred_samples.min() >= v2_min
+    assert pred_samples.max() <= v2_max
+
+
 @pytest.mark.parametrize("q", [0.1, 1, 10])
 def test_rand_q_lognormal(q, plot):
 

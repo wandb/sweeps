@@ -286,6 +286,30 @@
       },
       "additionalProperties": false
     },
+    "param_inv_loguniform": {
+      "type": "object",
+      "description": "inverse log uniform distribution",
+      "required": [
+        "distribution",
+        "max",
+        "min"
+      ],
+      "properties": {
+        "min": {
+          "description": "float",
+          "type": "number"
+        },
+        "max": {
+          "description": "float",
+          "type": "number"
+        },
+        "distribution": {
+          "enum": [
+            "inv_log_uniform"
+          ]
+        }
+      }
+    },
     "param_quniform": {
       "type": "object",
       "description": "quantized uniform distribution function.",
@@ -449,6 +473,9 @@
         },
         {
           "$ref": "#/definitions/param_loguniform"
+        },
+        {
+          "$ref": "#/definitions/param_inv_loguniform"
         },
         {
           "$ref": "#/definitions/param_normal"
