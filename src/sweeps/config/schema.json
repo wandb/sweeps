@@ -309,7 +309,8 @@
             "inv_log_uniform"
           ]
         }
-      }
+      },
+      "additionalProperties": false
     },
     "param_quniform": {
       "type": "object",
