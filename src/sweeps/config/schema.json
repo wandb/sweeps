@@ -297,13 +297,11 @@
       "properties": {
         "min": {
           "description": "float",
-          "type": "number",
-          "exclusiveMinimum": 0
+          "type": "number"
         },
         "max": {
           "description": "float",
-          "type": "number",
-          "exclusiveMinimum": 0
+          "type": "number"
         },
         "distribution": {
           "enum": [

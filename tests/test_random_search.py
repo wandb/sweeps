@@ -207,7 +207,6 @@ def test_rand_loguniform(plot):
 def test_rand_inv_loguniform(plot):
     # Calculates that the
 
-    v2_min = 0.5
     v2_max = 1e3
     v2_min = 1e-3
     n_samples = 1000
@@ -217,8 +216,8 @@ def test_rand_inv_loguniform(plot):
             "method": "random",
             "parameters": {
                 "v2": {
-                    "min": v2_min,
-                    "max": v2_max,
+                    "min": np.log(v2_min),
+                    "max": np.log(v2_max),
                     "distribution": "inv_log_uniform",
                 },
             },
