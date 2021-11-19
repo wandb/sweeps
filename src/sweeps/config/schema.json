@@ -297,7 +297,8 @@
       "properties": {
         "min": {
           "description": "float",
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         },
         "max": {
           "description": "float",
