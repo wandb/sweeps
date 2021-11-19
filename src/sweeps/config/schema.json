@@ -302,7 +302,8 @@
         },
         "max": {
           "description": "float",
-          "type": "number"
+          "type": "number",
+          "exclusiveMinimum": 0
         },
         "distribution": {
           "enum": [
