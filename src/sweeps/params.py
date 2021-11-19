@@ -194,8 +194,8 @@ class HyperParameter:
             return 1.0 / np.exp(
                 stats.uniform.ppf(
                     1 - x,
-                    np.log(1.0 / np.exp(self.config["max"])),
-                    np.log(1.0 / np.exp(self.config["min"])) - np.log(1.0 / np.exp(self.config["max"])),
+                    -self.config["max"],
+                    self.config["max"] - self.config["min"],
                 )
             )
         elif self.type == HyperParameter.Q_LOG_UNIFORM:
