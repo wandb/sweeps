@@ -205,19 +205,23 @@ def test_rand_loguniform(plot):
 
 
 def test_rand_inv_loguniform(plot):
-    # Calculates that the
 
-    v2_max = 1e3
-    v2_min = 1e-3
-    n_samples = 1000
+    # samples of v2 are between 1e-15 and 1e20
+    v2_min = 1e-15
+    v2_max = 1e20
+
+    # limits for sweep config are in log(1/x) space
+    limit_min = np.log(1 / v2_max)
+    limit_max = np.log(1 / v2_min)
+    n_samples = 10000
 
     sweep_config_2params = SweepConfig(
         {
             "method": "random",
             "parameters": {
                 "v2": {
-                    "min": np.log(v2_min),
-                    "max": np.log(v2_max),
+                    "min": limit_min,
+                    "max": limit_max,
                     "distribution": "inv_log_uniform",
                 },
             },
@@ -230,9 +234,7 @@ def test_rand_inv_loguniform(plot):
         runs.append(suggestion)
 
     pred_samples = np.asarray([run.config["v2"]["value"] for run in runs])
-    true_samples = np.random.uniform(
-        np.log(1 / v2_max), np.log(1 / v2_min), size=n_samples
-    )
+    true_samples = np.random.uniform(limit_min, limit_max, size=n_samples)
     true_samples = np.exp(true_samples)
     true_samples = 1 / true_samples
 
