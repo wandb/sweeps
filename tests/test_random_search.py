@@ -1,6 +1,7 @@
 import pytest
 
 from sweeps.config import SweepConfig
+from sweeps.params import HyperParameter
 import numpy as np
 from sweeps.run import next_run
 from sweeps._types import ArrayLike
@@ -215,15 +216,17 @@ def test_rand_inv_loguniform(plot):
     limit_max = np.log(1 / v2_min)
     n_samples = 10000
 
+    param_config = {
+        "min": limit_min,
+        "max": limit_max,
+        "distribution": "inv_log_uniform",
+    }
+
     sweep_config_2params = SweepConfig(
         {
             "method": "random",
             "parameters": {
-                "v2": {
-                    "min": limit_min,
-                    "max": limit_max,
-                    "distribution": "inv_log_uniform",
-                },
+                "v2": param_config,
             },
         }
     )
@@ -248,6 +251,44 @@ def test_rand_inv_loguniform(plot):
 
     assert pred_samples.min() >= v2_min
     assert pred_samples.max() <= v2_max
+
+    # use more bins to check that the CDF is correct
+    bins = np.logspace(np.log10(v2_min), np.log10(v2_max), 100)
+    n, _ = np.histogram(true_samples, bins=bins)
+    cdf_empirical = np.cumsum(n) / np.sum(n)
+    bin_centers = 0.5 * (bins[1:] + bins[:-1])
+
+    hyperparameter = HyperParameter("inv_log_uniform", param_config)
+    cdf_pred = hyperparameter.cdf(bin_centers)
+
+    if plot:
+        import matplotlib.pyplot as plt
+        import inspect
+
+        fig, ax = plt.subplots()
+        ax.step(
+            bin_centers,
+            cdf_empirical,
+            label="true",
+        )
+        ax.step(
+            bin_centers,
+            cdf_pred,
+            label="pred",
+        )
+        ax.legend()
+        ax.set_xscale("log")
+        ax.tick_params(which="both", axis="both", direction="in")
+        current_test = os.environ.get("PYTEST_CURRENT_TEST")
+        if current_test is None:
+            current_test = inspect.stack()[1].function
+        else:
+            current_test = current_test.split(":")[-1].split(" ")[0]
+        fname = f"{current_test}.cdf.pdf"
+        fig.savefig(test_results_dir / fname)
+
+    # assert that the cdfs are within 0.01 everywhere
+    np.testing.assert_array_less(np.abs(cdf_pred - cdf_empirical), 0.01)
 
 
 @pytest.mark.parametrize("q", [0.1, 1, 10])
