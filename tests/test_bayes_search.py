@@ -150,7 +150,7 @@ def run_iterations(
         for cc in range(chunk_size):
             if counter >= num_iterations:
                 break
-            (sample, prob, pred, _, _,) = bayes.next_sample(
+            (sample, prob, pred, pred_std, exp_imp) = bayes.next_sample(
                 sample_X=X,
                 sample_y=y,
                 X_bounds=bounds,
@@ -166,8 +166,8 @@ def run_iterations(
                 sample_X = np.append(sample_X, np.array([sample]), axis=0)
             counter += 1
             print(
-                "X: {} prob(I): {} pred: {} value: {}".format(
-                    sample, prob, pred, f(sample)
+                "X: {} prob(I): {} EI: {} pred: {} value: {} pred_std: {}".format(
+                    sample, prob, exp_imp, pred, f(sample), pred_std
                 )
             )
 

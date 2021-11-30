@@ -477,6 +477,24 @@ def parzen_threshold(y, gamma):
     return ret_val
 
 
+def stats_from_parzen_estimator(low_llik, high_llik, y, gamma, low_ind):
+    gamma_rescaled = np.sum(low_ind)/len(y)
+    y_star = (np.min(y[np.logical_not(low_ind)]) + np.max(y[low_ind]))/2.0
+    unnorm_mean_low_y = np.sum(y[low_ind]) / len(y)
+    unnorm_mean_high_y = np.mean(y) - unnorm_mean_low_y
+    unnorm_mean_low_y_sq = np.sum(np.square(y[low_ind])) / len(y)
+    unnorm_mean_high_y_sq = np.mean(np.square(y)) - unnorm_mean_low_y_sq
+    l_of_x = np.exp(low_llik)
+    g_of_x = np.exp(high_llik)
+    p_of_x = gamma_rescaled * l_of_x + (1-gamma_rescaled) * g_of_x
+    y_pred = (l_of_x * unnorm_mean_low_y + g_of_x * unnorm_mean_high_y) / p_of_x
+    y_sq_pred = (l_of_x * unnorm_mean_low_y_sq + g_of_x * unnorm_mean_high_y_sq) / p_of_x
+    y_std = np.sqrt(y_sq_pred - y_pred * y_pred)
+    prob_of_improvement = l_of_x * gamma_rescaled / p_of_x
+    expected_improvement = l_of_x * (gamma_rescaled * y_star - unnorm_mean_low_y) / p_of_x
+    return prob_of_improvement, y_pred, y_std, expected_improvement
+
+
 def next_sample_tpe(
     filtered_X: ArrayLike,
     filtered_y: ArrayLike,
@@ -487,7 +505,7 @@ def next_sample_tpe(
     num_points_to_try: integer = 1000,
     test_X: Optional[ArrayLike] = None,
     multivariate: Optional[bool] = False,
-    bw_multiplier: Optional[floating] = 1.0,
+    bw_multiplier: Optional[floating] = 0.2,
 ) -> Tuple[ArrayLike, floating, floating, floating, floating]:
 
     if X_bounds is None:
@@ -506,7 +524,7 @@ def next_sample_tpe(
         high_mus = high_X.copy()
 
         low_sigmas = fit_parzen_estimator_scott_bw(low_X, X_bounds, bw_multiplier)
-        high_sigmas = fit_parzen_estimator_scott_bw(high_X, X_bounds)
+        high_sigmas = fit_parzen_estimator_scott_bw(high_X, X_bounds, bw_multiplier)
 
         new_samples = sample_from_parzen_estimator(
             low_mus, low_sigmas, X_bounds, num_points_to_try
@@ -518,10 +536,15 @@ def next_sample_tpe(
             new_samples, high_mus, high_sigmas, X_bounds
         )
         score = low_llik - high_llik
-        best_sample = new_samples[np.argmax(score), :]
+        best_index = np.argmax(score)
+        best_sample = new_samples[best_index, :]
+        best_low_llik = low_llik[best_index]
+        best_high_llik = high_llik[best_index]
     else:
         # Fit separate 1D Parzen estimators to each hyperparameter
         best_sample = np.zeros(num_hp)
+        best_low_llik = 0
+        best_high_llik = 0
         for i in range(num_hp):
             low_mus = low_X[:, i]
             high_mus = high_X[:, i]
@@ -536,15 +559,20 @@ def next_sample_tpe(
             high_llik = llik_from_1D_parzen_estimator(
                 new_samples, high_mus, high_sigmas, X_bounds[i]
             )
-            best_sample[i] = new_samples[np.argmax(low_llik - high_llik)]
+            best_index = np.argmax(low_llik - high_llik)
+            best_sample[i] = new_samples[best_index]
+            best_low_llik += low_llik[best_index]
+            best_high_llik += high_llik[best_index]
+
+    (prob_of_improvement, predicted_y, predicted_std, expected_improvement) = stats_from_parzen_estimator(best_low_llik, best_high_llik, filtered_y, improvement, low_ind)
 
     # TODO: replace nans with actual values
     return (
         best_sample,
-        np.nan,
-        np.nan,
-        np.nan,
-        np.nan,
+        prob_of_improvement,
+        predicted_y,
+        predicted_std,
+        expected_improvement,
     )
 
 
