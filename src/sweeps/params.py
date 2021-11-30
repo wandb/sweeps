@@ -122,8 +122,8 @@ class HyperParameter:
         elif self.type == HyperParameter.INV_LOG_UNIFORM:
             return 1 - stats.uniform.cdf(
                 np.log(1 / x),
-                1 / np.exp(self.config["max"]),
-                1 / np.exp(self.config["min"]) - 1 / np.exp(self.config["max"]),
+                self.config["min"],
+                self.config["max"] - self.config["min"],
             )
         elif self.type == HyperParameter.NORMAL or self.type == HyperParameter.Q_NORMAL:
             return stats.norm.cdf(x, loc=self.config["mu"], scale=self.config["sigma"])
@@ -191,10 +191,10 @@ class HyperParameter:
                 )
             )
         elif self.type == HyperParameter.INV_LOG_UNIFORM:
-            return 1.0 / np.exp(
-                stats.uniform.ppf(
+            return np.exp(
+                -stats.uniform.ppf(
                     1 - x,
-                    -self.config["max"],
+                    self.config["min"],
                     self.config["max"] - self.config["min"],
                 )
             )
