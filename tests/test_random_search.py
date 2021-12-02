@@ -214,7 +214,7 @@ def test_rand_inv_loguniform(plot):
     # limits for sweep config are in log(1/x) space
     limit_min = np.log(1 / v2_max)
     limit_max = np.log(1 / v2_min)
-    n_samples = 10000
+    n_samples = 20000
 
     param_config = {
         "min": limit_min,
