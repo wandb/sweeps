@@ -287,8 +287,8 @@ def test_rand_inv_loguniform(plot):
         fname = f"{current_test}.cdf.pdf"
         fig.savefig(test_results_dir / fname)
 
-    # assert that the cdfs are within 0.01 everywhere
-    np.testing.assert_array_less(np.abs(cdf_pred - cdf_empirical), 0.01)
+    # assert that the cdfs are within 0.03 everywhere
+    np.testing.assert_array_less(np.abs(cdf_pred - cdf_empirical), 0.03)
 
 
 @pytest.mark.parametrize("q", [0.1, 1, 10])
