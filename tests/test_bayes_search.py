@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from typing import Callable, Optional, Tuple, Iterable, Dict, Union
 
 import pytest
@@ -21,6 +22,36 @@ def squiggle(x: ArrayLike) -> np.floating:
 def rosenbrock(x: ArrayLike) -> np.floating:
     # has a minimum at (1, 1, 1, 1, ...) for 4 <= ndim <= 7
     return np.sum((x[1:] - x[:-1] ** 2.0) ** 2.0 + (1 - x[:-1]) ** 2.0)
+
+
+rastrigin_A = 10.0
+
+
+def rastrigin(x: ArrayLike) -> np.floating:
+    # has a global minimum at (1, 1, 1, ...) with x_i \in [-4.12, 6.12]
+    return rastrigin_A * len(x) + np.sum(
+        np.square(x - 1.0) - rastrigin_A * np.cos(2 * np.pi * (x - 1.0))
+    )
+
+
+shekel_beta = np.array([0.1, 0.2, 0.2, 0.4, 0.4, 0.6, 0.3, 0.7, 0.5, 0.5])
+shekel_C = np.array(
+    [
+        [4.0, 1.0, 8.0, 6.0, 3.0, 2.0, 5.0, 8.0, 6.0, 7.0],
+        [4.0, 1.0, 8.0, 6.0, 7.0, 9.0, 3.0, 1.0, 2.0, 3.6],
+        [4.0, 1.0, 8.0, 6.0, 3.0, 2.0, 5.0, 8.0, 6.0, 7.0],
+        [4.0, 1.0, 8.0, 6.0, 7.0, 9.0, 3.0, 1.0, 2.0, 3.6],
+    ]
+).T
+shekel_min = -10.5364
+
+
+def shekel(x: ArrayLike) -> np.floating:
+    # Four minima in bounding region [[0,10]]*4
+    return (
+        -np.sum(np.reciprocal(np.sum(np.square(shekel_C - x), axis=1) + shekel_beta))
+        - shekel_min
+    )
 
 
 def run_bayes_search(
@@ -101,12 +132,15 @@ def run_iterations(
     optimium: Optional[ArrayLike] = None,
     atol: Optional[ArrayLike] = 0.2,
     chunk_size: integer = 1,
+    model: str = "gp",
+    bw_multiplier: floating = 1.0,
 ) -> Tuple[ArrayLike, ArrayLike]:
 
+    bounds = np.array(bounds)
     if x_init is not None:
         X = x_init
     else:
-        X = [np.zeros(len(bounds))]
+        X = [np.random.uniform(low=bounds[:, 0], high=bounds[:, 1])]
 
     y = np.array([f(x) for x in X]).flatten()
 
@@ -116,12 +150,15 @@ def run_iterations(
         for cc in range(chunk_size):
             if counter >= num_iterations:
                 break
-            (sample, prob, pred, _, _,) = bayes.next_sample(
+            (sample, prob, pred, pred_std, exp_imp) = bayes.next_sample(
                 sample_X=X,
                 sample_y=y,
                 X_bounds=bounds,
                 current_X=sample_X,
                 improvement=improvement,
+                model=model,
+                bw_multiplier=bw_multiplier,
+                max_samples_for_model=100,
             )
             if sample_X is None:
                 sample_X = np.array([sample])
@@ -129,8 +166,8 @@ def run_iterations(
                 sample_X = np.append(sample_X, np.array([sample]), axis=0)
             counter += 1
             print(
-                "X: {} prob(I): {} pred: {} value: {}".format(
-                    sample, prob, pred, f(sample)
+                "X: {} prob(I): {} EI: {} pred: {} value: {} pred_std: {}".format(
+                    sample, prob, exp_imp, pred, f(sample), pred_std
                 )
             )
 
@@ -177,14 +214,34 @@ def test_squiggle_convergence():
     run_iterations(squiggle, [[0.0, 5.0]], 200, x_init, optimium=[3.6], atol=0.2)
 
 
-def test_squiggle_convergence_to_maximum():
+@pytest.mark.parametrize("method", ["bayes", "bayes-tpe", "bayes-tpe-multi"])
+def test_squiggle_convergence_to_maximum(method, capsys):
     # This test checks whether the bayes algorithm correctly explores the parameter space
     # we sample a ton of positive examples, ignoring the negative side
     def f(x):
         return -squiggle(x)
 
     x_init = np.random.uniform(0, 5, 1)[:, None]
-    run_iterations(f, [[0.0, 5.0]], 200, x_init, optimium=[2], atol=0.2)
+    if method == "bayes-tpe" or method == "bayes-tpe-multi":
+        improvement = 0.15
+    else:
+        improvement = 0.1
+
+    start = time.time()
+    run_iterations(
+        f,
+        [[0.0, 5.0]],
+        2000,
+        x_init,
+        improvement=improvement,
+        optimium=[2],
+        atol=0.2,
+        model=method,
+    )
+    stop = time.time()
+
+    with capsys.disabled():
+        print(f"took {stop-start:0.2f} seconds")
 
 
 def test_nans():
@@ -210,10 +267,17 @@ def test_squiggle_int():
     assert np.isclose(sample % 1, 0)
 
 
-def test_iterations_rosenbrock():
+@pytest.mark.parametrize("method", ["bayes", "bayes-tpe", "bayes-tpe-multi"])
+def test_iterations_rosenbrock(method, capsys):
     dimensions = 3
     # x_init = np.random.uniform(0, 2, size=(1, dimensions))
     x_init = np.zeros((1, dimensions))
+    if method == "bayes-tpe" or method == "bayes-tpe-multi":
+        improvement = 0.15
+    else:
+        improvement = 0.1
+
+    start = time.time()
     run_iterations(
         rosenbrock,
         [[0.0, 2.0]] * dimensions,
@@ -221,8 +285,13 @@ def test_iterations_rosenbrock():
         x_init,
         optimium=[1, 1, 1],
         atol=0.2,
-        improvement=0.1,
+        improvement=improvement,
+        model=method,
     )
+    stop = time.time()
+
+    with capsys.disabled():
+        print(f"took {stop-start:0.2f} seconds")
 
 
 def test_iterations_squiggle_chunked():
@@ -870,7 +939,7 @@ def test_metric_extremum_in_bayes_search():
     data_path = f"{os.path.dirname(__file__)}/data/ygnwe8ptupj33get.decoded.json"
     with open(data_path, "r") as f:
         data = json.load(f)
-    _, _, _, y = bayes._construct_gp_data(
+    _, _, _, y = bayes._construct_bayes_data(
         [SweepRun(**r) for r in data["jsonPayload"]["data"]["runs"]],
         data["jsonPayload"]["data"]["config"],
     )
