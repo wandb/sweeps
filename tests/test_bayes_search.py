@@ -1,6 +1,6 @@
 import os
 import json
-from typing import Callable, Optional, Tuple, Iterable, Dict, Union
+from typing import Callable, Optional, Tuple, Iterable, Dict
 
 import pytest
 import numpy as np
@@ -30,7 +30,7 @@ def run_bayes_search(
     improvement: floating = 0.1,
     num_iterations: integer = 20,
     optimium: Optional[Dict[str, floating]] = None,
-    atol: Optional[Union[Dict[str, floating], floating]] = 0.2,
+    atol: float = 0.2,
 ):
 
     metric_name = config["metric"]["name"]
@@ -99,7 +99,7 @@ def run_iterations(
     x_init: Optional[ArrayLike] = None,
     improvement: floating = 0.1,
     optimium: Optional[ArrayLike] = None,
-    atol: Optional[ArrayLike] = 0.2,
+    atol: float = 0.2,
     chunk_size: integer = 1,
 ) -> Tuple[ArrayLike, ArrayLike]:
 
@@ -134,8 +134,10 @@ def run_iterations(
                 )
             )
 
+        assert sample_X is not None
+        sample_X = np.asarray(sample_X, dtype=np.float64)
+
         X = np.append(X, sample_X, axis=0)
-        print(X[np.argmin(y)])
         y = np.array([f(x) for x in X]).flatten()
 
     if optimium is not None:
