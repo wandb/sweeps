@@ -81,10 +81,49 @@ jobs:
           name: Run tests
           command: pip install tox==3.24.0 && tox -e py39
     resource_class: large
-  linters:
+  linters36:
+    executor:
+      name: python/default
+      tag: "3.6"
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: pip install -r requirements.dev.txt
+      - run:
+          pre-commit run --all-files
+      - run:
+          mypy --ignore-missing-imports --scripts-are-modules .
+  linters37:
+    executor:
+      name: python/default
+      tag: "3.7"
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: pip install -r requirements.dev.txt
+      - run:
+          pre-commit run --all-files
+      - run:
+          mypy --ignore-missing-imports --scripts-are-modules .
+  linters38:
     executor:
       name: python/default
       tag: "3.8"
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: pip install -r requirements.dev.txt
+      - run:
+          pre-commit run --all-files
+      - run:
+          mypy --ignore-missing-imports --scripts-are-modules .
+  linters39:
+    executor:
+      name: python/default
+      tag: "3.9"
     steps:
       - checkout
       - run:
@@ -102,4 +141,7 @@ workflows:
       - linux37
       - linux38
       - linux39
-      - linters
+      - linters36
+      - linters37
+      - linters38
+      - linters39
