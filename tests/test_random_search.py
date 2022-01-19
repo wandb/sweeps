@@ -75,6 +75,33 @@ def plot_two_distributions(
     fig.savefig(test_results_dir / fname)
 
 
+@pytest.mark.parametrize(
+    "values,probs",
+    [
+        (list(range(5)), [0.2, 0.2, 0.2, 0.2, 0.2]),
+        (list(range(3)), [0.5, 0.0, 0.5]),
+        (list(range(5)), [0.1, 0.25, 0.15, 0.2, 0.3]),
+    ],
+)
+def test_rand_categorical(values, probs):
+    n_samples = 1000
+    HyperParameter("categorical", dict(values=values, probabilities=probs))
+    sweep_config_2params = SweepConfig(
+        {
+            "method": "random",
+            "parameters": {"v1": {"values": values, "probabilities": probs}},
+        }
+    )
+    runs = []
+    for i in range(n_samples):
+        suggestion = next_run(sweep_config_2params, runs)
+        runs.append(suggestion)
+    pred_samples = [run.config["v1"]["value"] for run in runs]
+    for i, v in enumerate(values):
+        expected = n_samples * probs[i]
+        assert abs(pred_samples.count(v) - expected) <= 3 * np.sqrt(expected)
+
+
 def test_rand_uniform(plot):
 
     v1_min = 3.0

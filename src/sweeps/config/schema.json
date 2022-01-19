@@ -17,6 +17,10 @@
           "description": "Discrete values",
           "minItems": 1
         },
+        "probabilities": {
+          "type": "array",
+          "description": "Probability of each value"
+        },
         "distribution": {
           "enum": [
             "categorical"

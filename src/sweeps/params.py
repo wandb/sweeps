@@ -97,13 +97,16 @@ class HyperParameter:
         Args:
              x: Parameter values to calculate the CDF for. Can be scalar or 1-d.
         Returns:
-            Probability that a random sample of this hyperparameter will be less than x.
+            Probability that a random sample of this hyperparameter will be less 
+            than or equal to x.
         """
         if self.type == HyperParameter.CONSTANT:
             return np.zeros_like(x)
         elif self.type == HyperParameter.CATEGORICAL:
             # NOTE: Indices expected for categorical parameters, not values.
-            return stats.randint.cdf(x, 0, len(self.config["values"]))
+            if not self.config.get("probabilities"):
+                return stats.randint.cdf(x, 0, len(self.config["values"]))
+            return np.cumsum(self.config["probabilities"])[x]
         elif self.type == HyperParameter.INT_UNIFORM:
             return stats.randint.cdf(x, self.config["min"], self.config["max"] + 1)
         elif (
@@ -156,15 +159,28 @@ class HyperParameter:
         if self.type == HyperParameter.CONSTANT:
             return self.config["value"]
         elif self.type == HyperParameter.CATEGORICAL:
-            retval = [
-                self.config["values"][i]
-                for i in np.atleast_1d(
-                    stats.randint.ppf(x, 0, len(self.config["values"])).astype(int)
-                ).tolist()
-            ]
+            if not self.config.get("probabilities"):
+                # Samples uniformly over the values
+                retval = [
+                    self.config["values"][i]
+                    for i in np.atleast_1d(
+                        stats.randint.ppf(x, 0, len(self.config["values"])).astype(int)
+                    ).tolist()
+                ]
+                if np.isscalar(x):
+                    return retval[0]
+                return retval
+            # Samples by specified categorical distribution if specified
+            cdf = np.cumsum(self.config["probabilities"])
             if np.isscalar(x):
-                return retval[0]
-            return retval
+                return self.config["values"][np.argmin(x >= cdf, axis=-1)]
+            else:
+                return [
+                    self.config["values"][i] for i in [
+                        np.argmin(cdf >= p) for p in x 
+                    ]
+                ]
+
         elif self.type == HyperParameter.INT_UNIFORM:
             return (
                 stats.randint.ppf(x, self.config["min"], self.config["max"] + 1)
