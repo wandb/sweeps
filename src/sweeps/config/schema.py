@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 from copy import deepcopy
 
+from pytest import param
+
 sweep_config_jsonschema_fname = Path(__file__).parent / "schema.json"
 with open(sweep_config_jsonschema_fname, "r") as f:
     sweep_config_jsonschema = json.load(f)
@@ -102,6 +104,21 @@ def validate_min_max(parameter_name: str, parameter_config: Dict) -> None:
             raise ValueError(
                 f'{parameter_name}: min {parameter_config["min"]} is not '
                 f'less than max {parameter_config["max"]}'
+            )
+
+
+def validate_categorical_prob(parameter_name: str, parameter_config: Dict) -> None:
+    if "values" in parameter_config and "probabilities" in parameter_config:
+        if len(parameter_config["values"]) != len(parameter_config["probabilities"]):
+            raise ValueError(
+                f"Parameter {parameter_name}: values {parameter_config['values']}"
+                f" and probabilities {parameter_config['probabilities']} are not "
+                f"the same length"
+            )
+        if sum(parameter_config["probabilities"]) != 1.0:
+            raise ValueError(
+                f"Parameter {parameter_name}: Probabilities "
+                f"{parameter_config['probabilities']} do not sum to 1"
             )
 
 

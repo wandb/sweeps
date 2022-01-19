@@ -97,7 +97,7 @@ class HyperParameter:
         Args:
              x: Parameter values to calculate the CDF for. Can be scalar or 1-d.
         Returns:
-            Probability that a random sample of this hyperparameter will be less 
+            Probability that a random sample of this hyperparameter will be less
             than or equal to x.
         """
         if self.type == HyperParameter.CONSTANT:
@@ -176,9 +176,7 @@ class HyperParameter:
                 return self.config["values"][np.argmin(x >= cdf, axis=-1)]
             else:
                 return [
-                    self.config["values"][i] for i in [
-                        np.argmin(cdf >= p) for p in x 
-                    ]
+                    self.config["values"][i] for i in [np.argmin(cdf >= p) for p in x]
                 ]
 
         elif self.type == HyperParameter.INT_UNIFORM:

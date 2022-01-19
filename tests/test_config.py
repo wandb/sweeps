@@ -47,3 +47,23 @@ def test_missing_parameters_section():
 
     warnings = config.schema_violations_from_proposed_config(invalid_config)
     assert len(warnings) == 1
+
+
+def test_wrong_prob_length():
+    invalid_config = {
+        "method": "random",
+        "parameters": {
+            "v1": {"values": [1, 2, 3], "probabilities": [0.1, 0.2, 0.3, 0.4]}
+        },
+    }
+    with pytest.raises(jsonschema.ValidationError):
+        _ = config.SweepConfig(invalid_config)
+
+
+def test_irregular_probs():
+    invalid_config = {
+        "method": "random",
+        "parameters": {"v1": {"values": [1, 2, 3], "probabilities": [0.1, 0.2, 0.3]}},
+    }
+    with pytest.raises(jsonschema.ValidationError):
+        _ = config.SweepConfig(invalid_config)
