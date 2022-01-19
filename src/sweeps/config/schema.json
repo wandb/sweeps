@@ -19,6 +19,9 @@
         },
         "probabilities": {
           "type": "array",
+          "items": {
+            "type": "number"
+          },
           "description": "Probability of each value"
         },
         "distribution": {
