@@ -7,8 +7,6 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 from copy import deepcopy
 
-from pytest import param
-
 sweep_config_jsonschema_fname = Path(__file__).parent / "schema.json"
 with open(sweep_config_jsonschema_fname, "r") as f:
     sweep_config_jsonschema = json.load(f)
