@@ -20,7 +20,8 @@
         "probabilities": {
           "type": "array",
           "items": {
-            "type": "number"
+            "type": "number",
+            "minimum": 0
           },
           "description": "Probability of each value"
         },
