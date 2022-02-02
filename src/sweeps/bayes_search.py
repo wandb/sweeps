@@ -356,7 +356,7 @@ def _construct_gp_data(
 
     X_norms = params.convert_runs_to_normalized_vector(runs)
     for run, X_norm in zip(runs, X_norms):
-        if run.state == RunState.finished:
+        if run.state in [RunState.finished, RunState.killed]:
             try:
                 metric = run.metric_extremum(
                     metric_name, kind="maximum" if goal == "maximize" else "minimum"
@@ -375,7 +375,7 @@ def _construct_gp_data(
             # we wont use the metric, but we should pass it into our optimizer to
             # account for the fact that it is running
             current_X.append(X_norm)
-        elif run.state in [RunState.failed, RunState.crashed, RunState.killed]:
+        elif run.state in [RunState.failed, RunState.crashed]:
             # run failed, but we're still going to use it
             # maybe we should be smarter about this
             y.append(worst_metric)
