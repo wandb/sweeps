@@ -123,6 +123,16 @@ def fill_validate_metric(d: Dict) -> Dict:
                 # let it be filled in by the schema default
                 del d["metric"]["goal"]
 
+        if "impute" in d["metric"]:
+            if (
+                d["metric"]["impute"]
+                not in dereferenced_sweep_config_jsonschema["properties"]["metric"][
+                    "properties"
+                ]["impute"]["enum"]
+            ):
+                # let it be filled in by the schema default
+                del d["metric"]["impute"]
+
         filler = DefaultFiller(
             schema=dereferenced_sweep_config_jsonschema["properties"]["metric"],
             format_checker=format_checker,

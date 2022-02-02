@@ -639,6 +639,12 @@
         "target": {
           "type": "number",
           "description": "The sweep will finish once any run achieves this value"
+        },
+        "impute": {
+          "type": "string",
+          "description": "Metric value to use in bayes search for runs that fail, crash, or are killed",
+          "enum": ["latest", "best", "worst"],
+          "default": "worst"
         }
       }
     },

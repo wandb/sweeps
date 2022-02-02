@@ -324,12 +324,59 @@ def next_sample(
     )
 
 
+def impute(
+    goal: str,
+    metric_name: str,
+    impute_strategy: str,
+    run: Optional[SweepRun] = None,
+    runs: Optional[List[SweepRun]] = None,
+) -> floating:
+    failed_val = 0.0
+    worst_func = min if goal == "maximize" else max
+    if impute_strategy == "best":
+        if run is None:
+            raise ValueError("impute_strategy == best requires a nonnull run")
+        try:
+            return run.metric_extremum(
+                metric_name, kind="minimum" if goal == "minimize" else "maximum"
+            )
+        except ValueError:
+            return failed_val
+    elif impute_strategy == "worst":
+        # we calc the max metric to put as the metric for failed runs
+        # so that our bayesian search stays away from them
+        worst_metric: floating = np.inf if goal == "maximize" else -np.inf
+        if runs is None:
+            raise ValueError("impute_strategy == worst requires nonnull list of runs")
+        for run in runs:
+            if run.state == RunState.finished:
+                try:
+                    run_extremum = run.metric_extremum(
+                        metric_name, kind="minimum" if goal == "maximize" else "maximum"
+                    )
+                except ValueError:
+                    run_extremum = 0.0  # default
+                worst_metric = worst_func(worst_metric, run_extremum)
+        if not np.isfinite(worst_metric):
+            return failed_val
+        return worst_metric
+    elif impute_strategy == "latest":
+        if run is None:
+            raise ValueError("impute_strategy == latest requires a nonnull run")
+        history = run.metric_history(metric_name, filter_invalid=True)
+        if len(history) == 0:
+            return failed_val
+        return history[-1]
+    else:
+        raise ValueError(f"invalid impute strategy: {impute_strategy}")
+
+
 def _construct_gp_data(
     runs: List[SweepRun], config: Union[dict, SweepConfig]
 ) -> Tuple[HyperParameterSet, ArrayLike, ArrayLike, ArrayLike]:
     goal = config["metric"]["goal"]
     metric_name = config["metric"]["name"]
-    worst_func = min if goal == "maximize" else max
+    impute_strategy = config["metric"]["impute"]
     params = HyperParameterSet.from_config(config["parameters"])
 
     if len(params.searchable_params) == 0:
@@ -339,22 +386,8 @@ def _construct_gp_data(
     current_X: ArrayLike = []
     y: ArrayLike = []
 
-    # we calc the max metric to put as the metric for failed runs
-    # so that our bayesian search stays away from them
-    worst_metric: floating = np.inf if goal == "maximize" else -np.inf
-    for run in runs:
-        if run.state == RunState.finished:
-            try:
-                run_extremum = run.metric_extremum(
-                    metric_name, kind="minimum" if goal == "maximize" else "maximum"
-                )
-            except ValueError:
-                run_extremum = 0.0  # default
-            worst_metric = worst_func(worst_metric, run_extremum)
-    if not np.isfinite(worst_metric):
-        worst_metric = 0.0
-
     X_norms = params.convert_runs_to_normalized_vector(runs)
+    worst_metric = impute(goal, metric_name, "worst", runs=runs)
     for run, X_norm in zip(runs, X_norms):
         if run.state in [
             RunState.finished,
@@ -367,7 +400,9 @@ def _construct_gp_data(
                     metric_name, kind="maximum" if goal == "maximize" else "minimum"
                 )
             except ValueError:
-                metric = worst_metric  # default
+                metric = impute(
+                    goal, metric_name, impute_strategy, run=run, runs=runs
+                )  # default
             y.append(metric)
             sample_X.append(X_norm)
         elif run.state in [
