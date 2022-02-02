@@ -85,7 +85,7 @@ def plot_two_distributions(
 )
 def test_rand_categorical(values, probs):
     n_samples = 1000
-    HyperParameter("categorical", dict(values=values, probabilities=probs))
+
     sweep_config_2params = SweepConfig(
         {
             "method": "random",

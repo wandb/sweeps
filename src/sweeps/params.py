@@ -18,6 +18,7 @@ class HyperParameter:
 
     CONSTANT = "param_single_value"
     CATEGORICAL = "param_categorical"
+    CATEGORICAL_PROB = "param_categorical_w_probabilities"
     INT_UNIFORM = "param_int_uniform"
     UNIFORM = "param_uniform"
     LOG_UNIFORM = "param_loguniform"
@@ -104,8 +105,8 @@ class HyperParameter:
             return np.zeros_like(x)
         elif self.type == HyperParameter.CATEGORICAL:
             # NOTE: Indices expected for categorical parameters, not values.
-            if not self.config.get("probabilities"):
-                return stats.randint.cdf(x, 0, len(self.config["values"]))
+            return stats.randint.cdf(x, 0, len(self.config["values"]))
+        elif self.type == HyperParameter.CATEGORICAL_PROB:
             return np.cumsum(self.config["probabilities"])[x]
         elif self.type == HyperParameter.INT_UNIFORM:
             return stats.randint.cdf(x, self.config["min"], self.config["max"] + 1)
@@ -159,17 +160,17 @@ class HyperParameter:
         if self.type == HyperParameter.CONSTANT:
             return self.config["value"]
         elif self.type == HyperParameter.CATEGORICAL:
-            if not self.config.get("probabilities"):
-                # Samples uniformly over the values
-                retval = [
-                    self.config["values"][i]
-                    for i in np.atleast_1d(
-                        stats.randint.ppf(x, 0, len(self.config["values"])).astype(int)
-                    ).tolist()
-                ]
-                if np.isscalar(x):
-                    return retval[0]
-                return retval
+            # Samples uniformly over the values
+            retval = [
+                self.config["values"][i]
+                for i in np.atleast_1d(
+                    stats.randint.ppf(x, 0, len(self.config["values"])).astype(int)
+                ).tolist()
+            ]
+            if np.isscalar(x):
+                return retval[0]
+            return retval
+        elif self.type == HyperParameter.CATEGORICAL_PROB:
             # Samples by specified categorical distribution if specified
             cdf = np.cumsum(self.config["probabilities"])
             if np.isscalar(x):
@@ -178,7 +179,6 @@ class HyperParameter:
                 return [
                     self.config["values"][i] for i in [np.argmin(cdf >= p) for p in x]
                 ]
-
         elif self.type == HyperParameter.INT_UNIFORM:
             return (
                 stats.randint.ppf(x, self.config["min"], self.config["max"] + 1)
