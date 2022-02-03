@@ -1094,7 +1094,7 @@ def test_bayes_impute_latest():
         init_runs=runs,
         optimium={"a": 1.0},
         num_iterations=5,
-        atol=0.001,
+        atol=0.01,
     )
 
     # check that latest doesn't
@@ -1107,5 +1107,5 @@ def test_bayes_impute_latest():
             init_runs=runs,
             optimium={"a": 1.0},
             num_iterations=5,
-            atol=0.001,
+            atol=0.01,
         )
