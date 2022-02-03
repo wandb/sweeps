@@ -1,6 +1,6 @@
 import pytest
 import jsonschema
-from sweeps import config
+from sweeps import config, grid_search
 
 
 def test_invalid_sweep_config_nonuniform_array_elements_categorical():
@@ -67,3 +67,13 @@ def test_irregular_probs():
     }
     with pytest.raises(jsonschema.ValidationError):
         _ = config.SweepConfig(invalid_config)
+
+
+def test_categorical_prob_grid():
+    invalid_config = {
+        "method": "grid",
+        "parameters": {"v1": {"values": [1, 2, 3], "probabilities": [0.2, 0.2, 0.6]}},
+    }
+    with pytest.raises(ValueError):
+        sweep_config = config.SweepConfig(invalid_config)
+        grid_search.grid_search_next_runs([], sweep_config)
