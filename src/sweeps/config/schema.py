@@ -1,6 +1,7 @@
 import json
 import jsonref
 import jsonschema
+import numpy as np
 from jsonschema import Draft7Validator, validators
 
 from pathlib import Path
@@ -113,7 +114,7 @@ def validate_categorical_prob(parameter_name: str, parameter_config: Dict) -> No
                 f" and probabilities {parameter_config['probabilities']} are not "
                 f"the same length"
             )
-        if sum(parameter_config["probabilities"]) != 1.0:
+        if not np.isclose(sum(parameter_config["probabilities"]), 1.0):
             raise ValueError(
                 f"Parameter {parameter_name}: Probabilities "
                 f"{parameter_config['probabilities']} do not sum to 1"
