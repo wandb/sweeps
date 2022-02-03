@@ -26,6 +26,37 @@
       },
       "additionalProperties": false
     },
+    "param_categorical_w_probabilities": {
+      "type": "object",
+      "description": "A categorical parameter with allowed values and corresponding probabilities",
+      "required": [
+        "values",
+        "probabilities"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "description": "Discrete values",
+          "minItems": 1
+        },
+        "probabilities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "description": "Probability of each value"
+        },
+        "distribution": {
+          "enum": [
+            "categorical_w_probabilities"
+          ],
+          "default": "categorical_w_probabilities"
+        }
+      },
+      "additionalProperties": false
+    },
     "param_single_value": {
       "type": "object",
       "description": "A constant parameter.",
@@ -462,6 +493,9 @@
         },
         {
           "$ref": "#/definitions/param_categorical"
+        },
+        {
+          "$ref": "#/definitions/param_categorical_w_probabilities"
         },
         {
           "$ref": "#/definitions/param_int_uniform"
