@@ -1,5 +1,6 @@
 import numpy as np
 
+from enum import Enum
 from copy import deepcopy
 from typing import List, Tuple, Optional, Union, Dict
 
@@ -13,6 +14,12 @@ from scipy import stats as scipy_stats
 from ._types import floating, integer, ArrayLike
 
 NUGGET = 1e-10
+
+
+class ImputeStrategy(str, Enum):
+    best = "best"
+    worst = "worst"
+    latest = "latest"
 
 
 def bayes_baseline_validate_and_fill(config: Dict) -> Dict:
@@ -327,13 +334,14 @@ def next_sample(
 def impute(
     goal: str,
     metric_name: str,
-    impute_strategy: str,
+    impute_strategy: ImputeStrategy,
     run: Optional[SweepRun] = None,
     runs: Optional[List[SweepRun]] = None,
 ) -> floating:
+    """Impute the value of a run's metric using a specified strategy."""
     failed_val = 0.0
     worst_func = min if goal == "maximize" else max
-    if impute_strategy == "best":
+    if impute_strategy == ImputeStrategy.best:
         if run is None:
             raise ValueError("impute_strategy == best requires a nonnull run")
         try:
@@ -342,7 +350,7 @@ def impute(
             )
         except ValueError:
             return failed_val
-    elif impute_strategy == "worst":
+    elif impute_strategy == ImputeStrategy.worst:
         # we calc the max metric to put as the metric for failed runs
         # so that our bayesian search stays away from them
         worst_metric: floating = np.inf if goal == "maximize" else -np.inf
@@ -360,7 +368,7 @@ def impute(
         if not np.isfinite(worst_metric):
             return failed_val
         return worst_metric
-    elif impute_strategy == "latest":
+    elif impute_strategy == ImputeStrategy.latest:
         if run is None:
             raise ValueError("impute_strategy == latest requires a nonnull run")
         history = run.metric_history(metric_name, filter_invalid=True)
@@ -376,7 +384,7 @@ def _construct_gp_data(
 ) -> Tuple[HyperParameterSet, ArrayLike, ArrayLike, ArrayLike]:
     goal = config["metric"]["goal"]
     metric_name = config["metric"]["name"]
-    impute_strategy = config["metric"]["impute"]
+    impute_strategy = ImputeStrategy(config["metric"]["impute"])
     params = HyperParameterSet.from_config(config["parameters"])
 
     if len(params.searchable_params) == 0:
@@ -387,7 +395,7 @@ def _construct_gp_data(
     y: ArrayLike = []
 
     X_norms = params.convert_runs_to_normalized_vector(runs)
-    worst_metric = impute(goal, metric_name, "worst", runs=runs)
+    worst_metric = impute(goal, metric_name, ImputeStrategy.worst, runs=runs)
     for run, X_norm in zip(runs, X_norms):
         if run.state == RunState.finished:
             try:
