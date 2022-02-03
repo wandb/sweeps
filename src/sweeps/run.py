@@ -20,6 +20,15 @@ class RunState(str, Enum):
     preempting = "preempting"
 
 
+def run_state_is_terminal(state: RunState) -> bool:
+    return state in [
+        RunState.finished,
+        RunState.crashed,
+        RunState.failed,
+        RunState.killed,
+    ]
+
+
 def is_number(x: Any) -> bool:
     """Check if a value is a finite number."""
     try:

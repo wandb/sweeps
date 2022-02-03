@@ -5,7 +5,7 @@ from typing import List, Tuple, Optional, Union, Dict
 
 from .config.cfg import SweepConfig
 from .config.schema import fill_validate_metric
-from .run import SweepRun, RunState
+from .run import SweepRun, RunState, run_state_is_terminal
 from .params import HyperParameter, HyperParameterSet
 from sklearn import gaussian_process as sklearn_gaussian
 from scipy import stats as scipy_stats
@@ -349,13 +349,13 @@ def impute(
         if runs is None:
             raise ValueError("impute_strategy == worst requires nonnull list of runs")
         for run in runs:
-            if run.state == RunState.finished:
+            if run_state_is_terminal(run.state):
                 try:
                     run_extremum = run.metric_extremum(
                         metric_name, kind="minimum" if goal == "maximize" else "maximum"
                     )
                 except ValueError:
-                    run_extremum = 0.0  # default
+                    continue  # exclude run from worst_run calculation
                 worst_metric = worst_func(worst_metric, run_extremum)
         if not np.isfinite(worst_metric):
             return failed_val
@@ -389,20 +389,25 @@ def _construct_gp_data(
     X_norms = params.convert_runs_to_normalized_vector(runs)
     worst_metric = impute(goal, metric_name, "worst", runs=runs)
     for run, X_norm in zip(runs, X_norms):
-        if run.state in [
-            RunState.finished,
-            RunState.killed,
-            RunState.failed,
-            RunState.crashed,
-        ]:
+        if run.state == RunState.finished:
             try:
                 metric = run.metric_extremum(
                     metric_name, kind="maximum" if goal == "maximize" else "minimum"
                 )
             except ValueError:
-                metric = impute(
-                    goal, metric_name, impute_strategy, run=run, runs=runs
-                )  # default
+                if impute_strategy != "worst":
+                    metric = impute(
+                        goal, metric_name, impute_strategy, run=run, runs=runs
+                    )  # default
+                else:
+                    metric = worst_metric
+            y.append(metric)
+            sample_X.append(X_norm)
+        elif run.state in [RunState.failed, RunState.crashed, RunState.killed]:
+            if impute_strategy != "worst":
+                metric = impute(goal, metric_name, impute_strategy, run=run, runs=runs)
+            else:
+                metric = worst_metric
             y.append(metric)
             sample_X.append(X_norm)
         elif run.state in [
