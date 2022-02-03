@@ -63,7 +63,8 @@ def grid_search_next_runs(
         ]:
             raise ValueError(
                 f"Parameter {p.name} is a disallowed type with grid search. Grid search requires all parameters "
-                f"to be categorical, constant, int_uniform, or q_uniform."
+                f"to be categorical, constant, int_uniform, or q_uniform. Specification of probabilities for "
+                f"categorical parameters is disallowed in grid search"
             )
 
     # convert bounded int_uniform and q_uniform parameters to categorical parameters

@@ -6,7 +6,12 @@ from pathlib import Path
 from typing import Union, Dict, List
 
 import jsonschema
-from .schema import validator, fill_validate_schema, validate_min_max
+from .schema import (
+    validate_categorical_prob,
+    validator,
+    fill_validate_schema,
+    validate_min_max,
+)
 from copy import deepcopy
 
 
@@ -32,6 +37,11 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
                 validate_min_max(parameter_name, parameter_dict)
             except ValueError as e:
                 schema_violation_messages.append(e.args[0])
+            try:
+                validate_categorical_prob(parameter_name, parameter_dict)
+            except ValueError as e:
+                schema_violation_messages.append(e.args[0])
+
     return schema_violation_messages
 
 
