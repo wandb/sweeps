@@ -68,7 +68,7 @@ def run_bayes_search(
     "x",
     [
         {"distribution": "normal", "mu": 2, "sigma": 4},
-        {"distribution": "log_uniform", "min": -2, "max": 3},
+        {"distribution": "loguniform", "min": np.exp(-2), "max": np.exp(3)},
         {"min": 0.0, "max": 5.0},
         {"min": 0, "max": 5},
         {"distribution": "q_uniform", "min": 0.0, "max": 10.0, "q": 0.25},

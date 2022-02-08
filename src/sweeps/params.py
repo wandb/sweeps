@@ -63,25 +63,6 @@ class HyperParameter:
 
         self.type, self.config = result
 
-        # use existing logic for new distribution apis
-        if self.type == HyperParameter.Q_LOG_UNIFORM_V2:
-            # coerce to v1
-            self.type = HyperParameter.Q_LOG_UNIFORM_V1
-            self.config["min"] = np.exp(self.config["min"])
-            self.config["max"] = np.exp(self.config["max"])
-
-        elif self.type == HyperParameter.LOG_UNIFORM_V2:
-            # coerce to v1
-            self.type = HyperParameter.LOG_UNIFORM_V1
-            self.config["min"] = np.exp(self.config["min"])
-            self.config["max"] = np.exp(self.config["max"])
-
-        elif self.type == HyperParameter.INV_LOG_UNIFORM_V2:
-            # coerce to v1
-            self.type = HyperParameter.INV_LOG_UNIFORM_V1
-            self.config["min"] = np.exp(-self.config["max"])
-            self.config["max"] = np.exp(-self.config["min"])
-
         if self.config is None or self.type is None:
             raise ValueError(
                 "list of allowed schemas has length zero; please provide some valid schemas"
@@ -90,6 +71,26 @@ class HyperParameter:
         self.value = (
             None if self.type != HyperParameter.CONSTANT else self.config["value"]
         )
+
+    def coerce(self):
+        # use existing logic for new distribution apis
+        if self.type == HyperParameter.Q_LOG_UNIFORM_V2:
+            # coerce to v1
+            self.type = HyperParameter.Q_LOG_UNIFORM_V1
+            self.config["min"] = np.log(self.config["min"])
+            self.config["max"] = np.log(self.config["max"])
+
+        elif self.type == HyperParameter.LOG_UNIFORM_V2:
+            # coerce to v1
+            self.type = HyperParameter.LOG_UNIFORM_V1
+            self.config["min"] = np.log(self.config["min"])
+            self.config["max"] = np.log(self.config["max"])
+
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V2:
+            # coerce to v1
+            self.type = HyperParameter.INV_LOG_UNIFORM_V1
+            self.config["min"] = -np.log(self.config["max"])
+            self.config["max"] = -np.log(self.config["min"])
 
     def value_to_int(self, value: Any) -> int:
         """Get the index of the value of a categorically distributed HyperParameter.
@@ -129,6 +130,7 @@ class HyperParameter:
             Probability that a random sample of this hyperparameter will be less
             than or equal to x.
         """
+        self.coerce()
         if self.type == HyperParameter.CONSTANT:
             return np.zeros_like(x)
         elif self.type == HyperParameter.CATEGORICAL:
@@ -183,6 +185,7 @@ class HyperParameter:
         Returns:
             Value of the random variable at the specified percentile.
         """
+        self.coerce()
         if np.any((x < 0.0) | (x > 1.0)):
             raise ValueError("Can't call ppf on value outside of [0,1]")
         if self.type == HyperParameter.CONSTANT:
@@ -290,9 +293,11 @@ class HyperParameter:
 
     def sample(self) -> Any:
         """Randomly sample a value from the distribution of this HyperParameter."""
+        self.coerce()
         return self.ppf(random.uniform(0.0, 1.0))
 
     def _to_config(self) -> Tuple[str, Dict]:
+        self.coerce()
         config = dict(value=self.value)
         return self.name, config
 

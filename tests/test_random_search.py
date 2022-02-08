@@ -203,9 +203,9 @@ def test_rand_loguniform(plot):
             "method": "random",
             "parameters": {
                 "v2": {
-                    "min": np.log(v2_min),
-                    "max": np.log(v2_max),
-                    "distribution": "log_uniform",
+                    "min": v2_min,
+                    "max": v2_max,
+                    "distribution": "loguniform",
                 },
             },
         }
@@ -239,14 +239,14 @@ def test_rand_inv_loguniform(plot):
     v2_max = 1e20
 
     # limits for sweep config are in log(1/x) space
-    limit_min = np.log(1 / v2_max)
-    limit_max = np.log(1 / v2_min)
+    limit_min = v2_min
+    limit_max = v2_max
     n_samples = 20000
 
     param_config = {
         "min": limit_min,
         "max": limit_max,
-        "distribution": "inv_log_uniform",
+        "distribution": "inv_loguniform",
     }
 
     sweep_config_2params = SweepConfig(
@@ -436,9 +436,9 @@ def test_rand_q_loguniform(q, plot):
             "method": "random",
             "parameters": {
                 "v1": {
-                    "distribution": "q_log_uniform",
-                    "min": np.log(0.1),
-                    "max": np.log(100),
+                    "distribution": "q_loguniform",
+                    "min": 0.1,
+                    "max": 100,
                     "q": q,
                 },
             },

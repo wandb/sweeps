@@ -44,7 +44,7 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
                 schema_violation_messages.append(e.args[0])
             try:
                 check_for_deprecated_distributions(parameter_name, parameter_dict)
-            except ValueError as e:
+            except (ValueError, jsonschema.ValidationError) as e:
                 schema_violation_messages.append(e.args[0])
 
     return schema_violation_messages

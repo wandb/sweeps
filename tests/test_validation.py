@@ -77,7 +77,7 @@ def test_minmax_type_inference():
     }
 
     violations = schema_violations_from_proposed_config(schema)
-    assert len(violations) == 1
+    assert len(violations) == 2
 
 
 @pytest.mark.parametrize("controller_type", ["cloud", "local", "invalid"])
