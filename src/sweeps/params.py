@@ -21,10 +21,18 @@ class HyperParameter:
     CATEGORICAL_PROB = "param_categorical_w_probabilities"
     INT_UNIFORM = "param_int_uniform"
     UNIFORM = "param_uniform"
-    LOG_UNIFORM = "param_loguniform"
-    INV_LOG_UNIFORM = "param_inv_loguniform"
+
+    LOG_UNIFORM_V1 = "param_loguniform"
+    LOG_UNIFORM_V2 = "param_loguniform_v2"
+
+    INV_LOG_UNIFORM_V1 = "param_inv_loguniform"
+    INV_LOG_UNIFORM_V2 = "param_inv_loguniform_v2"
+
     Q_UNIFORM = "param_quniform"
-    Q_LOG_UNIFORM = "param_qloguniform"
+
+    Q_LOG_UNIFORM_V1 = "param_qloguniform"
+    Q_LOG_UNIFORM_V2 = "param_qloguniform_v2"
+
     NORMAL = "param_normal"
     Q_NORMAL = "param_qnormal"
     LOG_NORMAL = "param_lognormal"
@@ -54,6 +62,26 @@ class HyperParameter:
             )
 
         self.type, self.config = result
+
+        # use existing logic for new distribution apis
+        if self.type == HyperParameter.Q_LOG_UNIFORM_V2:
+            # coerce to v1
+            self.type = HyperParameter.Q_LOG_UNIFORM_V1
+            self.config["min"] = np.exp(self.config["min"])
+            self.config["max"] = np.exp(self.config["max"])
+
+        elif self.type == HyperParameter.LOG_UNIFORM_V2:
+            # coerce to v1
+            self.type = HyperParameter.LOG_UNIFORM_V1
+            self.config["min"] = np.exp(self.config["min"])
+            self.config["max"] = np.exp(self.config["max"])
+
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V2:
+            # coerce to v1
+            self.type = HyperParameter.INV_LOG_UNIFORM_V1
+            self.config["min"] = np.exp(-self.config["max"])
+            self.config["max"] = np.exp(-self.config["min"])
+
         if self.config is None or self.type is None:
             raise ValueError(
                 "list of allowed schemas has length zero; please provide some valid schemas"
@@ -117,13 +145,13 @@ class HyperParameter:
                 x, self.config["min"], self.config["max"] - self.config["min"]
             )
         elif (
-            self.type == HyperParameter.LOG_UNIFORM
-            or self.type == HyperParameter.Q_LOG_UNIFORM
+            self.type == HyperParameter.LOG_UNIFORM_V1
+            or self.type == HyperParameter.Q_LOG_UNIFORM_V1
         ):
             return stats.uniform.cdf(
                 np.log(x), self.config["min"], self.config["max"] - self.config["min"]
             )
-        elif self.type == HyperParameter.INV_LOG_UNIFORM:
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V1:
             return 1 - stats.uniform.cdf(
                 np.log(1 / x),
                 self.config["min"],
@@ -198,13 +226,13 @@ class HyperParameter:
                 return ret_val.astype(int)
             else:
                 return ret_val
-        elif self.type == HyperParameter.LOG_UNIFORM:
+        elif self.type == HyperParameter.LOG_UNIFORM_V1:
             return np.exp(
                 stats.uniform.ppf(
                     x, self.config["min"], self.config["max"] - self.config["min"]
                 )
             )
-        elif self.type == HyperParameter.INV_LOG_UNIFORM:
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V1:
             return np.exp(
                 -stats.uniform.ppf(
                     1 - x,
@@ -212,7 +240,7 @@ class HyperParameter:
                     self.config["max"] - self.config["min"],
                 )
             )
-        elif self.type == HyperParameter.Q_LOG_UNIFORM:
+        elif self.type == HyperParameter.Q_LOG_UNIFORM_V1:
             r = np.exp(
                 stats.uniform.ppf(
                     x, self.config["min"], self.config["max"] - self.config["min"]
@@ -356,3 +384,39 @@ class HyperParameterSet(list):
             X[bayes_opt_index, non_nan] = X_row[non_nan]
 
         return np.transpose(X)
+
+
+def make_param_log_deprecation_message(
+    param_type: str, replacement_param_type: str
+) -> str:
+    from .config import schema
+
+    param_schema = schema.dereferenced_sweep_config_jsonschema["definitions"][
+        param_type
+    ]
+    deprecated_distribution_name = param_schema["properties"]["distribution"]["enum"][0]
+
+    replacement_param_schema = schema.dereferenced_sweep_config_jsonschema[
+        "definitions"
+    ][replacement_param_type]
+    replacement_distribution_name = replacement_param_schema["properties"][
+        "distribution"
+    ]["enum"][0]
+
+    return (
+        f"uses {deprecated_distribution_name}, where min/max specify base-e exponents. "
+        f"Use {replacement_distribution_name} to specify limit values."
+    )
+
+
+PARAM_DEPRECATION_MAP = {
+    HyperParameter.LOG_UNIFORM_V1: make_param_log_deprecation_message(
+        HyperParameter.LOG_UNIFORM_V1, HyperParameter.LOG_UNIFORM_V2
+    ),
+    HyperParameter.INV_LOG_UNIFORM_V1: make_param_log_deprecation_message(
+        HyperParameter.INV_LOG_UNIFORM_V1, HyperParameter.INV_LOG_UNIFORM_V2
+    ),
+    HyperParameter.Q_LOG_UNIFORM_V1: make_param_log_deprecation_message(
+        HyperParameter.Q_LOG_UNIFORM_V1, HyperParameter.Q_LOG_UNIFORM_V2
+    ),
+}
