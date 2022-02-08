@@ -11,6 +11,7 @@ from .schema import (
     validator,
     fill_validate_schema,
     validate_min_max,
+    check_for_deprecated_distributions,
 )
 from copy import deepcopy
 
@@ -39,6 +40,10 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
                 schema_violation_messages.append(e.args[0])
             try:
                 validate_categorical_prob(parameter_name, parameter_dict)
+            except ValueError as e:
+                schema_violation_messages.append(e.args[0])
+            try:
+                check_for_deprecated_distributions(parameter_name, parameter_dict)
             except ValueError as e:
                 schema_violation_messages.append(e.args[0])
 

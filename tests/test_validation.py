@@ -160,3 +160,16 @@ def test_invalid_minmax_with_no_sweepconfig_validation():
 
     with pytest.raises(ValueError):
         fill_parameter("a", config["parameters"]["a"])
+
+
+@pytest.mark.parametrize(
+    "parameter_type", ["log_uniform", "q_log_uniform", "inv_log_uniform"]
+)
+def test_that_old_distributions_warn(parameter_type):
+    schema = {
+        "method": "random",
+        "parameters": {"a": {"min": 1, "max": 2, "distribution": parameter_type}},
+    }
+
+    violations = schema_violations_from_proposed_config(schema)
+    assert len(violations) > 0
