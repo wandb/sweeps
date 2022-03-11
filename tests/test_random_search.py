@@ -287,7 +287,7 @@ def test_rand_inv_loguniform(plot):
     cdf_empirical = np.cumsum(n) / np.sum(n)
     bin_centers = 0.5 * (bins[1:] + bins[:-1])
 
-    hyperparameter = HyperParameter("inv_log_uniform", param_config)
+    hyperparameter = HyperParameter("inv_log_uniform_values", param_config)
     cdf_pred = hyperparameter.cdf(bin_centers)
 
     if plot:
