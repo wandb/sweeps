@@ -198,18 +198,16 @@ def test_rand_loguniform(plot):
     v2_max = 100
     n_samples = 1000
 
-    sweep_config_2params = SweepConfig(
-        {
-            "method": "random",
-            "parameters": {
-                "v2": {
-                    "min": np.log(v2_min),
-                    "max": np.log(v2_max),
-                    "distribution": "log_uniform",
-                },
+    sweep_config_2params = {
+        "method": "random",
+        "parameters": {
+            "v2": {
+                "min": np.log(v2_min),
+                "max": np.log(v2_max),
+                "distribution": "log_uniform",
             },
-        }
-    )
+        },
+    }
 
     runs = []
     for i in range(n_samples):
@@ -290,14 +288,12 @@ def test_rand_inv_loguniform(plot):
         "distribution": "inv_log_uniform",
     }
 
-    sweep_config_2params = SweepConfig(
-        {
-            "method": "random",
-            "parameters": {
-                "v2": param_config,
-            },
-        }
-    )
+    sweep_config_2params = {
+        "method": "random",
+        "parameters": {
+            "v2": param_config,
+        },
+    }
 
     runs = []
     for i in range(n_samples):
@@ -600,19 +596,17 @@ def test_rand_q_loguniform_values(q, plot):
 def test_rand_q_loguniform(q, plot):
 
     n_samples_pred = 1000
-    sweep_config_2params = SweepConfig(
-        {
-            "method": "random",
-            "parameters": {
-                "v1": {
-                    "distribution": "q_log_uniform",
-                    "min": np.log(0.1),
-                    "max": np.log(100),
-                    "q": q,
-                },
+    sweep_config_2params = {
+        "method": "random",
+        "parameters": {
+            "v1": {
+                "distribution": "q_log_uniform",
+                "min": np.log(0.1),
+                "max": np.log(100),
+                "q": q,
             },
-        }
-    )
+        },
+    }
 
     runs = []
     for i in range(n_samples_pred):
