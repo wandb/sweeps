@@ -239,6 +239,92 @@ def test_rand_inv_loguniform(plot):
     v2_max = 1e20
 
     # limits for sweep config are in log(1/x) space
+    limit_min = np.log(1 / v2_max)
+    limit_max = np.log(1 / v2_min)
+    n_samples = 20000
+
+    param_config = {
+        "min": limit_min,
+        "max": limit_max,
+        "distribution": "inv_log_uniform",
+    }
+
+    sweep_config_2params = SweepConfig(
+        {
+            "method": "random",
+            "parameters": {
+                "v2": param_config,
+            },
+        }
+    )
+
+    runs = []
+    for i in range(n_samples):
+        suggestion = next_run(sweep_config_2params, runs)
+        runs.append(suggestion)
+
+    pred_samples = np.asarray([run.config["v2"]["value"] for run in runs])
+    true_samples = np.random.uniform(limit_min, limit_max, size=n_samples)
+    true_samples = np.exp(true_samples)
+    true_samples = 1 / true_samples
+
+    # the lhs needs to be >= 0 because
+    bins = np.logspace(np.log10(v2_min), np.log10(v2_max), 10)
+
+    if plot:
+        plot_two_distributions(true_samples, pred_samples, bins, xscale="log")
+
+    check_that_samples_are_from_the_same_distribution(pred_samples, true_samples, bins)
+
+    assert pred_samples.min() >= v2_min
+    assert pred_samples.max() <= v2_max
+
+    # use more bins to check that the CDF is correct
+    bins = np.logspace(np.log10(v2_min), np.log10(v2_max), 100)
+    n, _ = np.histogram(true_samples, bins=bins)
+    cdf_empirical = np.cumsum(n) / np.sum(n)
+    bin_centers = 0.5 * (bins[1:] + bins[:-1])
+
+    hyperparameter = HyperParameter("inv_log_uniform", param_config)
+    cdf_pred = hyperparameter.cdf(bin_centers)
+
+    if plot:
+        import matplotlib.pyplot as plt
+        import inspect
+
+        fig, ax = plt.subplots()
+        ax.step(
+            bin_centers,
+            cdf_empirical,
+            label="true",
+        )
+        ax.step(
+            bin_centers,
+            cdf_pred,
+            label="pred",
+        )
+        ax.legend()
+        ax.set_xscale("log")
+        ax.tick_params(which="both", axis="both", direction="in")
+        current_test = os.environ.get("PYTEST_CURRENT_TEST")
+        if current_test is None:
+            current_test = inspect.stack()[1].function
+        else:
+            current_test = current_test.split(":")[-1].split(" ")[0]
+        fname = f"{current_test}.cdf.pdf"
+        fig.savefig(test_results_dir / fname)
+
+    # assert that the cdfs are within 0.03 everywhere
+    np.testing.assert_array_less(np.abs(cdf_pred - cdf_empirical), 0.03)
+
+
+def test_rand_inv_loguniform_values(plot):
+
+    # samples of v2 are between 1e-15 and 1e20
+    v2_min = 1e-15
+    v2_max = 1e20
+
+    # limits for sweep config are in log(1/x) space
     limit_min = v2_min
     limit_max = v2_max
     n_samples = 20000
