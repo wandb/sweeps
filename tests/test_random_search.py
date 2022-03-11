@@ -191,7 +191,7 @@ def test_rand_lognormal(plot):
     check_that_samples_are_from_the_same_distribution(pred_samples, true_samples, bins)
 
 
-def test_rand_loguniform(plot):
+def test_rand_loguniform_values(plot):
     # Calculates that the
 
     v2_min = 5.0
@@ -516,7 +516,7 @@ def test_rand_q_uniform(q, plot):
 
 
 @pytest.mark.parametrize("q", [0.1, 1, 10])
-def test_rand_q_loguniform(q, plot):
+def test_rand_q_loguniform_values(q, plot):
 
     n_samples_pred = 1000
     sweep_config_2params = SweepConfig(
