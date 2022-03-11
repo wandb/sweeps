@@ -191,6 +191,47 @@ def test_rand_lognormal(plot):
     check_that_samples_are_from_the_same_distribution(pred_samples, true_samples, bins)
 
 
+def test_rand_loguniform(plot):
+    # Calculates that the
+
+    v2_min = 5.0
+    v2_max = 100
+    n_samples = 1000
+
+    sweep_config_2params = SweepConfig(
+        {
+            "method": "random",
+            "parameters": {
+                "v2": {
+                    "min": np.log(v2_min),
+                    "max": np.log(v2_max),
+                    "distribution": "log_uniform",
+                },
+            },
+        }
+    )
+
+    runs = []
+    for i in range(n_samples):
+        suggestion = next_run(sweep_config_2params, runs)
+        runs.append(suggestion)
+
+    pred_samples = np.asarray([run.config["v2"]["value"] for run in runs])
+    true_samples = np.random.uniform(np.log(v2_min), np.log(v2_max), size=n_samples)
+    true_samples = np.exp(true_samples)
+
+    # the lhs needs to be >= 0 because
+    bins = np.logspace(np.log10(v2_min), np.log10(v2_max), 10)
+
+    if plot:
+        plot_two_distributions(true_samples, pred_samples, bins, xscale="log")
+
+    check_that_samples_are_from_the_same_distribution(pred_samples, true_samples, bins)
+
+    assert pred_samples.min() >= v2_min
+    assert pred_samples.max() <= v2_max
+
+
 def test_rand_loguniform_values(plot):
     # Calculates that the
 
@@ -527,6 +568,46 @@ def test_rand_q_loguniform_values(q, plot):
                     "distribution": "q_log_uniform_values",
                     "min": 0.1,
                     "max": 100,
+                    "q": q,
+                },
+            },
+        }
+    )
+
+    runs = []
+    for i in range(n_samples_pred):
+        suggestion = next_run(sweep_config_2params, runs)
+        runs.append(suggestion)
+
+    pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
+    true_samples = np.round(stats.loguniform(0.1, 100).rvs(1000) / q) * q
+
+    # need the binsize to be >> q
+    bins = np.logspace(-1, 2, 10)
+
+    if plot:
+        plot_two_distributions(true_samples, pred_samples, bins, xscale="log")
+
+    check_that_samples_are_from_the_same_distribution(pred_samples, true_samples, bins)
+    remainder = np.remainder(pred_samples, q)
+
+    # when pred_samples == 0, pred_samples % q = q, so need to test for both remainder = q and
+    # remainder = 0 under modular division
+    assert np.all(np.isclose(remainder, 0) | np.isclose(remainder, q))
+
+
+@pytest.mark.parametrize("q", [0.1, 1, 10])
+def test_rand_q_loguniform(q, plot):
+
+    n_samples_pred = 1000
+    sweep_config_2params = SweepConfig(
+        {
+            "method": "random",
+            "parameters": {
+                "v1": {
+                    "distribution": "q_log_uniform",
+                    "min": np.log(0.1),
+                    "max": np.log(100),
                     "q": q,
                 },
             },
