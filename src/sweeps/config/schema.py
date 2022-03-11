@@ -121,6 +121,20 @@ def validate_categorical_prob(parameter_name: str, parameter_config: Dict) -> No
             )
 
 
+def check_for_deprecated_distributions(
+    parameter_name: str, parameter_config: Dict
+) -> None:
+    from ..params import HyperParameter, PARAM_DEPRECATION_MAP
+
+    param = HyperParameter(
+        parameter_name, parameter_config
+    )  # will raise if parameter config is malformed
+
+    # check if type is deprecated
+    if param.type in PARAM_DEPRECATION_MAP:
+        raise ValueError(f"{parameter_name} {PARAM_DEPRECATION_MAP[param.type]}")
+
+
 def fill_validate_metric(d: Dict) -> Dict:
     d = deepcopy(d)
 

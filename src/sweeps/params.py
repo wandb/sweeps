@@ -14,6 +14,29 @@ from .config import fill_parameter
 from ._types import ArrayLike
 
 
+def q_log_uniform_v1_ppf(x: ArrayLike, min, max, q):
+    r = np.exp(stats.uniform.ppf(x, min, max - min))
+    ret_val = np.round(r / q) * q
+    if isinstance(q, int):
+        return ret_val.astype(int)
+    else:
+        return ret_val
+
+
+def inv_log_uniform_v1_ppf(x: ArrayLike, min, max):
+    return np.exp(
+        -stats.uniform.ppf(
+            1 - x,
+            min,
+            max - min,
+        )
+    )
+
+
+def loguniform_v1_ppf(x: ArrayLike, min, max):
+    return np.exp(stats.uniform.ppf(x, min, max - min))
+
+
 class HyperParameter:
 
     CONSTANT = "param_single_value"
@@ -21,10 +44,18 @@ class HyperParameter:
     CATEGORICAL_PROB = "param_categorical_w_probabilities"
     INT_UNIFORM = "param_int_uniform"
     UNIFORM = "param_uniform"
-    LOG_UNIFORM = "param_loguniform"
-    INV_LOG_UNIFORM = "param_inv_loguniform"
+
+    LOG_UNIFORM_V1 = "param_loguniform"
+    LOG_UNIFORM_V2 = "param_loguniform_v2"
+
+    INV_LOG_UNIFORM_V1 = "param_inv_loguniform"
+    INV_LOG_UNIFORM_V2 = "param_inv_loguniform_v2"
+
     Q_UNIFORM = "param_quniform"
-    Q_LOG_UNIFORM = "param_qloguniform"
+
+    Q_LOG_UNIFORM_V1 = "param_qloguniform"
+    Q_LOG_UNIFORM_V2 = "param_qloguniform_v2"
+
     NORMAL = "param_normal"
     Q_NORMAL = "param_qnormal"
     LOG_NORMAL = "param_lognormal"
@@ -54,6 +85,7 @@ class HyperParameter:
             )
 
         self.type, self.config = result
+
         if self.config is None or self.type is None:
             raise ValueError(
                 "list of allowed schemas has length zero; please provide some valid schemas"
@@ -117,17 +149,32 @@ class HyperParameter:
                 x, self.config["min"], self.config["max"] - self.config["min"]
             )
         elif (
-            self.type == HyperParameter.LOG_UNIFORM
-            or self.type == HyperParameter.Q_LOG_UNIFORM
+            self.type == HyperParameter.LOG_UNIFORM_V1
+            or self.type == HyperParameter.Q_LOG_UNIFORM_V1
         ):
             return stats.uniform.cdf(
                 np.log(x), self.config["min"], self.config["max"] - self.config["min"]
             )
-        elif self.type == HyperParameter.INV_LOG_UNIFORM:
+        elif (
+            self.type == HyperParameter.LOG_UNIFORM_V2
+            or self.type == HyperParameter.Q_LOG_UNIFORM_V2
+        ):
+            return stats.uniform.cdf(
+                np.log(x),
+                np.log(self.config["min"]),
+                np.log(self.config["max"]) - np.log(self.config["min"]),
+            )
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V1:
             return 1 - stats.uniform.cdf(
                 np.log(1 / x),
                 self.config["min"],
                 self.config["max"] - self.config["min"],
+            )
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V2:
+            return 1 - stats.uniform.cdf(
+                np.log(1 / x),
+                -np.log(self.config["max"]),
+                np.abs(np.log(self.config["max"]) - np.log(self.config["min"])),
             )
         elif self.type == HyperParameter.NORMAL or self.type == HyperParameter.Q_NORMAL:
             return stats.norm.cdf(x, loc=self.config["mu"], scale=self.config["sigma"])
@@ -198,31 +245,29 @@ class HyperParameter:
                 return ret_val.astype(int)
             else:
                 return ret_val
-        elif self.type == HyperParameter.LOG_UNIFORM:
-            return np.exp(
-                stats.uniform.ppf(
-                    x, self.config["min"], self.config["max"] - self.config["min"]
-                )
+        elif self.type == HyperParameter.LOG_UNIFORM_V1:
+            return loguniform_v1_ppf(x, self.config["min"], self.config["max"])
+        elif self.type == HyperParameter.LOG_UNIFORM_V2:
+            return loguniform_v1_ppf(
+                x, np.log(self.config["min"]), np.log(self.config["max"])
             )
-        elif self.type == HyperParameter.INV_LOG_UNIFORM:
-            return np.exp(
-                -stats.uniform.ppf(
-                    1 - x,
-                    self.config["min"],
-                    self.config["max"] - self.config["min"],
-                )
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V1:
+            return inv_log_uniform_v1_ppf(x, self.config["min"], self.config["max"])
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V2:
+            return inv_log_uniform_v1_ppf(
+                x, -np.log(self.config["max"]), -np.log(self.config["min"])
             )
-        elif self.type == HyperParameter.Q_LOG_UNIFORM:
-            r = np.exp(
-                stats.uniform.ppf(
-                    x, self.config["min"], self.config["max"] - self.config["min"]
-                )
+        elif self.type == HyperParameter.Q_LOG_UNIFORM_V1:
+            return q_log_uniform_v1_ppf(
+                x, self.config["min"], self.config["max"], self.config["q"]
             )
-            ret_val = np.round(r / self.config["q"]) * self.config["q"]
-            if isinstance(self.config["q"], int):
-                return ret_val.astype(int)
-            else:
-                return ret_val
+        elif self.type == HyperParameter.Q_LOG_UNIFORM_V2:
+            return q_log_uniform_v1_ppf(
+                x,
+                np.log(self.config["min"]),
+                np.log(self.config["max"]),
+                self.config["q"],
+            )
         elif self.type == HyperParameter.NORMAL:
             return stats.norm.ppf(x, loc=self.config["mu"], scale=self.config["sigma"])
         elif self.type == HyperParameter.Q_NORMAL:
@@ -356,3 +401,39 @@ class HyperParameterSet(list):
             X[bayes_opt_index, non_nan] = X_row[non_nan]
 
         return np.transpose(X)
+
+
+def make_param_log_deprecation_message(
+    param_type: str, replacement_param_type: str
+) -> str:
+    from .config import schema
+
+    param_schema = schema.dereferenced_sweep_config_jsonschema["definitions"][
+        param_type
+    ]
+    deprecated_distribution_name = param_schema["properties"]["distribution"]["enum"][0]
+
+    replacement_param_schema = schema.dereferenced_sweep_config_jsonschema[
+        "definitions"
+    ][replacement_param_type]
+    replacement_distribution_name = replacement_param_schema["properties"][
+        "distribution"
+    ]["enum"][0]
+
+    return (
+        f"uses {deprecated_distribution_name}, where min/max specify base-e exponents. "
+        f"Use {replacement_distribution_name} to specify limit values."
+    )
+
+
+PARAM_DEPRECATION_MAP = {
+    HyperParameter.LOG_UNIFORM_V1: make_param_log_deprecation_message(
+        HyperParameter.LOG_UNIFORM_V1, HyperParameter.LOG_UNIFORM_V2
+    ),
+    HyperParameter.INV_LOG_UNIFORM_V1: make_param_log_deprecation_message(
+        HyperParameter.INV_LOG_UNIFORM_V1, HyperParameter.INV_LOG_UNIFORM_V2
+    ),
+    HyperParameter.Q_LOG_UNIFORM_V1: make_param_log_deprecation_message(
+        HyperParameter.Q_LOG_UNIFORM_V1, HyperParameter.Q_LOG_UNIFORM_V2
+    ),
+}
