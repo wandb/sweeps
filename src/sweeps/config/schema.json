@@ -337,7 +337,7 @@
         },
         "distribution": {
           "enum": [
-            "loguniform"
+            "log_uniform_values"
           ]
         }
       },
@@ -388,7 +388,7 @@
         },
         "distribution": {
           "enum": [
-            "inv_loguniform"
+            "inv_log_uniform_values"
           ]
         }
       },
@@ -480,7 +480,7 @@
         },
         "distribution": {
           "enum": [
-            "q_loguniform"
+            "q_log_uniform_values"
           ]
         }
       },

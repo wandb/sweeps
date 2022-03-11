@@ -205,7 +205,7 @@ def test_rand_loguniform(plot):
                 "v2": {
                     "min": v2_min,
                     "max": v2_max,
-                    "distribution": "loguniform",
+                    "distribution": "log_uniform_values",
                 },
             },
         }
@@ -246,7 +246,7 @@ def test_rand_inv_loguniform(plot):
     param_config = {
         "min": limit_min,
         "max": limit_max,
-        "distribution": "inv_loguniform",
+        "distribution": "inv_log_uniform_values",
     }
 
     sweep_config_2params = SweepConfig(
@@ -264,7 +264,9 @@ def test_rand_inv_loguniform(plot):
         runs.append(suggestion)
 
     pred_samples = np.asarray([run.config["v2"]["value"] for run in runs])
-    true_samples = np.random.uniform(limit_min, limit_max, size=n_samples)
+    true_samples = np.random.uniform(
+        np.log(1 / limit_max), np.log(1 / limit_min), size=n_samples
+    )
     true_samples = np.exp(true_samples)
     true_samples = 1 / true_samples
 
@@ -436,7 +438,7 @@ def test_rand_q_loguniform(q, plot):
             "method": "random",
             "parameters": {
                 "v1": {
-                    "distribution": "q_loguniform",
+                    "distribution": "q_log_uniform_values",
                     "min": 0.1,
                     "max": 100,
                     "q": q,

@@ -155,11 +155,26 @@ class HyperParameter:
             return stats.uniform.cdf(
                 np.log(x), self.config["min"], self.config["max"] - self.config["min"]
             )
+        elif (
+            self.type == HyperParameter.LOG_UNIFORM_V2
+            or self.type == HyperParameter.Q_LOG_UNIFORM_V2
+        ):
+            return stats.uniform.cdf(
+                np.log(x),
+                np.log(self.config["min"]),
+                np.log(self.config["max"]) - np.log(self.config["min"]),
+            )
         elif self.type == HyperParameter.INV_LOG_UNIFORM_V1:
             return 1 - stats.uniform.cdf(
                 np.log(1 / x),
                 self.config["min"],
                 self.config["max"] - self.config["min"],
+            )
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V2:
+            return 1 - stats.uniform.cdf(
+                np.log(1 / x),
+                -np.log(self.config["max"]),
+                np.abs(np.log(self.config["max"]) - np.log(self.config["min"])),
             )
         elif self.type == HyperParameter.NORMAL or self.type == HyperParameter.Q_NORMAL:
             return stats.norm.cdf(x, loc=self.config["mu"], scale=self.config["sigma"])
