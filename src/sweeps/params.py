@@ -14,6 +14,25 @@ from .config import fill_parameter
 from ._types import ArrayLike
 
 
+def q_log_uniform_v1_ppf(x: ArrayLike, min, max, q):
+    r = np.exp(stats.uniform.ppf(x, min, max - min))
+    ret_val = np.round(r / q) * q
+    if isinstance(q, int):
+        return ret_val.astype(int)
+    else:
+        return ret_val
+
+
+def inv_log_uniform_v1_ppf(x: ArrayLike, min, max):
+    return np.exp(
+        -stats.uniform.ppf(
+            1 - x,
+            min,
+            max - min,
+        )
+    )
+
+
 class HyperParameter:
 
     CONSTANT = "param_single_value"
@@ -72,26 +91,6 @@ class HyperParameter:
             None if self.type != HyperParameter.CONSTANT else self.config["value"]
         )
 
-    def coerce(self):
-        # use existing logic for new distribution apis
-        if self.type == HyperParameter.Q_LOG_UNIFORM_V2:
-            # coerce to v1
-            self.type = HyperParameter.Q_LOG_UNIFORM_V1
-            self.config["min"] = np.log(self.config["min"])
-            self.config["max"] = np.log(self.config["max"])
-
-        elif self.type == HyperParameter.LOG_UNIFORM_V2:
-            # coerce to v1
-            self.type = HyperParameter.LOG_UNIFORM_V1
-            self.config["min"] = np.log(self.config["min"])
-            self.config["max"] = np.log(self.config["max"])
-
-        elif self.type == HyperParameter.INV_LOG_UNIFORM_V2:
-            # coerce to v1
-            self.type = HyperParameter.INV_LOG_UNIFORM_V1
-            self.config["min"] = -np.log(self.config["max"])
-            self.config["max"] = -np.log(self.config["min"])
-
     def value_to_int(self, value: Any) -> int:
         """Get the index of the value of a categorically distributed HyperParameter.
 
@@ -130,7 +129,6 @@ class HyperParameter:
             Probability that a random sample of this hyperparameter will be less
             than or equal to x.
         """
-        self.coerce()
         if self.type == HyperParameter.CONSTANT:
             return np.zeros_like(x)
         elif self.type == HyperParameter.CATEGORICAL:
@@ -185,7 +183,6 @@ class HyperParameter:
         Returns:
             Value of the random variable at the specified percentile.
         """
-        self.coerce()
         if np.any((x < 0.0) | (x > 1.0)):
             raise ValueError("Can't call ppf on value outside of [0,1]")
         if self.type == HyperParameter.CONSTANT:
@@ -236,24 +233,22 @@ class HyperParameter:
                 )
             )
         elif self.type == HyperParameter.INV_LOG_UNIFORM_V1:
-            return np.exp(
-                -stats.uniform.ppf(
-                    1 - x,
-                    self.config["min"],
-                    self.config["max"] - self.config["min"],
-                )
+            return inv_log_uniform_v1_ppf(x, self.config["min"], self.config["max"])
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V2:
+            return inv_log_uniform_v1_ppf(
+                x, -np.log(self.config["max"]), -np.log(self.config["min"])
             )
         elif self.type == HyperParameter.Q_LOG_UNIFORM_V1:
-            r = np.exp(
-                stats.uniform.ppf(
-                    x, self.config["min"], self.config["max"] - self.config["min"]
-                )
+            return q_log_uniform_v1_ppf(
+                x, self.config["min"], self.config["max"], self.config["q"]
             )
-            ret_val = np.round(r / self.config["q"]) * self.config["q"]
-            if isinstance(self.config["q"], int):
-                return ret_val.astype(int)
-            else:
-                return ret_val
+        elif self.type == HyperParameter.Q_LOG_UNIFORM_V2:
+            return q_log_uniform_v1_ppf(
+                x,
+                np.log(self.config["min"]),
+                np.log(self.config["max"]),
+                self.config["q"],
+            )
         elif self.type == HyperParameter.NORMAL:
             return stats.norm.ppf(x, loc=self.config["mu"], scale=self.config["sigma"])
         elif self.type == HyperParameter.Q_NORMAL:
@@ -293,11 +288,9 @@ class HyperParameter:
 
     def sample(self) -> Any:
         """Randomly sample a value from the distribution of this HyperParameter."""
-        self.coerce()
         return self.ppf(random.uniform(0.0, 1.0))
 
     def _to_config(self) -> Tuple[str, Dict]:
-        self.coerce()
         config = dict(value=self.value)
         return self.name, config
 
