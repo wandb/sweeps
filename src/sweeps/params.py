@@ -33,6 +33,10 @@ def inv_log_uniform_v1_ppf(x: ArrayLike, min, max):
     )
 
 
+def loguniform_v1_ppf(x: ArrayLike, min, max):
+    return np.exp(stats.uniform.ppf(x, min, max - min))
+
+
 class HyperParameter:
 
     CONSTANT = "param_single_value"
@@ -227,10 +231,10 @@ class HyperParameter:
             else:
                 return ret_val
         elif self.type == HyperParameter.LOG_UNIFORM_V1:
-            return np.exp(
-                stats.uniform.ppf(
-                    x, self.config["min"], self.config["max"] - self.config["min"]
-                )
+            return loguniform_v1_ppf(x, self.config["min"], self.config["max"])
+        elif self.type == HyperParameter.LOG_UNIFORM_V2:
+            return loguniform_v1_ppf(
+                x, np.log(self.config["min"]), np.log(self.config["max"])
             )
         elif self.type == HyperParameter.INV_LOG_UNIFORM_V1:
             return inv_log_uniform_v1_ppf(x, self.config["min"], self.config["max"])
