@@ -116,7 +116,14 @@ class SweepRun(BaseModel):
             The maximum or minimum metric.
         """
 
-        cmp_func = max if kind == "maximum" else min
+        if kind.lower() in ['minimum', 'min']:
+            cmp_func = min
+        elif kind.lower() in ['maximum', 'max']:
+            cmp_func = max
+        else:
+            raise ValueError(
+                f'Invalid extremum type {kind}, must be one of ["maximum", "minimum"]'
+            )
         try:
             summary_metric = [self.summary_metric(metric_name)]
         except KeyError:
