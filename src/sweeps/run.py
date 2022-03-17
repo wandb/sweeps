@@ -116,9 +116,9 @@ class SweepRun(BaseModel):
             The maximum or minimum metric.
         """
 
-        if kind.lower() in ["minimum", "min"]:
+        if kind.lower() in ["minimum", "min", "minimize"]:
             cmp_func = min
-        elif kind.lower() in ["maximum", "max"]:
+        elif kind.lower() in ["maximum", "max", "maximize"]:
             cmp_func = max
         else:
             raise ValueError(
