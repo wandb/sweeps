@@ -81,6 +81,7 @@ class SweepRun(BaseModel):
     exitcode: Optional[int] = None
     running: Optional[bool] = None
 
+    # TODO: this config class does not seem to be used by anything
     class Config:
         use_enum_values = True
         allow_population_by_field_name = True
@@ -147,6 +148,7 @@ def next_run(
     validate: bool = False,
     **kwargs,
 ) -> Optional[SweepRun]:
+    # TODO: next run requiring re-calculation of all runs is expensive
     return next_runs(sweep_config, runs, validate, 1, **kwargs)[0]
 
 
@@ -293,6 +295,7 @@ def stop_runs(
         A list of the runs to stop.
     """
 
+    # TODO: should this be only imported in the case where et_type is hyperband below?
     from .hyperband_stopping import hyperband_stop_runs
 
     # validate the sweep config
