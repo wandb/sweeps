@@ -15,7 +15,7 @@ from .test_random_search import check_that_samples_are_from_the_same_distributio
 def squiggle(x: ArrayLike) -> np.floating:
     # the maximum of this 1d function is at x=2 and the minimum is at ~3.6 over the
     # interval 0-5
-    return np.exp(-((x - 2) ** 2)) + np.exp(-((x - 6) ** 2) / 10) + 1 / (x ** 2 + 1)
+    return np.exp(-((x - 2) ** 2)) + np.exp(-((x - 6) ** 2) / 10) + 1 / (x**2 + 1)
 
 
 def rosenbrock(x: ArrayLike) -> np.floating:
