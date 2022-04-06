@@ -738,6 +738,10 @@
       "type": "array",
       "description": "Command used to launch the training script"
     },
+    "command_flags": {
+      "type": "array",
+      "description": "Which (if any) arguments passed into the command are flags."
+    },
     "name": {
       "type": "string",
       "description": "The name of the sweep, displayed in the W&B UI"
