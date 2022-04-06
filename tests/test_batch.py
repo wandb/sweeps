@@ -12,7 +12,7 @@ def reset_seed(init_seed):
 def test_batch_bayes_search_same_answer_as_single_search(
     sweep_config_bayes_search_2params_with_metric,
 ):
-    init_seed = random.randrange(0, 2 ** 32 - 1)
+    init_seed = random.randrange(0, 2**32 - 1)
     reset_seed(init_seed)
     runs = []
     for _ in range(10):
@@ -43,7 +43,7 @@ def test_batch_random_search_same_answer_as_single_search():
         "parameters": {"v1": {"values": [1, 2, 3]}, "v2": {"values": [4, 5]}},
     }
 
-    init_seed = random.randrange(0, 2 ** 32 - 1)
+    init_seed = random.randrange(0, 2**32 - 1)
     reset_seed(init_seed)
 
     runs = []
