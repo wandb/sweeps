@@ -407,6 +407,7 @@ def test_eta_3_max():
     to_stop = stop_runs(sweep_config, runs)
     assert to_stop == [runs[1], runs[-1]]
 
+
 def test_hyperband_runs_with_bad_config():
     # fixes https://sentry.io/share/issue/8fc67616a29a431f8f66ebbf40343ce1/
 
@@ -418,6 +419,7 @@ def test_hyperband_runs_with_bad_config():
     }
     with pytest.raises(ValueError):
         _ = stop_runs(invalid_config, [])
+
 
 def test_hyperband_runs_with_nan_metrics():
     # fixes https://sentry.io/share/issue/e6e002283c0447d6ac4defaf58a5d665/
