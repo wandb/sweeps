@@ -304,6 +304,13 @@ def stop_runs(
 
     if "early_terminate" not in sweep_config:
         raise ValueError('early terminate requires "early_terminate" section.')
+
+    if (
+        not isinstance(sweep_config["early_terminate"], Dict)
+        or "type" not in sweep_config["early_terminate"]
+    ):
+        raise ValueError('early terminate must be a dict with a "type" section')
+
     et_type = sweep_config["early_terminate"]["type"]
 
     if et_type == "hyperband":
