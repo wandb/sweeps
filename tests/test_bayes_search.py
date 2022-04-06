@@ -93,7 +93,7 @@ def test_squiggle_convergence_full(x):
         }
     )
 
-    run_bayes_search(y, config, runs, num_iterations=200, optimium={"x": 2.0})
+    run_bayes_search(y, config, runs, num_iterations=256, optimium={"x": 2.0})
 
 
 def run_iterations(
