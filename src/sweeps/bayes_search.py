@@ -14,8 +14,6 @@ from scipy import stats as scipy_stats
 
 from ._types import floating, integer, ArrayLike
 
-NUGGET = 1e-10
-
 
 class ImputeStrategy(str, Enum):
     best = "best"
