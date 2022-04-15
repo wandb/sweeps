@@ -15,19 +15,18 @@ test_results_dir.mkdir(parents=True, exist_ok=True)
 
 
 def check_that_samples_are_from_the_same_distribution(
-    pred_samples,
-    true_samples,
-    bins,
+    pred_samples: ArrayLike,
+    true_samples: ArrayLike,
+    bins: ArrayLike,
 ):
 
+    # bin the samples for comparison
     n_pred, _ = np.histogram(pred_samples, bins=bins)
     n_true, _ = np.histogram(true_samples, bins=bins)
 
     # assert the counts are equal in each bin to 1 sigma within the poisson error
     err_pred = np.sqrt(n_pred)
     err_true = np.sqrt(n_true)
-
-    # less than 5 sigma different
 
     # if denom is zero, then both bins have zero counts, to set to 1 to
     # avoid division by zero error (no effect on answer)
@@ -36,6 +35,8 @@ def check_that_samples_are_from_the_same_distribution(
     sigma_diff = np.abs(n_pred - n_true) / denom
     sigma_diff[~np.isfinite(sigma_diff)] = 0
 
+    # less than 5 sigma different
+    plot_two_distributions(true_samples, pred_samples, bins)
     np.testing.assert_array_less(sigma_diff, 5)
 
 
