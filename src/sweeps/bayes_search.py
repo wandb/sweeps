@@ -35,6 +35,33 @@ def bayes_baseline_validate_and_fill(config: Dict) -> Dict:
     return config
 
 
+def fit_normalized_gaussian_process(
+    X: ArrayLike,
+    y: ArrayLike,
+    nu: floating = 1.5,
+    rng_seed: int = 2,
+) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
+    gp = sklearn_gaussian.GaussianProcessRegressor(
+        # Matern Kernel is a generalization of the Radial-Basis Function kernel
+        kernel=sklearn_gaussian.kernels.Matern(nu=nu),
+        n_restarts_optimizer=2,
+        alpha=1e-7,
+        random_state=rng_seed,
+    )
+
+    y_stddev: ArrayLike
+    if len(y) == 1:
+        y = np.array(y)
+        y_mean = y[0]
+        y_stddev = 1.0
+    else:
+        y_mean = np.mean(y)
+        y_stddev = np.std(y) + 0.0001
+    y_norm = (y - y_mean) / y_stddev
+    gp.fit(X, y_norm)
+    return gp, y_mean, y_stddev
+
+
 def sigmoid(x: ArrayLike) -> ArrayLike:
     return np.exp(-np.logaddexp(0, -x))
 
