@@ -27,7 +27,6 @@ def run_bayes_search(
     f: Callable[[SweepRun], floating],
     config: SweepConfig,
     init_runs: Iterable[SweepRun] = (),
-    improvement: floating = 0.1,
     num_iterations: integer = 20,
     optimium: Optional[Dict[str, floating]] = None,
     atol: float = 0.2,
@@ -39,7 +38,7 @@ def run_bayes_search(
     runs = list(init_runs)
     for _ in range(num_iterations):
         suggested_run = bayes.bayes_search_next_run(
-            runs, config, minimum_improvement=improvement
+            runs, config
         )
         suggested_run.state = RunState.finished
         metric = f(suggested_run)
@@ -101,7 +100,6 @@ def run_iterations(
     bounds: ArrayLike,
     num_iterations: integer = 20,
     x_init: Optional[ArrayLike] = None,
-    improvement: floating = 0.1,
     optimium: Optional[ArrayLike] = None,
     atol: float = 0.2,
     chunk_size: integer = 1,
@@ -125,7 +123,6 @@ def run_iterations(
                 sample_y=y,
                 X_bounds=bounds,
                 current_X=sample_X,
-                improvement=improvement,
             )
             if sample_X is None:
                 sample_X = np.array([sample])
@@ -158,7 +155,7 @@ def test_squiggle_explores_parameter_space():
     X = np.random.uniform(0, 5, 200)[:, None]
     Y = squiggle(X.ravel())
     (sample, prob, pred, _, _,) = bayes.next_sample(
-        sample_X=X, sample_y=Y, X_bounds=[[-5.0, 5.0]], improvement=1.0
+        sample_X=X, sample_y=Y, X_bounds=[[-5.0, 5.0]]
     )
     assert sample[0] < 0.0, "Greater than 0 {}".format(sample[0])
     # we sample missing a big chunk between 1 and 3
@@ -227,7 +224,6 @@ def test_iterations_rosenbrock():
         x_init,
         optimium=[1, 1, 1],
         atol=0.2,
-        improvement=0.1,
     )
 
 
@@ -238,7 +234,6 @@ def test_iterations_squiggle_chunked():
         chunk_size=5,
         num_iterations=200,
         optimium=[3.6],
-        improvement=0.1,
     )
 
 

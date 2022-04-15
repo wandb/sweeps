@@ -8,7 +8,8 @@ from .config.cfg import SweepConfig
 from .config.schema import fill_validate_metric
 from .run import SweepRun, RunState, run_state_is_terminal
 from .params import HyperParameter, HyperParameterSet
-from sklearn import gaussian_process as sklearn_gaussian
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import Matern as MaternKernel
 from scipy import stats as scipy_stats
 
 from ._types import floating, integer, ArrayLike
@@ -36,33 +37,6 @@ def bayes_baseline_validate_and_fill(config: Dict) -> Dict:
     return config
 
 
-def fit_normalized_gaussian_process(
-    X: ArrayLike,
-    y: ArrayLike,
-    nu: floating = 1.5,
-    rng_seed: int = 2,
-) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
-    gp = sklearn_gaussian.GaussianProcessRegressor(
-        # Matern Kernel is a generalization of the Radial-Basis Function kernel
-        kernel=sklearn_gaussian.kernels.Matern(nu=nu),
-        n_restarts_optimizer=2,
-        alpha=1e-7,
-        random_state=rng_seed,
-    )
-
-    y_stddev: ArrayLike
-    if len(y) == 1:
-        y = np.array(y)
-        y_mean = y[0]
-        y_stddev = 1.0
-    else:
-        y_mean = np.mean(y)
-        y_stddev = np.std(y) + 0.0001
-    y_norm = (y - y_mean) / y_stddev
-    gp.fit(X, y_norm)
-    return gp, y_mean, y_stddev
-
-
 def sigmoid(x: ArrayLike) -> ArrayLike:
     return np.exp(-np.logaddexp(0, -x))
 
@@ -83,16 +57,6 @@ def random_sample(X_bounds: ArrayLike, num_test_samples: integer) -> ArrayLike:
     return test_X
 
 
-def predict(
-    X: ArrayLike, y: ArrayLike, test_X: ArrayLike, nu: floating = 1.5
-) -> Tuple[ArrayLike, ArrayLike]:
-    gp, norm_mean, norm_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
-    y_pred, y_std = gp.predict([test_X], return_std=True)
-    y_std_norm = y_std * norm_stddev
-    y_pred_norm = (y_pred * norm_stddev) + norm_mean
-    return y_pred_norm[0], y_std_norm[0]
-
-
 def train_gaussian_process(
     sample_X: ArrayLike,
     sample_y: ArrayLike,
@@ -100,7 +64,8 @@ def train_gaussian_process(
     current_X: ArrayLike = None,
     nu: floating = 1.5,
     max_samples: integer = 100,
-) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
+    rng_seed: int = 2,
+) -> Tuple[GaussianProcessRegressor, floating, floating]:
     """Trains a Gaussian Process function from sample_X, sample_y data.
 
     Handles the case where there are other training runs in flight (current_X)
@@ -157,14 +122,17 @@ def train_gaussian_process(
     else:
         X = sample_X
         y = sample_y
-    gp, y_mean, y_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
-    if current_X is not None:
-        # if we have some hyperparameters running, we pretend that they return
-        # the prediction of the function we've fit
-        X = np.append(X, current_X, axis=0)
-        current_y_fantasy = (gp.predict(current_X) * y_stddev) + y_mean
-        y = np.append(y, current_y_fantasy)
-        gp, y_mean, y_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
+    y_mean = np.mean(y)
+    y_stddev = np.std(y)
+    gp = GaussianProcessRegressor(
+        # Matern Kernel is a generalization of the Radial-Basis Function kernel
+        kernel=MaternKernel(nu=nu),
+        n_restarts_optimizer=2,
+        alpha=1e-7,
+        random_state=rng_seed,
+        normalize_y=True,
+    )
+    gp.fit(X, y)
     return gp, y_mean, y_stddev
 
 
@@ -183,9 +151,7 @@ def next_sample(
     current_X: Optional[ArrayLike] = None,
     nu: floating = 1.5,
     max_samples_for_gp: integer = 100,
-    improvement: floating = 0.01,
     num_points_to_try: integer = 1000,
-    opt_func: str = "expected_improvement",
     test_X: Optional[ArrayLike] = None,
 ) -> Tuple[ArrayLike, floating, floating, floating, floating]:
     """Calculates the best next sample to look at via bayesian optimization.
@@ -209,15 +175,9 @@ def next_sample(
             maximum samples to consider (since algo is O(n^3)) for performance,
             but also adds some randomness. this number of samples will be chosen
             randomly from the sample_X and used to train the GP.
-        improvement: floating, optional, default 0.1
-            amount of improvement to optimize for -- higher means take more exploratory risks
         num_points_to_try: integer, optional, default 1000
             number of X values to try when looking for value with highest expected probability
             of improvement
-        opt_func: one of {"expected_improvement", "prob_of_improvement"} - whether to optimize expected
-                improvement of probability of improvement.  Expected improvement is generally better - may want
-                to remove probability of improvement at some point.  (But I think prboability of improvement
-                is a little easier to calculate)
         test_X: X values to test when looking for the best values to try
 
     Returns:
@@ -288,11 +248,6 @@ def next_sample(
     # hack for dealing with predicted std of 0
     epsilon = 0.00000001
 
-    """
-    if opt_func == "probability_of_improvement":
-        min_norm_y = (min_unnorm_y - y_mean) / y_stddev - improvement
-    else:
-    """
     min_norm_y = (min_unnorm_y - y_mean) / y_stddev
 
     Z = -(y_pred - min_norm_y) / (y_pred_std + epsilon)
@@ -301,11 +256,6 @@ def next_sample(
         Z
     ) + y_pred_std * scipy_stats.norm.pdf(Z)
 
-    """
-    if opt_func == "probability_of_improvement":
-        best_test_X_index = np.argmax(prob_of_improve)
-    else:
-    """
     best_test_X_index = np.argmax(e_i)
 
     suggested_X = test_X[best_test_X_index]
@@ -459,7 +409,6 @@ def bayes_search_next_run(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
     validate: bool = False,
-    minimum_improvement: floating = 0.1,
 ) -> SweepRun:
     """Suggest runs using Bayesian optimization.
 
@@ -472,7 +421,6 @@ def bayes_search_next_run(
     Args:
         runs: The runs in the sweep.
         config: The sweep's config.
-        minimum_improvement: The minimium improvement to optimize for. Higher means take more exploratory risks.
         validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
            If true, will raise a Validation error if `sweep_config` does not conform to
            the schema. If false, will attempt to run the sweep with an unvalidated schema.
@@ -500,7 +448,6 @@ def bayes_search_next_run(
         sample_y=y,
         X_bounds=X_bounds,
         current_X=current_X if len(current_X) > 0 else None,
-        improvement=minimum_improvement,
     )
 
     # convert the parameters from vector of [0,1] values
@@ -526,12 +473,11 @@ def bayes_search_next_runs(
     config: Union[dict, SweepConfig],
     validate: bool = False,
     n: int = 1,
-    minimum_improvement: floating = 0.1,
 ):
     ret: List[SweepRun] = []
     for _ in range(n):
         suggestion = bayes_search_next_run(
-            runs + ret, config, validate, minimum_improvement
+            runs + ret, config, validate
         )
         ret.append(suggestion)
     return ret
