@@ -37,13 +37,17 @@ def bayes_baseline_validate_and_fill(config: Dict) -> Dict:
 
 
 def fit_normalized_gaussian_process(
-    X: ArrayLike, y: ArrayLike, nu: floating = 1.5
+    X: ArrayLike,
+    y: ArrayLike,
+    nu: floating = 1.5,
+    rng_seed: int = 2,
 ) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
     gp = sklearn_gaussian.GaussianProcessRegressor(
+        # Matern Kernel is a generalization of the Radial-Basis Function kernel
         kernel=sklearn_gaussian.kernels.Matern(nu=nu),
         n_restarts_optimizer=2,
-        alpha=0.0000001,
-        random_state=2,
+        alpha=1e-7,
+        random_state=rng_seed,
     )
 
     y_stddev: ArrayLike
