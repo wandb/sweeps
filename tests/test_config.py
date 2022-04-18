@@ -77,3 +77,13 @@ def test_categorical_prob_grid():
     with pytest.raises(ValueError):
         sweep_config = config.SweepConfig(invalid_config)
         grid_search.grid_search_next_runs([], sweep_config)
+
+def test_nested_config():
+    nested_config = {
+        "method": "grid",
+        "parameters": {
+            "foo": {"values": [1, 2, 3]},
+            "foo.bar": {"values": [1, 2, 3]},
+        },
+    }
+    _ = config.SweepConfig(nested_config)
