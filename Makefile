@@ -29,6 +29,18 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
 
+test:
+	tox -e "pyupgrade,black,mypy,flake8,docstrings"
+
+test-full:
+	tox
+
+test-short:
+	tox -e "pyupgrade,black,mypy,flake8,docstrings,py36"
+
+format:
+	tox -e format
+	
 release: dist ## package and upload release
 	pip install -qq twine
 	twine upload dist/*
