@@ -53,6 +53,21 @@ def test_hyperparameterset_normalize_runs():
     normalized_runs = valid_set.normalize_runs_as_array([r1, r2])
     assert normalized_runs.shape == (2, 1)
 
+    valid_set = HyperParameterSet(
+        [
+            HyperParameter("v1", {"value": 1}),
+            HyperParameter("v2", {"values": [1, 2]}),
+        ]
+    )
+    r1 = SweepRun(
+        name="b",
+        state=RunState.finished,
+        config={"v1": {"value": 1}},
+        history=[],
+    )
+    with pytest.raises(TypeError):
+        _ = valid_set.normalize_runs_as_array([r1, r2])
+
 
 def test_hyperparameterset_normalize_runs_with_nans():
 
@@ -60,7 +75,6 @@ def test_hyperparameterset_normalize_runs_with_nans():
         [
             HyperParameter("v1", {"value": 1}),
             HyperParameter("v2", {"values": [1, None]}),
-            HyperParameter("v3", {"values": [1, 2]}),
         ]
     )
     r1 = SweepRun(

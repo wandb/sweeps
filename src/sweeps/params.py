@@ -371,7 +371,7 @@ class HyperParameterSet(list):
         normalized_runs: np.ndarray = np.zeros([len(self.searchable_params), len(runs)])
         for param_name, bayes_opt_index in self.param_names_to_index.items():
             _param: HyperParameter = self.param_names_to_param[param_name]
-            row: np.ndarray = np.empty(len(runs))  # default to NaN
+            row: np.ndarray = np.zeros(len(runs))  # default to 0
             for i, run in enumerate(runs):
                 if param_name in run.config:
                     _val = run.config[param_name]["value"]
@@ -379,6 +379,10 @@ class HyperParameterSet(list):
                         row[i] = _param.value_to_idx(_val)
                     else:
                         row[i] = _val
+                else:
+                    raise ValueError(
+                        "Run does not contain parameter {}".format(param_name)
+                    )
             # Convert row to CDF, filter out NaNs
             non_nan_indices = ~np.isnan(row)
             normalized_runs[bayes_opt_index, non_nan_indices] = _param.cdf(row)[
