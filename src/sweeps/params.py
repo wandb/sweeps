@@ -371,7 +371,7 @@ class HyperParameterSet(list):
         normalized_runs: np.ndarray = np.zeros([len(self.searchable_params), len(runs)])
         for param_name, bayes_opt_index in self.param_names_to_index.items():
             _param: HyperParameter = self.param_names_to_param[param_name]
-            row: np.ndarray = np.zeros(len(runs))  # default to 0
+            row: np.ndarray = np.empty(len(runs))  # default to NaN
             for i, run in enumerate(runs):
                 if param_name in run.config:
                     _val = run.config[param_name]["value"]
