@@ -325,24 +325,24 @@ class HyperParameterSet(list):
         Args:
             items: A list of HyperParameters to construct the set from.
         """
+        self.searchable_params: List[HyperParameter] = []
+        self.param_names_to_index: Dict[str, int] = dict()
+        self.param_names_to_param: Dict[str, HyperParameter] = dict()
 
+        _searchable_param_counter: int = 0
         for item in items:
             if not isinstance(item, HyperParameter):
                 raise TypeError(
-                    f"each item used to initialize HyperParameterSet must be a HyperParameter, got {item}"
+                    f"Every item in HyperParameterSet must be a HyperParameter, got {item} of type {type(item)}"
                 )
+            elif not item.type == HyperParameter.CONSTANT:
+                # constants do not form part of the search space
+                self.searchable_params.append(item)
+                self.param_names_to_index[item.name] = _searchable_param_counter
+                self.param_names_to_param[item.name] = item
+                _searchable_param_counter += 1
 
         super().__init__(items)
-        self.searchable_params = [
-            param for param in self if param.type != HyperParameter.CONSTANT
-        ]
-
-        self.param_names_to_index = {}
-        self.param_names_to_param = {}
-
-        for ii, param in enumerate(self.searchable_params):
-            self.param_names_to_index[param.name] = ii
-            self.param_names_to_param[param.name] = param
 
     @classmethod
     def from_config(cls, config: Dict):
@@ -394,6 +394,9 @@ class HyperParameterSet(list):
                     for config in runs_params
                 ]
             )
+
+            # Remove any NaN values before passing to CDF
+            # x = x[~np.isnan(x)]
 
             X_row = param.cdf(row)
             # only use values where input wasn't nan
