@@ -9,4 +9,4 @@ floating = Union[float, np.floating]
 integer = Union[int, np.integer]
 ArrayLike = Any
 # TODO: mypy is very picky when it comes to supported operand types
-# ArrayLike = Union[List, Tuple, np.ndarray]
+# ArrayLike = Union[List, Tuple, numpy.typing.NDArray]

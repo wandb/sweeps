@@ -1,5 +1,7 @@
 import pytest
 
+import numpy as np
+
 from sweeps import SweepRun, RunState
 from sweeps.params import HyperParameter, HyperParameterSet
 
@@ -65,7 +67,7 @@ def test_hyperparameterset_normalize_runs():
         config={"v1": {"value": 1}},
         history=[],
     )
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         _ = valid_set.normalize_runs_as_array([r1, r2])
 
 
@@ -74,7 +76,7 @@ def test_hyperparameterset_normalize_runs_with_nans():
     valid_set = HyperParameterSet(
         [
             HyperParameter("v1", {"value": 1}),
-            HyperParameter("v2", {"values": [1, None]}),
+            HyperParameter("v2", {"values": [1, np.inf]}),
         ]
     )
     r1 = SweepRun(
@@ -86,8 +88,8 @@ def test_hyperparameterset_normalize_runs_with_nans():
     r2 = SweepRun(
         name="b",
         state=RunState.finished,
-        config={"v1": {"value": 1}, "v2": {"value": None}},
+        config={"v1": {"value": 1}, "v2": {"value": 2}},
         history=[],
     )
-    normalized_runs = valid_set.normalize_runs_as_array([r1, r2])
-    assert normalized_runs.shape == (2, 2)
+    with pytest.raises(ValueError):
+        _ = valid_set.normalize_runs_as_array([r1, r2])

@@ -329,7 +329,8 @@ class HyperParameterSet(list):
         self.param_names_to_index: Dict[str, int] = dict()
         self.param_names_to_param: Dict[str, HyperParameter] = dict()
 
-        for i, item in items:
+        _searchable_param_index: int = 0
+        for item in items:
             if not isinstance(item, HyperParameter):
                 raise TypeError(
                     f"Every item in HyperParameterSet must be a HyperParameter, got {item} of type {type(item)}"
@@ -337,8 +338,9 @@ class HyperParameterSet(list):
             elif not item.type == HyperParameter.CONSTANT:
                 # constants do not form part of the search space
                 self.searchable_params.append(item)
-                self.param_names_to_index[item.name] = i
+                self.param_names_to_index[item.name] = _searchable_param_index
                 self.param_names_to_param[item.name] = item
+                _searchable_param_index += 1
 
         super().__init__(items)
 
@@ -378,9 +380,9 @@ class HyperParameterSet(list):
                     else:
                         row[i] = _val
                 else:
-                    raise ValueError(
-                        "Run does not contain parameter {}".format(param_name)
-                    )
+                    raise ValueError(f"Run does not contain parameter {param_name}")
+            if not np.all(np.isfinite(row)):
+                raise ValueError(f"Found non-finite value in normalized run row {row}")
             # Convert row to CDF, filter out NaNs
             non_nan_indices = ~np.isnan(row)
             normalized_runs[bayes_opt_index, non_nan_indices] = _param.cdf(row)[
