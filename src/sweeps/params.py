@@ -95,11 +95,11 @@ class HyperParameter:
             None if self.type != HyperParameter.CONSTANT else self.config["value"]
         )
 
-    def value_to_int(self, value: Any) -> int:
+    def value_to_idx(self, value: Any) -> int:
         """Get the index of the value of a categorically distributed HyperParameter.
 
         >>> parameter = HyperParameter('a', {'values': [1, 2, 3]})
-        >>> assert parameter.value_to_int(2) == 1
+        >>> assert parameter.value_to_idx(2) == 1
 
         Args:
              value: The value to look up.
@@ -109,7 +109,7 @@ class HyperParameter:
         """
 
         if self.type != HyperParameter.CATEGORICAL:
-            raise ValueError("Can only call value_to_int on categorical variable")
+            raise ValueError("Can only call value_to_idx on categorical variable")
 
         for ii, test_value in enumerate(self.config["values"]):
             if value == test_value:
@@ -366,44 +366,25 @@ class HyperParameterSet(list):
         """Convert a HyperParameterSet to a SweepRun config."""
         return dict([param._to_config() for param in self])
 
-    def convert_runs_to_normalized_vector(self, runs: List[SweepRun]) -> ArrayLike:
-        """Converts a list of SweepRuns to an array of normalized parameter vectors.
-
-        Args:
-            runs: List of runs to convert.
-
-        Returns:
-            A 2d array of normalized parameter vectors.
-        """
-
-        runs_params = [run.config for run in runs]
-        X = np.zeros([len(self.searchable_params), len(runs)])
-
-        for key, bayes_opt_index in self.param_names_to_index.items():
-            param = self.param_names_to_param[key]
-            row = np.array(
-                [
-                    (
-                        param.value_to_int(config[key]["value"])
-                        if param.type == HyperParameter.CATEGORICAL
-                        else config[key]["value"]
-                    )
-                    if key in config
-                    # filter out incorrectly specified runs
-                    else np.nan
-                    for config in runs_params
-                ]
-            )
-
-            # Remove any NaN values before passing to CDF
-            # x = x[~np.isnan(x)]
-
-            X_row = param.cdf(row)
-            # only use values where input wasn't nan
-            non_nan = ~np.isnan(row)
-            X[bayes_opt_index, non_nan] = X_row[non_nan]
-
-        return np.transpose(X)
+    def normalize_runs_as_array(self, runs: List[SweepRun]) -> np.ndarray:
+        """Normalize a list of SweepRuns to an ndarray of parameter vectors."""
+        normalized_runs: np.ndarray = np.zeros([len(self.searchable_params), len(runs)])
+        for param_name, bayes_opt_index in self.param_names_to_index.items():
+            _param: HyperParameter = self.param_names_to_param[param_name]
+            row: np.ndarray = np.zeros(len(runs))  # default to 0
+            for i, run in enumerate(runs):
+                if param_name in run.config:
+                    _val = run.config[param_name]["value"]
+                    if _param.type == HyperParameter.CATEGORICAL:
+                        row[i] = _param.value_to_idx(_val)
+                    else:
+                        row[i] = _val
+            # Convert row to CDF, filter out NaNs
+            non_nan_indices = ~np.isnan(row)
+            normalized_runs[bayes_opt_index, non_nan_indices] = _param.cdf(row)[
+                non_nan_indices
+            ]
+        return np.transpose(normalized_runs)
 
 
 def make_param_log_deprecation_message(
