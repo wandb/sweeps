@@ -329,8 +329,7 @@ class HyperParameterSet(list):
         self.param_names_to_index: Dict[str, int] = dict()
         self.param_names_to_param: Dict[str, HyperParameter] = dict()
 
-        _searchable_param_counter: int = 0
-        for item in items:
+        for i, item in items:
             if not isinstance(item, HyperParameter):
                 raise TypeError(
                     f"Every item in HyperParameterSet must be a HyperParameter, got {item} of type {type(item)}"
@@ -338,9 +337,8 @@ class HyperParameterSet(list):
             elif not item.type == HyperParameter.CONSTANT:
                 # constants do not form part of the search space
                 self.searchable_params.append(item)
-                self.param_names_to_index[item.name] = _searchable_param_counter
+                self.param_names_to_index[item.name] = i
                 self.param_names_to_param[item.name] = item
-                _searchable_param_counter += 1
 
         super().__init__(items)
 

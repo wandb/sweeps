@@ -2,8 +2,6 @@
 
 from typing import Any, Union
 
-# from typing import Any, List, Tuple, Union
-
 import numpy as np
 
 
