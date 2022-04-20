@@ -85,7 +85,7 @@ def test_hyperparameterset_normalize_runs():
     r2 = SweepRun(
         name="b",
         state=RunState.finished,
-        config={"v1": {"value": 1}, "v2": {"value": 2}},
+        config={"v1": {"value": 1}, "v2": {"value": np.inf}},
         history=[],
     )
     normalized_runs = valid_set.normalize_runs_as_array([r1, r2])
