@@ -1,7 +1,7 @@
 """Hyperparameter search parameters."""
 
 import random
-
+import logging
 from typing import List, Tuple, Dict, Any
 
 import numpy as np
@@ -380,9 +380,9 @@ class HyperParameterSet(list):
                     else:
                         row[i] = _val
                 else:
-                    raise ValueError(f"Run does not contain parameter {param_name}")
+                    logging.warning(f"Run does not contain parameter {param_name}")
             if not np.all(np.isfinite(row)):
-                raise ValueError(f"Found non-finite value in normalized run row {row}")
+                logging.warning(f"Found non-finite value in normalized run row {row}")
             # Convert row to CDF, filter out NaNs
             non_nan_indices = ~np.isnan(row)
             normalized_runs[bayes_opt_index, non_nan_indices] = _param.cdf(row)[

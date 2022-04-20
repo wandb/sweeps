@@ -67,11 +67,8 @@ def test_hyperparameterset_normalize_runs():
         config={"v1": {"value": 1}},
         history=[],
     )
-    with pytest.raises(ValueError):
-        _ = valid_set.normalize_runs_as_array([r1, r2])
-
-
-def test_hyperparameterset_normalize_runs_with_nans():
+    normalized_runs = valid_set.normalize_runs_as_array([r1, r2])
+    assert normalized_runs.shape == (2, 1)
 
     valid_set = HyperParameterSet(
         [
@@ -91,5 +88,5 @@ def test_hyperparameterset_normalize_runs_with_nans():
         config={"v1": {"value": 1}, "v2": {"value": 2}},
         history=[],
     )
-    with pytest.raises(ValueError):
-        _ = valid_set.normalize_runs_as_array([r1, r2])
+    normalized_runs = valid_set.normalize_runs_as_array([r1, r2])
+    assert normalized_runs.shape == (2, 1)
