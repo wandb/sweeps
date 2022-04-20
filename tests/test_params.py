@@ -76,4 +76,4 @@ def test_hyperparameterset_normalize_runs_with_nans():
         history=[],
     )
     normalized_runs = valid_set.normalize_runs_as_array([r1, r2])
-    assert normalized_runs.shape == (3, 1)
+    assert normalized_runs.shape == (2, 2)
