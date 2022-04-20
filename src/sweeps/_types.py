@@ -1,10 +1,12 @@
 """ Custom types for sweeps, mainly for type-checking. """
 
-from typing import List, Tuple, Union
+from typing import Any, List, Tuple, Union
 
 import numpy as np
 
 
 floating = Union[float, np.floating]
 integer = Union[int, np.integer]
-ArrayLike = Union[List, Tuple, np.ndarray]
+# TODO: Remove Any from here
+#   mypy is very picky when it comes to supported operand types
+ArrayLike = Union[Any, List, Tuple, np.ndarray]
