@@ -40,7 +40,7 @@ test-short:
 
 format:
 	tox -e format
-	
+
 release: dist ## package and upload release
 	pip install -qq twine
 	twine upload dist/*

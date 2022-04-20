@@ -1,6 +1,6 @@
 """ Custom types for sweeps, mainly for type-checking. """
 
-from typing import Any, List, Tuple, Union
+from typing import List, Tuple, Union
 
 import numpy as np
 

@@ -6,7 +6,7 @@ from sweeps.params import HyperParameter, HyperParameterSet
 
 def test_hyperparameterset_initialize():
 
-    valid_set = HyperParameterSet(
+    _ = HyperParameterSet(
         [
             HyperParameter(
                 "inv_log_uniform",
@@ -22,7 +22,7 @@ def test_hyperparameterset_initialize():
     )
 
     with pytest.raises(TypeError):
-        invalid_set = HyperParameterSet(
+        _ = HyperParameterSet(
             [
                 HyperParameter("constant", {"value": 1}),
                 "not-a-hyperparameter",
