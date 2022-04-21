@@ -385,9 +385,9 @@ class HyperParameterSet(list):
                 logging.warning(f"Found non-finite value in normalized run row {row}")
             # Convert row to CDF, filter out NaNs
             non_nan_indices = ~np.isnan(row)
-            normalized_runs[bayes_opt_index, non_nan_indices] = _param.cdf(row)[
+            normalized_runs[bayes_opt_index, non_nan_indices] = _param.cdf(row[
                 non_nan_indices
-            ]
+            ])
         return np.transpose(normalized_runs)
 
 
