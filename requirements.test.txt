@@ -1,5 +1,4 @@
 -r requirements.dev.txt
-tox>=3.24.0
 pytest==6.2.3
 pytest-cov==2.11.1
 pytest-randomly==3.8.0
