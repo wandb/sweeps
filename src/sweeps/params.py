@@ -369,7 +369,7 @@ class HyperParameterSet(list):
     def normalize_runs_as_array(self, runs: List[SweepRun]) -> np.ndarray:
         """Normalize a list of SweepRuns to an ndarray of parameter vectors."""
         normalized_runs: np.ndarray = np.zeros([len(self.searchable_params), len(runs)])
-        for param_name, bayes_opt_index in self.param_names_to_index.items():
+        for param_name, idx in self.param_names_to_index.items():
             _param: HyperParameter = self.param_names_to_param[param_name]
             row: np.ndarray = np.zeros(len(runs))  # default to 0
             for i, run in enumerate(runs):
@@ -385,9 +385,7 @@ class HyperParameterSet(list):
                 logging.warning(f"Found non-finite value in normalized run row {row}")
             # Convert row to CDF, filter out NaNs
             non_nan_indices = ~np.isnan(row)
-            normalized_runs[bayes_opt_index, non_nan_indices] = _param.cdf(row[
-                non_nan_indices
-            ])
+            normalized_runs[idx, non_nan_indices] = _param.cdf(row[non_nan_indices])
         return np.transpose(normalized_runs)
 
 
