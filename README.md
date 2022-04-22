@@ -1,4 +1,9 @@
-# W&B Hyperparameter Sweeps Engine
+<p align="center">
+  <img src=".github/wb-logo-lightbg.png#gh-light-mode-only" width="600" alt="Weights & Biases"/>
+  <img src=".github/wb-logo-darkbg.png#gh-dark-mode-only" width="600" alt="Weights & Biases"/>
+</p>
+
+# __Sweeps__: Hyperparameter Optimization Engine
 
 This repo contains the routines that generate hyperparameter sweep suggestions in
 the W&B backend and [client](https://github.com/wandb/client) local controller.
@@ -146,16 +151,17 @@ to_stop = stop_runs(config, runs)
 
 
 ### Testing
-To run tests:
+
+Tests are run using `tox`, the makefile defines convenience commands for short and long tests:
 
 ```
-tox
+make test-short
+make test-full
 ```
-
-
-
 
 ### Contributing
+
+__Review the [Contributing Instructions](https://github.com/wandb/client/blob/master/CONTRIBUTING.md)__
 
 Install the development requirements:
 
@@ -164,13 +170,14 @@ pip install -r requirements.dev.txt
 ```
 
 Install the pre-commit hooks:
+
 ```
 pre-commit install .
 ```
 
-PRs must:
+Run formatting and tests:
 
-* Not degrade test coverage (automatically calculated via codecov)
-* Use type-hints on all public functions
-* Pass linting checks
-* Be reviewed and approved by at least 1 maintainer
+```
+make format
+make test
+```
