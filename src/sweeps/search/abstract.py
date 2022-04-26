@@ -10,7 +10,6 @@ _log = logging.getLogger(__name__)
 class AbstractSearch(ABC):
     """Abstract base class for Search Algotithms."""
 
-    @abstractmethod
     def next_run(
         sweep_config: Union[dict, SweepConfig],
         runs: List[SweepRun],
@@ -19,7 +18,6 @@ class AbstractSearch(ABC):
     ) -> Optional[SweepRun]:
         pass
 
-    @abstractmethod
     def next_runs(
         sweep_config: Union[dict, SweepConfig],
         runs: List[SweepRun],

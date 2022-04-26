@@ -6,6 +6,7 @@ from typing import Any, List, Optional, Union
 
 import numpy as np
 
+from .abstract import AbstractSearch
 from ..config.cfg import SweepConfig
 from ..run import SweepRun
 from ..params import HyperParameter, HyperParameterSet
@@ -145,3 +146,6 @@ def grid_search_next_runs(
         param_hashes_seen.add(next_hash)
 
     return retval
+
+class GridSearch(AbstractSearch):
+    pass

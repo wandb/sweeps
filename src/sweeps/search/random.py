@@ -1,8 +1,9 @@
+from typing import Union, List
+
+from .abstract import AbstractSearch
 from ..config.cfg import SweepConfig
 from ..run import SweepRun
 from ..params import HyperParameterSet
-
-from typing import Union, List
 
 
 def random_search_next_runs(
@@ -39,3 +40,6 @@ def random_search_next_runs(
         retval.append(run)
 
     return retval
+
+class RandomSearch(AbstractSearch):
+    pass
