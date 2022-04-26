@@ -1,6 +1,7 @@
 import pytest
 import jsonschema
-from sweeps import config, grid_search
+from sweeps import config
+from sweeps.search import grid as grid_search
 
 
 def test_invalid_sweep_config_nonuniform_array_elements_categorical():

@@ -6,9 +6,9 @@ from sweeps.config import (
     schema_violations_from_proposed_config,
     fill_parameter,
 )
-from sweeps.bayes_search import bayes_search_next_runs
-from sweeps.grid_search import grid_search_next_runs
-from sweeps.random_search import random_search_next_runs
+from sweeps.search.bayes import bayes_search_next_runs
+from sweeps.search.grid import grid_search_next_runs
+from sweeps.search.random import random_search_next_runs
 from sweeps.hyperband_stopping import hyperband_stop_runs
 
 

@@ -6,9 +6,9 @@ from typing import Any, List, Optional, Union
 
 import numpy as np
 
-from .config.cfg import SweepConfig
-from .run import SweepRun
-from .params import HyperParameter, HyperParameterSet
+from ..config.cfg import SweepConfig
+from ..run import SweepRun
+from ..params import HyperParameter, HyperParameterSet
 
 
 def yaml_hash(value: Any) -> str:

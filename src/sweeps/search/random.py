@@ -1,6 +1,6 @@
-from .config.cfg import SweepConfig
-from .run import SweepRun
-from .params import HyperParameterSet
+from ..config.cfg import SweepConfig
+from ..run import SweepRun
+from ..params import HyperParameterSet
 
 from typing import Union, List
 

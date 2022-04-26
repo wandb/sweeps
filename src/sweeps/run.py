@@ -177,9 +177,9 @@ def next_runs(
         The suggested runs.
     """
 
-    from .grid_search import grid_search_next_runs
-    from .random_search import random_search_next_runs
-    from .bayes_search import bayes_search_next_runs
+    from .search.grid import grid_search_next_runs
+    from .search.random import random_search_next_runs
+    from .search.bayes import bayes_search_next_runs
 
     # validate the sweep config
     if validate:

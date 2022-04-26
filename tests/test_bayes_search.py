@@ -5,7 +5,7 @@ from typing import Callable, Optional, Tuple, Iterable, Dict
 import pytest
 import numpy as np
 
-from sweeps import bayes_search as bayes
+from sweeps.search import bayes
 from sweeps._types import integer, floating, ArrayLike
 from sweeps import SweepRun, RunState, next_run, SweepConfig
 
