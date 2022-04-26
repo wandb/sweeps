@@ -73,7 +73,8 @@ def convert_SweepRun_to_TuneRun(
         if _early_terminate.get("type", None) is None:
             raise ValueError(f"config['early_terminate'] must have a 'type' key.")
         if _early_terminate["type"] == "hyperband":
-            tune_run['scheduler'] = HyperBandScheduler()
+            tune_run['scheduler'] = HyperBandScheduler(
+                metric=tune_run['metric'], mode=tune_run['mode'])
 
     _method: Dict[str, Any] = sweep_config.get("method", None)
     if _method is None:
