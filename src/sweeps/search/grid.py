@@ -23,14 +23,14 @@ def yaml_hash(value: Any) -> str:
 class GridSearch(AbstractSearch):
     """Suggest runs with Hyperparameters drawn from a grid of all possible values."""
 
-    def _next_runs(
+    def _next_runs(  # type: ignore
         self,
         runs: List[SweepRun],
         *args,
         n: int = 1,
         randomize_order: bool = False,
         **kwargs,
-    ) -> Sequence[Optional[SweepRun]]:  # type: ignore
+    ) -> Sequence[Optional[SweepRun]]:
 
         # Check that all parameters are categorical or constant
         for p in self.params:

@@ -447,20 +447,20 @@ def _construct_gp_data(
     # maximize, we need to negate y
     y *= -1 if goal == "maximize" else 1
 
-    return params, sample_X, current_X, y
+    return params, sample_X, current_X, y  # type: ignore
 
 
 class BayesSearch(AbstractSearch):
     """Suggest runs using Bayesian optimization."""
 
-    def _next_runs(
+    def _next_runs(  # type: ignore
         self,
         runs: List[SweepRun],
         *args,
         n: int = 1,
         minimum_improvement: floating = 0.1,
         **kwargs,
-    ) -> Sequence[Optional[SweepRun]]:  # type: ignore
+    ) -> Sequence[Optional[SweepRun]]:
 
         ret: List[SweepRun] = []
         for _ in range(n):
