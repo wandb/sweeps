@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from typing import Dict
 
 from sweeps import RunState, SweepRun
 from sweeps.params import (
@@ -158,7 +157,7 @@ def test_make_run_config_from_params_custom_delimiters(delimiter):
                 f"a{delimiter}b",
                 {"value": 1, "nested": True, "nest_delimiter": delimiter},
             ),
-            HyperParameter(f"a-c", {"value": 2, "nested": True, "nest_delimiter": "-"}),
+            HyperParameter("a-c", {"value": 2, "nested": True, "nest_delimiter": "-"}),
         ]
     )
     with pytest.raises(ValueError):

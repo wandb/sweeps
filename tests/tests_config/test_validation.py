@@ -173,8 +173,8 @@ def test_nested_run_parameter(search_type):
         "a.b": {"value": 2},
         "a.c": {"value": 3},
         "a.d.e": {"value": 4},
-        # User will aso get the parameters in un-nested form
-        # so they can retreive them via wandb.config['a']['b']
+        # User will aso get any nested parameters in un-nested form
+        # so they can retreive them via wandb.config['a']['d']['e']
         # as requested in https://github.com/wandb/client/issues/982
         # where values inside their nested wandb.config objects
         # could not be sweeped over in a sweep config.

@@ -387,7 +387,7 @@ def make_run_config_from_params(
                     f"Only one custom delimiter can be specified, got {_unnest_delimiter} and {param.nested_delimiter}"
                 )
             # Make sure the delimiter is actually in the parameter
-            if not _unnest_delimiter in param.name:
+            if _unnest_delimiter not in param.name:
                 raise ValueError(
                     f"Nested parameter {param.name} does not contain delimiter {_unnest_delimiter}"
                 )
