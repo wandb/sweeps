@@ -9,7 +9,7 @@ import numpy as np
 from .abstract import AbstractSearch
 from ..config.cfg import SweepConfig
 from ..run import SweepRun
-from ..params import HyperParameter, HyperParameterSet
+from ..params import HyperParameter, HyperParameterSet, make_run_config_from_params
 
 
 def yaml_hash(value: Any) -> str:
@@ -116,7 +116,7 @@ class GridSearch(AbstractSearch):
             for param, hash_val in zip(discrete_params, next_hash):
                 param.value = value_hash_lookup[param.name][hash_val]
 
-            run = SweepRun(config=self.params.to_config())
+            run = SweepRun(config=make_run_config_from_params(self.params))
             retval.append(run)
 
             param_hashes_seen.add(next_hash)

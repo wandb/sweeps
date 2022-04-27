@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import logging
-from typing import List, Optional, Sequence, Union
+from typing import List, Optional, Sequence, Union, Dict
 
 import numpy as np
 
@@ -56,5 +56,4 @@ class AbstractSearch(ABC):
         n: int = 1,
         **kwargs,
     ) -> Sequence[Optional[SweepRun]]:
-        # dict([param._to_config() for param in self])
         return self._next_runs(runs, *args, n=n, **kwargs)

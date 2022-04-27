@@ -8,7 +8,7 @@ from .abstract import AbstractSearch
 from ..config.cfg import SweepConfig
 from ..config.schema import fill_validate_metric
 from ..run import SweepRun, RunState, run_state_is_terminal
-from ..params import HyperParameter, HyperParameterSet
+from ..params import HyperParameter, HyperParameterSet, make_run_config_from_params
 from sklearn import gaussian_process as sklearn_gaussian
 from scipy import stats as scipy_stats
 
@@ -494,7 +494,7 @@ class BayesSearch(AbstractSearch):
                 try_value = suggested_X[params.param_names_to_index[param.name]]
                 param.value = param.ppf(try_value)
 
-            ret_dict = params.to_config()
+            ret_dict = make_run_config_from_params(params)
             info = {
                 "success_probability": suggested_X_prob_of_improvement,
                 "predicted_value": suggested_X_predicted_y,

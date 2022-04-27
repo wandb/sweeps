@@ -312,12 +312,6 @@ class HyperParameter:
         """Randomly sample a value from the distribution of this HyperParameter."""
         return self.ppf(np.random.uniform(0.0, 1.0))
 
-    def _to_config(self) -> Tuple[str, Dict]:
-        config = dict(value=self.value)
-        if self.is_nested:
-            config = unnest_config(config, delimiter=self.nested_delimiter)
-        return self.name, config
-
 
 class HyperParameterSet(list):
     def __init__(self, items: List[HyperParameter]):
@@ -349,10 +343,6 @@ class HyperParameterSet(list):
 
         super().__init__(items)
 
-    def to_config(self) -> Dict:
-        """Convert a HyperParameterSet to a SweepRun config."""
-        return dict([param._to_config() for param in self])
-
     def normalize_runs_as_array(self, runs: List[SweepRun]) -> np.ndarray:
         """Normalize a list of SweepRuns to an ndarray of parameter vectors."""
         normalized_runs: np.ndarray = np.zeros([len(self.searchable_params), len(runs)])
@@ -374,6 +364,21 @@ class HyperParameterSet(list):
             non_nan_indices = ~np.isnan(row)
             normalized_runs[idx, non_nan_indices] = _param.cdf(row[non_nan_indices])
         return np.transpose(normalized_runs)
+
+
+def make_run_config_from_params(
+    params: HyperParameterSet,
+) -> Dict:
+    """Create a config for a run from a set of HyperParameters."""
+    d: Dict = dict()
+    for param in params:
+        if param.is_nested:
+            d[param.name] = unnest_config(
+                d[param.name], delimiter=param.nested_delimiter
+            )
+        else:
+            d[param.name] = {"value": param.value}
+    return d
 
 
 def make_param_log_deprecation_message(
