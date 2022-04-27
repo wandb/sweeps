@@ -373,7 +373,7 @@ def make_run_config_from_params(
     d: Dict = dict()
     # If any nested parameters are found an additional parameter entry
     # will be created with the nested parameter in proper Dict form.
-    _unnest_delimiter: str = None   # type: ignore
+    _unnest_delimiter: str = None  # type: ignore
     for param in params:
         # Write the parameter value no matter what
         d[param.name] = {"value": param.value}
