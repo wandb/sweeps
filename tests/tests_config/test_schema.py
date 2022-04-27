@@ -11,34 +11,38 @@ def test_json_type_inference_int_uniform():
     config = {"min": 0, "max": 1}
     param = HyperParameter("int_unif_param", config)
     assert param.type == HyperParameter.INT_UNIFORM
-
-    # len is 3 because distribution key is inferred via default
-    assert len(param.config) == 3
+    assert param.config["nested"] == False
+    assert param.config["nest_delimiter"] == "."
+    # len is 5 because distribution, nested, and nested_delimiter keys are inferred via default
+    assert len(param.config) == 5
 
 
 def test_json_type_inference_uniform():
     config = {"min": 0.0, "max": 1.0}
     param = HyperParameter("unif_param", config)
     assert param.type == HyperParameter.UNIFORM
-
-    # len is 3 because distribution key is inferred via default
-    assert len(param.config) == 3
+    assert param.config["nested"] == False
+    assert param.config["nest_delimiter"] == "."
+    # len is 5 because distribution, nested, and nested_delimiter keys are inferred via default
+    assert len(param.config) == 5
 
 
 def test_json_type_inference_uniform_mixed():
     config = {"min": 0.0, "max": 1}
     param = HyperParameter("unif_param", config)
     assert param.type == HyperParameter.UNIFORM
-
-    # len is 3 because distribution key is inferred via default
-    assert len(param.config) == 3
+    assert param.config["nested"] == False
+    assert param.config["nest_delimiter"] == "."
+    # len is 5 because distribution, nested, and nested_delimiter keys are inferred via default
+    assert len(param.config) == 5
 
     config = {"min": 0, "max": 1.0}
     param = HyperParameter("unif_param", config)
     assert param.type == HyperParameter.UNIFORM
-
-    # len is 3 because distribution key is inferred via default
-    assert len(param.config) == 3
+    assert param.config["nested"] == False
+    assert param.config["nest_delimiter"] == "."
+    # len is 5 because distribution, nested, and nested_delimiter keys are inferred via default
+    assert len(param.config) == 5
 
 
 def test_json_type_inference_and_imputation_normal():
@@ -46,8 +50,10 @@ def test_json_type_inference_and_imputation_normal():
     param = HyperParameter("normal_param", config)
     assert param.config["mu"] == 0
     assert param.config["sigma"] == 1
+    assert param.config["nested"] == False
+    assert param.config["nest_delimiter"] == "."
     assert param.type == HyperParameter.NORMAL
-    assert len(param.config) == 3
+    assert len(param.config) == 5
 
 
 def test_json_type_inference_and_imputation_lognormal():
@@ -55,25 +61,30 @@ def test_json_type_inference_and_imputation_lognormal():
     param = HyperParameter("log_normal_param", config)
     assert param.config["mu"] == 0
     assert param.config["sigma"] == 1
+    assert param.config["nested"] == False
+    assert param.config["nest_delimiter"] == "."
     assert param.type == HyperParameter.LOG_NORMAL
-    assert len(param.config) == 3
+    assert len(param.config) == 5
 
 
 def test_json_type_inference_categorical():
     config = {"values": [1, 2, 3]}
     param = HyperParameter("categorical_param", config)
     assert param.type == HyperParameter.CATEGORICAL
+    assert param.config["nested"] == False
+    assert param.config["nest_delimiter"] == "."
     # len is 2 because distribution key is inferred via default
-    assert len(param.config) == 2
+    assert len(param.config) == 4
 
 
 def test_json_type_inference_constant():
     config = {"value": "abcd"}
     param = HyperParameter("constant_param", config)
     assert param.type == HyperParameter.CONSTANT
-
+    assert param.config["nested"] == False
+    assert param.config["nest_delimiter"] == "."
     # len is 2 because distribution key is inferred via default
-    assert len(param.config) == 2
+    assert len(param.config) == 4
 
 
 def test_json_type_inference_q_normal():
@@ -81,8 +92,10 @@ def test_json_type_inference_q_normal():
     param = HyperParameter("q_normal_param", config)
     assert param.config["mu"] == 0
     assert param.config["sigma"] == 1
+    assert param.config["nested"] == False
+    assert param.config["nest_delimiter"] == "."
     assert param.type == HyperParameter.Q_NORMAL
-    assert len(param.config) == 4
+    assert len(param.config) == 6
 
 
 def test_json_type_inference_q_beta():
@@ -91,8 +104,10 @@ def test_json_type_inference_q_beta():
     assert param.config["a"] == 1
     assert param.config["b"] == 1
     assert param.config["q"] == 1
+    assert param.config["nested"] == False
+    assert param.config["nest_delimiter"] == "."
     assert param.type == HyperParameter.Q_BETA
-    assert len(param.config) == 4
+    assert len(param.config) == 6
 
 
 def test_json_type_inference_beta():
@@ -100,8 +115,10 @@ def test_json_type_inference_beta():
     param = HyperParameter("beta_param", config)
     assert param.config["a"] == 1
     assert param.config["b"] == 1
+    assert param.config["nested"] == False
+    assert param.config["nest_delimiter"] == "."
     assert param.type == HyperParameter.BETA
-    assert len(param.config) == 3
+    assert len(param.config) == 5
 
 
 def test_totally_invalid_config():

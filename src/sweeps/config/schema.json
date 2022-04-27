@@ -12,6 +12,16 @@
         "values"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "values": {
           "type": "array",
           "description": "Discrete values",
@@ -34,6 +44,16 @@
         "probabilities"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "values": {
           "type": "array",
           "description": "Discrete values",
@@ -64,6 +84,16 @@
         "value"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "value": {
           "description": "A constant"
         },
@@ -83,6 +113,16 @@
       ],
       "description": "A normally distributed parameter.",
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "distribution": {
           "enum": [
             "normal"
@@ -109,6 +149,16 @@
       ],
       "description": "A lognormally distributed parameter.",
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "distribution": {
           "enum": [
             "log_normal"
@@ -135,6 +185,16 @@
         "distribution"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "q": {
           "type": "number",
           "default": 1.0,
@@ -167,6 +227,16 @@
         "distribution"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "q": {
           "type": "number",
           "default": 1.0,
@@ -203,6 +273,16 @@
             "distribution"
           ],
           "properties": {
+            "nested": {
+              "type": "boolean",
+              "description": "Whether this parameter represents a nested parameter in the Run config.",
+              "default": false
+            },
+            "nest_delimiter": {
+              "type": "string",
+              "description": "Delimiter to use when unnesting parameter into a Run config.",
+              "default": "."
+            },
             "min": {
               "type": "number"
             },
@@ -225,6 +305,16 @@
             "max"
           ],
           "properties": {
+            "nested": {
+              "type": "boolean",
+              "description": "Whether this parameter represents a nested parameter in the Run config.",
+              "default": false
+            },
+            "nest_delimiter": {
+              "type": "string",
+              "description": "Delimiter to use when unnesting parameter into a Run config.",
+              "default": "."
+            },
             "min": {
               "type": "number",
               "format": "float"
@@ -250,6 +340,16 @@
             "max"
           ],
           "properties": {
+            "nested": {
+              "type": "boolean",
+              "description": "Whether this parameter represents a nested parameter in the Run config.",
+              "default": false
+            },
+            "nest_delimiter": {
+              "type": "string",
+              "description": "Delimiter to use when unnesting parameter into a Run config.",
+              "default": "."
+            },
             "min": {
               "type": "number"
             },
@@ -274,6 +374,16 @@
             "max"
           ],
           "properties": {
+            "nested": {
+              "type": "boolean",
+              "description": "Whether this parameter represents a nested parameter in the Run config.",
+              "default": false
+            },
+            "nest_delimiter": {
+              "type": "string",
+              "description": "Delimiter to use when unnesting parameter into a Run config.",
+              "default": "."
+            },
             "min": {
               "type": "number",
               "format": "float"
@@ -301,6 +411,16 @@
         "min"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "min": {
           "description": "float",
           "type": "number"
@@ -326,6 +446,16 @@
         "min"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "min": {
           "description": "float",
           "type": "number",
@@ -352,6 +482,16 @@
         "min"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "min": {
           "description": "float",
           "type": "number"
@@ -377,6 +517,16 @@
         "min"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "min": {
           "description": "float",
           "type": "number",
@@ -403,6 +553,16 @@
         "min"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "min": {
           "description": "float",
           "type": "number"
@@ -434,6 +594,16 @@
         "min"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "min": {
           "type": "number"
         },
@@ -463,6 +633,16 @@
         "min"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "min": {
           "description": "float",
           "type": "number",
@@ -494,6 +674,16 @@
         "max"
       ],
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "max": {
           "type": "integer",
           "format": "integer"
@@ -515,6 +705,16 @@
       "type": "object",
       "description": "beta distribution",
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "a": {
           "type": "number",
           "minimum": 0,
@@ -540,6 +740,16 @@
       "type": "object",
       "description": "quantized beta distribution",
       "properties": {
+        "nested": {
+          "type": "boolean",
+          "description": "Whether this parameter represents a nested parameter in the Run config.",
+          "default": false
+        },
+        "nest_delimiter": {
+          "type": "string",
+          "description": "Delimiter to use when unnesting parameter into a Run config.",
+          "default": "."
+        },
         "a": {
           "type": "number",
           "minimum": 0,

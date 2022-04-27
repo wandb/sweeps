@@ -7,7 +7,7 @@ import scipy.stats as stats
 
 from ._types import ArrayLike
 from .config import fill_parameter
-from .config.utils import unnest_config
+from .config.utils import nest_config, DEFAULT_NEST_DELIMITER
 from .run import SweepRun
 
 
@@ -92,8 +92,11 @@ class HyperParameter:
             None if self.type != HyperParameter.CONSTANT else self.config["value"]
         )
 
-        self.is_nested: bool = False
-        self.nested_delimiter: str = "."
+        # Nested hyperparameters will be expanded in the run config
+        self.is_nested: bool = self.config.get("nested", False)
+        self.nested_delimiter: str = self.config.get(
+            "nest_delimiter", DEFAULT_NEST_DELIMITER
+        )
 
     def value_to_idx(self, value: Any) -> int:
         """Get the index of the value of a categorically distributed HyperParameter.
@@ -368,13 +371,45 @@ def make_run_config_from_params(
 ) -> Dict:
     """Create a config for a run from a set of HyperParameters."""
     d: Dict = dict()
+    # If any nested parameters are found an additional parameter entry
+    # will be created with the nested parameter in proper Dict form.
+    _unnest_delimiter: str = None
     for param in params:
+        # Write the parameter value no matter what
+        d[param.name] = {"value": param.value}
+        # If the parameter is nested, also create an entry with a Dict value
         if param.is_nested:
-            d[param.name] = unnest_config(
-                d[param.name], delimiter=param.nested_delimiter
+            # Only one custom delimiter is supported
+            if _unnest_delimiter is None:
+                _unnest_delimiter = param.nested_delimiter
+            elif _unnest_delimiter != param.nested_delimiter:
+                raise ValueError(
+                    f"Only one custom delimiter can be specified, got {_unnest_delimiter} and {param.nested_delimiter}"
+                )
+            # Make sure the delimiter is actually in the parameter
+            if not _unnest_delimiter in param.name:
+                raise ValueError(
+                    f"Nested parameter {param.name} does not contain delimiter {_unnest_delimiter}"
+                )
+            # Split the parameter on the delimiter
+            subkeys: List[str] = param.name.split(_unnest_delimiter)
+            # Check to see if the first subkey is in the run config already
+            if not subkeys[0] in d:
+                # Create new level-one entry in run config with subkey
+                d[subkeys[0]] = {"value": dict()}
+            elif not isinstance(d[subkeys[0]]["value"], dict):
+                raise ValueError(
+                    f"Root {subkeys[0]} of nested parameter {param.name} already exists as an un-nested parameter {d[subkeys[0]]}"
+                )
+            # Use temporary token to prevent unnesting unintended parameters
+            _unnest_token: str = "._."  # kinda looks like a little face :)
+            d[subkeys[0]]["value"][_unnest_token.join(subkeys[1:])] = param.value
+            # Update the nested parameter with the new
+            d[subkeys[0]]["value"] = nest_config(
+                # Exsisting "nested" dictionary within run config
+                d[subkeys[0]]["value"],
+                delimiter=_unnest_token,
             )
-        else:
-            d[param.name] = {"value": param.value}
     return d
 
 

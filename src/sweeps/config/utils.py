@@ -1,5 +1,9 @@
 from copy import deepcopy
+import logging
 from typing import Any, Dict, List, Union
+
+_log = logging.getLogger(__name__)
+
 
 # Nested config objects are delimited with this character
 DEFAULT_NEST_DELIMITER = "."
@@ -46,6 +50,7 @@ def _unflatten_dict(d: Dict, delimiter: str) -> None:
     Based on community solution:
     https://github.com/wandb/client/issues/982#issuecomment-1014525666
     """
+    _log.debug(f"Nesting {d} with delimiter {delimiter}")
     if type(d) == dict:
         # The reverse sorting here ensures that "foo.bar" will appear before "foo"
         for k in sorted(d.keys(), reverse=True):
@@ -54,6 +59,7 @@ def _unflatten_dict(d: Dict, delimiter: str) -> None:
                     f"Config keys must be strings, found {k} of type {type(k)}"
                 )
             if delimiter in k:
+                _log.debug(f"Found delimiter {delimiter} in key {k}")
                 subdict: Union[Any, Dict] = d
                 subkeys: List[str] = k.split(delimiter)
                 for i, subkey in enumerate(subkeys[:-1]):
