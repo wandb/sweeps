@@ -386,14 +386,14 @@ def _construct_gp_data(
     metric_name = config["metric"]["name"]
     impute_strategy = ImputeStrategy(config["metric"]["impute"])
 
-    if len(params.searchable_params) == 0:
+    if len(params.searchable_params) == 0:  # type: ignore
         raise ValueError("Need at least one searchable parameter for bayes search.")
 
     sample_X: ArrayLike = []
     current_X: ArrayLike = []
     y: ArrayLike = []
 
-    X_norms = params.normalize_runs_as_array(runs)
+    X_norms = params.normalize_runs_as_array(runs)  # type: ignore
     worst_metric = impute(goal, metric_name, ImputeStrategy.worst, runs=runs)
     for run, X_norm in zip(runs, X_norms):
         if run.state == RunState.finished:
@@ -460,7 +460,7 @@ class BayesSearch(AbstractSearch):
         n: int = 1,
         minimum_improvement: floating = 0.1,
         **kwargs,
-    ) -> Sequence[Optional[SweepRun]]:
+    ) -> Sequence[Optional[SweepRun]]:  # type: ignore
 
         ret: List[SweepRun] = []
         for _ in range(n):

@@ -182,11 +182,11 @@ def next_runs(
     validate_search(sweep_config)
     _method: str = sweep_config["method"]
     if _method == "grid":
-        _search: GridSearch = GridSearch(sweep_config, validate=validate)
+        _search: GridSearch = GridSearch(sweep_config, validate=validate)  # type: ignore
     elif _method == "random":
-        _search: RandomSearch = RandomSearch(sweep_config, validate=validate)
+        _search: RandomSearch = RandomSearch(sweep_config, validate=validate)  # type: ignore
     elif _method == "bayes":
-        _search: BayesSearch = BayesSearch(sweep_config, validate=validate)
+        _search: BayesSearch = BayesSearch(sweep_config, validate=validate)  # type: ignore
     else:
         raise ValueError(f"Invalid search algorithm {_method}")
     return _search.next_runs(runs, n=n, **kwargs)

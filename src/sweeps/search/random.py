@@ -13,7 +13,7 @@ class RandomSearch(AbstractSearch):
         *args,
         n: int = 1,
         **kwargs,
-    ) -> Sequence[Optional[SweepRun]]:
+    ) -> Sequence[Optional[SweepRun]]:  # type: ignore
         retval = []
         for _ in range(n):
             for param in self.params:

@@ -26,9 +26,11 @@ class GridSearch(AbstractSearch):
     def _next_runs(
         self,
         runs: List[SweepRun],
+        *args,
         n: int = 1,
         randomize_order: bool = False,
-    ) -> Sequence[Optional[SweepRun]]:
+        **kwargs,
+    ) -> Sequence[Optional[SweepRun]]:  # type: ignore
 
         # Check that all parameters are categorical or constant
         for p in self.params:

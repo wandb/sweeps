@@ -33,12 +33,12 @@ def run_bayes_search(
         suggested_run = bayes.BayesSearch(config).next_runs(
             runs, minimum_improvement=improvement
         )[0]
-        suggested_run.state = RunState.finished
-        metric = f(suggested_run)
-        if suggested_run.summary_metrics is None:
-            suggested_run.summary_metrics = {}  # pragma: no cover
-        suggested_run.summary_metrics[metric_name] = metric
-        runs.append(suggested_run)
+        suggested_run.state = RunState.finished  # type: ignore
+        metric = f(suggested_run)  # type: ignore
+        if suggested_run.summary_metrics is None:  # type: ignore
+            suggested_run.summary_metrics = {}  # pragma: no cover  # type: ignore
+        suggested_run.summary_metrics[metric_name] = metric  # type: ignore
+        runs.append(suggested_run)  # type: ignore
 
     for run in runs:
         print(run.config, run.state)
