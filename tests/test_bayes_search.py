@@ -5,7 +5,7 @@ from typing import Callable, Optional, Tuple, Iterable, Dict
 import pytest
 import numpy as np
 
-from sweeps.search import bayes
+import sweeps.search.bayes as bayes
 from sweeps._types import integer, floating, ArrayLike
 from sweeps import SweepRun, RunState, next_run, SweepConfig
 
@@ -38,9 +38,9 @@ def run_bayes_search(
 
     runs = list(init_runs)
     for _ in range(num_iterations):
-        suggested_run = bayes.bayes_search_next_run(
-            runs, config, minimum_improvement=improvement
-        )
+        suggested_run = bayes.BayesSearch(config).next_runs(
+            runs, minimum_improvement=improvement
+        )[0]
         suggested_run.state = RunState.finished
         metric = f(suggested_run)
         if suggested_run.summary_metrics is None:

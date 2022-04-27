@@ -1,7 +1,7 @@
 import pytest
 import jsonschema
 from sweeps import config
-from sweeps.search import grid as grid_search
+from sweeps.search.grid import GridSearch
 
 
 def test_invalid_sweep_config_nonuniform_array_elements_categorical():
@@ -77,4 +77,4 @@ def test_categorical_prob_grid():
     }
     with pytest.raises(ValueError):
         sweep_config = config.SweepConfig(invalid_config)
-        grid_search.grid_search_next_runs([], sweep_config)
+        GridSearch(sweep_config).next_runs([])

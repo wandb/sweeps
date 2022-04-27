@@ -379,12 +379,15 @@ def impute(
 
 
 def _construct_gp_data(
-    runs: List[SweepRun], config: Union[dict, SweepConfig]
+    runs: List[SweepRun],
+    config: Union[dict, SweepConfig],
+    params: HyperParameterSet = None,
 ) -> Tuple[HyperParameterSet, ArrayLike, ArrayLike, ArrayLike]:
     goal = config["metric"]["goal"]
     metric_name = config["metric"]["name"]
     impute_strategy = ImputeStrategy(config["metric"]["impute"])
-    params = HyperParameterSet.from_config(config["parameters"])
+    if params is None:
+        params = HyperParameterSet.from_config(config["parameters"])
 
     if len(params.searchable_params) == 0:
         raise ValueError("Need at least one searchable parameter for bayes search.")
@@ -450,97 +453,107 @@ def _construct_gp_data(
     return params, sample_X, current_X, y
 
 
-def bayes_search_next_run(
-    runs: List[SweepRun],
-    config: Union[dict, SweepConfig],
-    validate: bool = False,
-    minimum_improvement: floating = 0.1,
-) -> SweepRun:
-    """Suggest runs using Bayesian optimization.
+# def bayes_search_next_run(
+#     runs: List[SweepRun],
+#     config: Union[dict, SweepConfig],
+#     validate: bool = False,
+#     minimum_improvement: floating = 0.1,
+# ) -> SweepRun:
+#     """Suggest runs using Bayesian optimization.
 
-    >>> suggestion = bayes_search_next_run([], {
-    ...    'method': 'bayes',
-    ...    'parameters': {'a': {'min': 1., 'max': 2.}},
-    ...    'metric': {'name': 'loss', 'goal': 'maximize'}
-    ... })
+#     >>> suggestion = bayes_search_next_run([], {
+#     ...    'method': 'bayes',
+#     ...    'parameters': {'a': {'min': 1., 'max': 2.}},
+#     ...    'metric': {'name': 'loss', 'goal': 'maximize'}
+#     ... })
 
-    Args:
-        runs: The runs in the sweep.
-        config: The sweep's config.
-        minimum_improvement: The minimium improvement to optimize for. Higher means take more exploratory risks.
-        validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
-           If true, will raise a Validation error if `sweep_config` does not conform to
-           the schema. If false, will attempt to run the sweep with an unvalidated schema.
+#     Args:
+#         runs: The runs in the sweep.
+#         config: The sweep's config.
+#         minimum_improvement: The minimium improvement to optimize for. Higher means take more exploratory risks.
+#         validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
+#            If true, will raise a Validation error if `sweep_config` does not conform to
+#            the schema. If false, will attempt to run the sweep with an unvalidated schema.
 
-    Returns:
-        The suggested run.
-    """
+#     Returns:
+#         The suggested run.
+#     """
 
-    if validate:
-        config = SweepConfig(config)
+#     if validate:
+#         config = SweepConfig(config)
 
-    config = bayes_baseline_validate_and_fill(config)
+#     config = bayes_baseline_validate_and_fill(config)
 
-    params, sample_X, current_X, y = _construct_gp_data(runs, config)
-    X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
+#     params, sample_X, current_X, y = _construct_gp_data(runs, config)
+#     X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
 
-    (
-        suggested_X,
-        suggested_X_prob_of_improvement,
-        suggested_X_predicted_y,
-        suggested_X_predicted_std,
-        suggested_X_expected_improvement,
-    ) = next_sample(
-        sample_X=sample_X,
-        sample_y=y,
-        X_bounds=X_bounds,
-        current_X=current_X if len(current_X) > 0 else None,
-        improvement=minimum_improvement,
-    )
+#     (
+#         suggested_X,
+#         suggested_X_prob_of_improvement,
+#         suggested_X_predicted_y,
+#         suggested_X_predicted_std,
+#         suggested_X_expected_improvement,
+#     ) = next_sample(
+#         sample_X=sample_X,
+#         sample_y=y,
+#         X_bounds=X_bounds,
+#         current_X=current_X if len(current_X) > 0 else None,
+#         improvement=minimum_improvement,
+#     )
 
-    # convert the parameters from vector of [0,1] values
-    # to the original ranges
-    for param in params:
-        if param.type == HyperParameter.CONSTANT:
-            continue
-        try_value = suggested_X[params.param_names_to_index[param.name]]
-        param.value = param.ppf(try_value)
+#     # convert the parameters from vector of [0,1] values
+#     # to the original ranges
+#     for param in params:
+#         if param.type == HyperParameter.CONSTANT:
+#             continue
+#         try_value = suggested_X[params.param_names_to_index[param.name]]
+#         param.value = param.ppf(try_value)
 
-    ret_dict = params.to_config()
-    info = {
-        "success_probability": suggested_X_prob_of_improvement,
-        "predicted_value": suggested_X_predicted_y,
-        "predicted_value_std_dev": suggested_X_predicted_std,
-        "expected_improvement": suggested_X_expected_improvement,
-    }
-    return SweepRun(config=ret_dict, search_info=info)
+#     ret_dict = params.to_config()
+#     info = {
+#         "success_probability": suggested_X_prob_of_improvement,
+#         "predicted_value": suggested_X_predicted_y,
+#         "predicted_value_std_dev": suggested_X_predicted_std,
+#         "expected_improvement": suggested_X_expected_improvement,
+#     }
+#     return SweepRun(config=ret_dict, search_info=info)
 
 
-def bayes_search_next_runs(
-    runs: List[SweepRun],
-    config: Union[dict, SweepConfig],
-    validate: bool = False,
-    n: int = 1,
-    minimum_improvement: floating = 0.1,
-):
-    ret: List[SweepRun] = []
-    for _ in range(n):
-        suggestion = bayes_search_next_run(
-            runs + ret, config, validate, minimum_improvement
-        )
-        ret.append(suggestion)
-    return ret
+# def bayes_search_next_runs(
+#     runs: List[SweepRun],
+#     config: Union[dict, SweepConfig],
+#     validate: bool = False,
+#     n: int = 1,
+#     minimum_improvement: floating = 0.1,
+# ):
+#     ret: List[SweepRun] = []
+#     for _ in range(n):
+#         suggestion = bayes_search_next_run(
+#             runs + ret, config, validate, minimum_improvement
+#         )
+#         ret.append(suggestion)
+#     return ret
 
 
 class BayesSearch(AbstractSearch):
     """Suggest runs using Bayesian optimization."""
 
-    def _next_runs(self, *args, n:int = 1, **kwargs) -> Sequence[Optional[SweepRun]]:
+    def _next_runs(
+        self,
+        runs: List[SweepRun],
+        *args,
+        n: int = 1,
+        minimum_improvement: floating = 0.1,
+        **kwargs,
+    ) -> Sequence[Optional[SweepRun]]:
+
         ret: List[SweepRun] = []
         for _ in range(n):
-            config = bayes_baseline_validate_and_fill(config)
+            config = bayes_baseline_validate_and_fill(self.sweep_config)
 
-            params, sample_X, current_X, y = _construct_gp_data(runs, config)
+            params, sample_X, current_X, y = _construct_gp_data(
+                runs, config, self.params
+            )
             X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
 
             (
