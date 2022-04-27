@@ -169,7 +169,7 @@ def test_nested_run_parameter(search_type):
     }
     desired_run_config = {
         # User gets the original parameters as specified
-        "foo": {"value": 1},
+        "foo": {"value": 2},
         "a.b": {"value": 2},
         "a.c": {"value": 3},
         "a.d.e": {"value": 4},
