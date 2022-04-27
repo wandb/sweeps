@@ -46,7 +46,7 @@ def run_bayes_search(
     if optimium is not None:
         best_run = (min if opt_goal == "minimize" else max)(
             [r for r in runs if r.state == RunState.finished],
-            key=lambda run: run.metric_extremum(metric_name, opt_goal),
+            key=lambda run: run.metric_extremum(metric_name, opt_goal),  # type: ignore
         )
         for param_name in config["parameters"]:
             left_comp = best_run.config[param_name]["value"]

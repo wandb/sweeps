@@ -27,7 +27,7 @@ class AbstractSearch(ABC):
             validate_search(sweep_config)
         self.sweep_config = sweep_config
         # Ensures repeatably random behavior
-        self.random_state = random_state
+        self.random_state = random_state  # type: ignore
         # Create hyperparameters from SweepConfig
         _params: List[HyperParameter] = []
         for _name, _config in sorted(sweep_config["parameters"].items()):
@@ -45,7 +45,7 @@ class AbstractSearch(ABC):
             # np.random.seed(random_state)
             self._random_state = np.random.RandomState(random_state)
         else:
-            self._random_state = random_state
+            self._random_state = random_state  # type: ignore
         _log.info(f"Search random state set to {self._random_state}")
 
     @abstractmethod

@@ -229,11 +229,11 @@ def hyperband_stop_runs(
 
             if closest_band != -1:  # no bands apply yet
                 bandstr = " (Metric: %f Band: %d Threshold %f)" % (
-                    min(history),
+                    min(history),  # type: ignore
                     closest_band,
                     closest_threshold,
                 )
-                if min(history) > closest_threshold:
+                if min(history) > closest_threshold:  # type: ignore
                     terminate_runs.append(run)
                     termstr = " STOP"
 
