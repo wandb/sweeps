@@ -7,6 +7,7 @@ from sweeps._types import ArrayLike
 test_results_dir = Path(__file__).parent.parent / "test_results"
 test_results_dir.mkdir(parents=True, exist_ok=True)
 
+
 def check_that_samples_are_from_the_same_distribution(
     pred_samples,
     true_samples,
@@ -66,6 +67,7 @@ def plot_two_distributions(
         current_test = current_test.split(":")[-1].split(" ")[0]
     fname = f"{current_test}.pdf"
     fig.savefig(test_results_dir / fname)
+
 
 def squiggle(x: ArrayLike) -> np.floating:
     # the maximum of this 1d function is at x=2 and the minimum is at ~3.6 over the

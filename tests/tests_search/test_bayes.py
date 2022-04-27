@@ -15,6 +15,7 @@ from ..utils import (
     check_that_samples_are_from_the_same_distribution,
 )
 
+
 def run_bayes_search(
     f: Callable[[SweepRun], floating],
     config: SweepConfig,
