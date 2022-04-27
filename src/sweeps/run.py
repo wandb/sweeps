@@ -5,7 +5,7 @@ import numpy as np
 import datetime
 
 from pydantic import BaseModel, Field
-from .config import SweepConfig
+from .config import SweepConfig, validate_search
 from ._types import floating
 
 
@@ -178,7 +178,7 @@ def next_runs(
     """
     from .search import GridSearch, RandomSearch, BayesSearch
 
-    SweepConfig.quick_validate(sweep_config)
+    validate_search(sweep_config)
     _method: str = sweep_config["method"]
     if _method == "grid":
         _search: GridSearch = GridSearch(sweep_config, validate=validate)

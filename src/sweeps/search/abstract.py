@@ -4,7 +4,7 @@ from typing import List, Optional, Sequence, Union
 
 import numpy as np
 
-from ..config.cfg import SweepConfig
+from ..config import SweepConfig, validate_search
 from ..params import HyperParameter, HyperParameterSet
 from ..run import SweepRun
 
@@ -24,7 +24,7 @@ class AbstractSearch(ABC):
             _log.info("Ensuring sweep config is properly formatted")
             sweep_config = SweepConfig(sweep_config)
         else:
-            SweepConfig.quick_validate(sweep_config)
+            validate_search(sweep_config)
         self.sweep_config = sweep_config
         # Ensures repeatably random behavior
         self.random_state = random_state

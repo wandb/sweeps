@@ -67,19 +67,6 @@ class SweepConfig(dict):
     def __str__(self) -> str:
         return yaml.safe_dump(self)
 
-    @staticmethod
-    def quick_validate(config: Dict) -> None:
-        if "method" not in config:
-            raise ValueError("Sweep config must contain 'method' section")
-        if "parameters" not in config:
-            raise ValueError("Sweep config must contain 'parameters' section")
-        if not isinstance(config["parameters"], dict):
-            raise ValueError("Sweep config 'parameters' section must be of type <dict>")
-        if len(config["parameters"]) < 1:
-            raise ValueError(
-                "Sweep config 'parameters' section must contain at least 1 parameter"
-            )
-
     def save(self, filename: Union[Path, str]) -> None:
         with open(filename, "w") as outfile:
             yaml.safe_dump(self, outfile, default_flow_style=False)

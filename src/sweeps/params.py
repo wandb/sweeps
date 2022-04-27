@@ -10,6 +10,7 @@ import jsonschema
 
 from .run import SweepRun
 from .config import fill_parameter
+from .config.utils import unnest_config
 from ._types import ArrayLike
 
 
@@ -93,6 +94,9 @@ class HyperParameter:
         self.value = (
             None if self.type != HyperParameter.CONSTANT else self.config["value"]
         )
+
+        self.is_nested: bool = False
+        self.nested_delimiter: str = "."
 
     def value_to_idx(self, value: Any) -> int:
         """Get the index of the value of a categorically distributed HyperParameter.
@@ -310,6 +314,8 @@ class HyperParameter:
 
     def _to_config(self) -> Tuple[str, Dict]:
         config = dict(value=self.value)
+        if self.is_nested:
+            config = unnest_config(config, delimiter=self.nested_delimiter)
         return self.name, config
 
 
@@ -342,24 +348,6 @@ class HyperParameterSet(list):
                 _searchable_param_index += 1
 
         super().__init__(items)
-
-    @classmethod
-    def from_config(cls, config: Dict):
-        """Instantiate a HyperParameterSet based the parameters section of a SweepConfig.
-
-        >>> sweep_config = {'method': 'grid', 'parameters': {'a': {'values': [1, 2, 3]}}}
-        >>> hps = HyperParameterSet.from_config(sweep_config['parameters'])
-
-        Args:
-            config: The parameters section of a SweepConfig.
-        """
-        hpd = cls(
-            [
-                HyperParameter(param_name, param_config)
-                for param_name, param_config in sorted(config.items())
-            ]
-        )
-        return hpd
 
     def to_config(self) -> Dict:
         """Convert a HyperParameterSet to a SweepRun config."""

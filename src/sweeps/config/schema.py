@@ -121,6 +121,19 @@ def validate_categorical_prob(parameter_name: str, parameter_config: Dict) -> No
             )
 
 
+def validate_search(d: Dict) -> None:
+    if "method" not in d:
+        raise ValueError("Sweep config must contain 'method' section")
+    if "parameters" not in d:
+        raise ValueError("Sweep config must contain 'parameters' section")
+    if not isinstance(d["parameters"], dict):
+        raise ValueError("Sweep config 'parameters' section must be of type <dict>")
+    if len(d["parameters"]) < 1:
+        raise ValueError(
+            "Sweep config 'parameters' section must contain at least 1 parameter"
+        )
+
+
 def check_for_deprecated_distributions(
     parameter_name: str, parameter_config: Dict
 ) -> None:

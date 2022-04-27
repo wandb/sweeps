@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 """Sweep config interface."""
 from .cfg import SweepConfig, schema_violations_from_proposed_config
-from .schema import fill_validate_schema, fill_parameter, fill_validate_early_terminate
+from .schema import (
+    fill_validate_schema,
+    fill_parameter,
+    fill_validate_early_terminate,
+    validate_search,
+)
 
 __all__ = [
     "SweepConfig",

@@ -386,8 +386,6 @@ def _construct_gp_data(
     goal = config["metric"]["goal"]
     metric_name = config["metric"]["name"]
     impute_strategy = ImputeStrategy(config["metric"]["impute"])
-    if params is None:
-        params = HyperParameterSet.from_config(config["parameters"])
 
     if len(params.searchable_params) == 0:
         raise ValueError("Need at least one searchable parameter for bayes search.")
