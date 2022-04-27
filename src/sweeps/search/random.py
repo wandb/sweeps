@@ -41,5 +41,8 @@ def random_search_next_runs(
 
     return retval
 
+
 class RandomSearch(AbstractSearch):
+    """Suggest runs with Hyperparameters sampled randomly from specified distributions."""
+
     pass

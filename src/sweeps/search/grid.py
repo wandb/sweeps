@@ -147,5 +147,8 @@ def grid_search_next_runs(
 
     return retval
 
+
 class GridSearch(AbstractSearch):
+    """Suggest runs with Hyperparameters drawn from a grid of all possible values."""
+
     pass

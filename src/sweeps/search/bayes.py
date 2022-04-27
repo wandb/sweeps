@@ -14,6 +14,7 @@ from scipy import stats as scipy_stats
 
 from .._types import floating, integer, ArrayLike
 
+
 class ImputeStrategy(str, Enum):
     best = "best"
     worst = "worst"
@@ -530,5 +531,8 @@ def bayes_search_next_runs(
         ret.append(suggestion)
     return ret
 
+
 class BayesSearch(AbstractSearch):
+    """Suggest runs using Bayesian optimization."""
+
     pass
