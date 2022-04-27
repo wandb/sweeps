@@ -169,7 +169,7 @@ def test_nested_run_parameter(search_type):
     }
     desired_run_config = {
         # User gets the original parameters as specified
-        "foo": {"value": 2},
+        "foo": {"value": 1},
         "a.b": {"value": 2},
         "a.c": {"value": 3},
         "a.d.e": {"value": 4},
@@ -183,6 +183,8 @@ def test_nested_run_parameter(search_type):
     existing_run_config = deepcopy(desired_run_config)
     existing_run_config["foo"]["value"] = 2
     run = next_run(sweep_config, [SweepRun(config=existing_run_config)])
+    del run.config["foo"]
+    del desired_run_config["foo"]
     assert run.config == desired_run_config
 
 
