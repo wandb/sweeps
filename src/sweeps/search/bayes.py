@@ -2,7 +2,7 @@ import numpy as np
 
 from enum import Enum
 from copy import deepcopy
-from typing import List, Tuple, Optional, Union, Dict
+from typing import Dict, List, Tuple, Optional, Sequence, Union
 
 from .abstract import AbstractSearch
 from ..config.cfg import SweepConfig
@@ -535,4 +535,42 @@ def bayes_search_next_runs(
 class BayesSearch(AbstractSearch):
     """Suggest runs using Bayesian optimization."""
 
-    pass
+    def _next_runs(self, *args, n:int = 1, **kwargs) -> Sequence[Optional[SweepRun]]:
+        ret: List[SweepRun] = []
+        for _ in range(n):
+            config = bayes_baseline_validate_and_fill(config)
+
+            params, sample_X, current_X, y = _construct_gp_data(runs, config)
+            X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
+
+            (
+                suggested_X,
+                suggested_X_prob_of_improvement,
+                suggested_X_predicted_y,
+                suggested_X_predicted_std,
+                suggested_X_expected_improvement,
+            ) = next_sample(
+                sample_X=sample_X,
+                sample_y=y,
+                X_bounds=X_bounds,
+                current_X=current_X if len(current_X) > 0 else None,
+                improvement=minimum_improvement,
+            )
+
+            # convert the parameters from vector of [0,1] values
+            # to the original ranges
+            for param in params:
+                if param.type == HyperParameter.CONSTANT:
+                    continue
+                try_value = suggested_X[params.param_names_to_index[param.name]]
+                param.value = param.ppf(try_value)
+
+            ret_dict = params.to_config()
+            info = {
+                "success_probability": suggested_X_prob_of_improvement,
+                "predicted_value": suggested_X_predicted_y,
+                "predicted_value_std_dev": suggested_X_predicted_std,
+                "expected_improvement": suggested_X_expected_improvement,
+            }
+            ret.append(SweepRun(config=ret_dict, search_info=info))
+        return ret

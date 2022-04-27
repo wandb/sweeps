@@ -1,6 +1,5 @@
 """Hyperparameter search parameters."""
 
-import random
 import logging
 from typing import List, Tuple, Dict, Any
 
@@ -307,7 +306,7 @@ class HyperParameter:
 
     def sample(self) -> Any:
         """Randomly sample a value from the distribution of this HyperParameter."""
-        return self.ppf(random.uniform(0.0, 1.0))
+        return self.ppf(np.random.uniform(0.0, 1.0))
 
     def _to_config(self) -> Tuple[str, Dict]:
         config = dict(value=self.value)

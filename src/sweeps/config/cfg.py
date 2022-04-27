@@ -76,7 +76,9 @@ class SweepConfig(dict):
         if not isinstance(config["parameters"], dict):
             raise ValueError("Sweep config 'parameters' section must be of type <dict>")
         if len(config["parameters"]) < 1:
-            raise ValueError("Sweep config 'parameters' section must contain at least 1 parameter")
+            raise ValueError(
+                "Sweep config 'parameters' section must contain at least 1 parameter"
+            )
 
     def save(self, filename: Union[Path, str]) -> None:
         with open(filename, "w") as outfile:
