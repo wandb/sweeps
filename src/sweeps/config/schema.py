@@ -1,12 +1,12 @@
 import json
+from copy import deepcopy
+from pathlib import Path
+from typing import Dict, Optional, Tuple
+
 import jsonref
 import jsonschema
 import numpy as np
 from jsonschema import Draft7Validator, validators
-
-from pathlib import Path
-from typing import Dict, Optional, Tuple
-from copy import deepcopy
 
 sweep_config_jsonschema_fname = Path(__file__).parent / "schema.json"
 with open(sweep_config_jsonschema_fname, "r") as f:
@@ -137,7 +137,7 @@ def validate_search(d: Dict) -> None:
 def check_for_deprecated_distributions(
     parameter_name: str, parameter_config: Dict
 ) -> None:
-    from ..params import HyperParameter, PARAM_DEPRECATION_MAP
+    from ..params import PARAM_DEPRECATION_MAP, HyperParameter
 
     param = HyperParameter(
         parameter_name, parameter_config

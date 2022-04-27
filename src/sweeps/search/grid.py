@@ -1,15 +1,17 @@
-import itertools
-import random
 import hashlib
-import yaml
-from typing import Any, List, Optional, Sequence, Union
+import itertools
+from typing import Any, List, Optional, Sequence
 
 import numpy as np
+import yaml
 
-from .abstract import AbstractSearch
-from ..config.cfg import SweepConfig
+from ..params import (
+    HyperParameter,
+    HyperParameterSet,
+    make_run_config_from_params,
+)
 from ..run import SweepRun
-from ..params import HyperParameter, HyperParameterSet, make_run_config_from_params
+from .abstract import AbstractSearch
 
 
 def yaml_hash(value: Any) -> str:

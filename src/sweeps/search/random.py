@@ -1,9 +1,8 @@
-from typing import Union, List, Sequence, Optional
+from typing import Optional, Sequence
 
-from .abstract import AbstractSearch
-from ..config.cfg import SweepConfig
+from ..params import make_run_config_from_params
 from ..run import SweepRun
-from ..params import HyperParameterSet, make_run_config_from_params
+from .abstract import AbstractSearch
 
 
 class RandomSearch(AbstractSearch):

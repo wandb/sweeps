@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
 import logging
-from typing import List, Optional, Sequence, Union, Dict
+from abc import ABC, abstractmethod
+from typing import Dict, List, Optional, Sequence, Union
 
 import numpy as np
 
@@ -16,7 +16,7 @@ class AbstractSearch(ABC):
 
     def __init__(
         self,
-        sweep_config: Union[dict, SweepConfig],
+        sweep_config: Union[Dict, SweepConfig],
         validate: bool = False,
         random_state: Union[np.random.RandomState, int] = 42,
     ) -> None:
@@ -41,9 +41,12 @@ class AbstractSearch(ABC):
     @random_state.setter
     def random_state(self, random_state: Union[np.random.RandomState, int]) -> None:
         if type(random_state) == int:
+            # TODO: Remove legacy "seed" style random state
+            # np.random.seed(random_state)
             self._random_state = np.random.RandomState(random_state)
         else:
             self._random_state = random_state
+        _log.info(f"Search random state set to {self._random_state}")
 
     @abstractmethod
     def _next_runs(self, *args, **kwargs) -> Sequence[Optional[SweepRun]]:

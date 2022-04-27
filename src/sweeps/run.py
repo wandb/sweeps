@@ -1,12 +1,13 @@
-from typing import Sequence, List, Optional, Union, Any, Dict
+import datetime
 from enum import Enum
 from numbers import Number
-import numpy as np
-import datetime
+from typing import Any, Dict, List, Optional, Sequence, Union
 
+import numpy as np
 from pydantic import BaseModel, Field
-from .config import SweepConfig, validate_search
+
 from ._types import floating
+from .config import SweepConfig, validate_search
 
 
 class RunState(str, Enum):
@@ -176,7 +177,7 @@ def next_runs(
     Returns:
         The suggested runs.
     """
-    from .search import GridSearch, RandomSearch, BayesSearch
+    from .search import BayesSearch, GridSearch, RandomSearch
 
     validate_search(sweep_config)
     _method: str = sweep_config["method"]

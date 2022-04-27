@@ -1,18 +1,17 @@
-import numpy as np
-
-from enum import Enum
 from copy import deepcopy
-from typing import Dict, List, Tuple, Optional, Sequence, Union
+from enum import Enum
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
-from .abstract import AbstractSearch
+import numpy as np
+from scipy import stats as scipy_stats
+from sklearn import gaussian_process as sklearn_gaussian
+
+from .._types import ArrayLike, floating, integer
 from ..config.cfg import SweepConfig
 from ..config.schema import fill_validate_metric
-from ..run import SweepRun, RunState, run_state_is_terminal
 from ..params import HyperParameter, HyperParameterSet, make_run_config_from_params
-from sklearn import gaussian_process as sklearn_gaussian
-from scipy import stats as scipy_stats
-
-from .._types import floating, integer, ArrayLike
+from ..run import RunState, SweepRun, run_state_is_terminal
+from .abstract import AbstractSearch
 
 
 class ImputeStrategy(str, Enum):
