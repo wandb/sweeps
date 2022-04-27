@@ -1,5 +1,3 @@
-""" Custom types for sweeps, mainly for type-checking. """
-
 from typing import Any, Union
 
 import numpy as np

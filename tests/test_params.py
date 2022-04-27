@@ -1,8 +1,7 @@
+import numpy as np
 import pytest
 
-import numpy as np
-
-from sweeps import SweepRun, RunState
+from sweeps import RunState, SweepRun
 from sweeps.params import HyperParameter, HyperParameterSet
 
 

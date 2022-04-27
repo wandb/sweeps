@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Search algorithms for Hyperparameter Optimization."""
 from .abstract import AbstractSearch
 from .grid import GridSearch
 from .random import RandomSearch

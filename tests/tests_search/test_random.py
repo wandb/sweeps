@@ -1,18 +1,16 @@
+import os
+
+import numpy as np
 import pytest
+from scipy import stats
 
 from sweeps.config import SweepConfig
 from sweeps.params import HyperParameter
-import numpy as np
 from sweeps.run import next_run
-from sweeps._types import ArrayLike
-import os
-from scipy import stats
-
-from pathlib import Path
 
 from ..utils import (
-    plot_two_distributions,
     check_that_samples_are_from_the_same_distribution,
+    plot_two_distributions,
     test_results_dir,
 )
 
@@ -268,8 +266,9 @@ def test_rand_inv_loguniform(plot):
     cdf_pred = hyperparameter.cdf(bin_centers)
 
     if plot:
-        import matplotlib.pyplot as plt
         import inspect
+
+        import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
         ax.step(
@@ -356,8 +355,9 @@ def test_rand_inv_loguniform_values(plot):
     cdf_pred = hyperparameter.cdf(bin_centers)
 
     if plot:
-        import matplotlib.pyplot as plt
         import inspect
+
+        import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
         ax.step(

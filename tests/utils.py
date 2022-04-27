@@ -1,6 +1,7 @@
-import numpy as np
 import os
 from pathlib import Path
+
+import numpy as np
 
 from sweeps._types import ArrayLike
 
@@ -39,8 +40,9 @@ def plot_two_distributions(
     bins: ArrayLike,
     xscale="linear",
 ):
-    import matplotlib.pyplot as plt
     import inspect
+
+    import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots()
     ax.hist(

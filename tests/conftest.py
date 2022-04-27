@@ -1,4 +1,5 @@
 import pytest
+
 from sweeps.config import SweepConfig
 
 
