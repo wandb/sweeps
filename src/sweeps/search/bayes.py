@@ -380,20 +380,20 @@ def impute(
 def _construct_gp_data(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
-    params: HyperParameterSet = None,
+    params: HyperParameterSet,
 ) -> Tuple[HyperParameterSet, ArrayLike, ArrayLike, ArrayLike]:
     goal = config["metric"]["goal"]
     metric_name = config["metric"]["name"]
     impute_strategy = ImputeStrategy(config["metric"]["impute"])
 
-    if len(params.searchable_params) == 0:  # type: ignore
+    if len(params.searchable_params) == 0:
         raise ValueError("Need at least one searchable parameter for bayes search.")
 
     sample_X: ArrayLike = []
     current_X: ArrayLike = []
     y: ArrayLike = []
 
-    X_norms = params.normalize_runs_as_array(runs)  # type: ignore
+    X_norms = params.normalize_runs_as_array(runs)
     worst_metric = impute(goal, metric_name, ImputeStrategy.worst, runs=runs)
     for run, X_norm in zip(runs, X_norms):
         if run.state == RunState.finished:
@@ -447,7 +447,7 @@ def _construct_gp_data(
     # maximize, we need to negate y
     y *= -1 if goal == "maximize" else 1
 
-    return params, sample_X, current_X, y  # type: ignore
+    return params, sample_X, current_X, y
 
 
 class BayesSearch(AbstractSearch):
