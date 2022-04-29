@@ -26,6 +26,28 @@
       },
       "additionalProperties": false
     },
+    "param_dict": {
+      "type": "object",
+      "description": "A parameter dictionary which can contain other parameters.",
+      "propertyNames": {
+        "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/parameter"
+      },
+      "minProperties": 1
+    },
+    "param_choice": {
+      "type": "object",
+      "description": "Only one choice parameter per nest level will be picked.",
+      "propertyNames": {
+        "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/parameter"
+      },
+      "minProperties": 1
+    },
     "param_categorical_w_probabilities": {
       "type": "object",
       "description": "A categorical parameter with allowed values and corresponding probabilities",
@@ -569,6 +591,12 @@
     },
     "parameter": {
       "anyOf": [
+        {
+          "$ref": "#/definitions/param_dict"
+        },
+        {
+          "$ref": "#/definitions/param_choice"
+        },
         {
           "$ref": "#/definitions/param_qbeta"
         },
