@@ -1,4 +1,5 @@
 import pytest
+from copy import deepcopy
 from jsonschema import ValidationError
 from sweeps import next_run, stop_runs, SweepRun
 from sweeps.config import (
@@ -154,6 +155,45 @@ def test_invalid_run_parameter():
     with pytest.raises(ValueError):
         next_run(config, runs, validate=False)
 
+@pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
+def test_nested_run_parameter(search_type):
+    sweep_config = {
+        "method": search_type,
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {
+            "foo": {"values": [1, 2]},
+            "a.b": {"value": 2, "nested": True},
+            "a.c": {"value": 3, "nested": True},
+            "a.d.e": {"value": 4, "nested": True},
+        },
+    }
+    desired_run_config = {
+        # User gets the original parameters as specified
+        "foo": {"value": 1},
+        "a.b": {"value": 2},
+        "a.c": {"value": 3},
+        "a.d.e": {"value": 4},
+        # User will aso get any nested parameters in un-nested form
+        # so they can retreive them via wandb.config['a']['d']['e']
+        # as requested in https://github.com/wandb/client/issues/982
+        # where values inside their nested wandb.config objects
+        # could not be sweeped over in a sweep config.
+        "a": {"value": {"b": 2, "c": 3, "d": {"e": 4}}},
+    }
+    existing_run_config = deepcopy(desired_run_config)
+    existing_run_config["foo"]["value"] = 2
+    run = next_run(sweep_config, [SweepRun(config=existing_run_config)])
+    del run.config["foo"]
+    del desired_run_config["foo"]
+    assert run.config == desired_run_config
+
+@pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
+def test_conditional_run_parameter(search_type):
+    pass
+
+@pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
+def test_nested_conditional_run_parameter(search_type):
+    pass
 
 def test_invalid_minmax_with_no_sweepconfig_validation():
     config = {"method": "random", "parameters": {"a": {"max": 0, "min": 1}}}

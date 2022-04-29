@@ -90,3 +90,71 @@ def test_hyperparameterset_normalize_runs():
     )
     normalized_runs = valid_set.normalize_runs_as_array([r1, r2])
     assert normalized_runs.shape == (2, 1)
+
+def test_make_run_config_from_params():
+
+    # Nested values by default use '.' as delimiter
+    runconf = make_run_config_from_params(
+        HyperParameterSet(
+            [
+                HyperParameter("a.a", {"value": 1}),
+                HyperParameter("a.b", {"value": 2, "nested": True}),
+                HyperParameter("a.c", {"value": 3, "nested": True}),
+                HyperParameter("a.d.e", {"value": 4, "nested": True}),
+            ]
+        )
+    )
+    assert runconf == {
+        "a.a": {"value": 1},
+        "a.b": {"value": 2},
+        "a.c": {"value": 3},
+        "a.d.e": {"value": 4},
+        "a": {"value": {"b": 2, "c": 3, "d": {"e": 4}}},
+    }
+
+    # Nested values can't overwrite existing non-nested keys
+    params = HyperParameterSet(
+        [
+            HyperParameter("a", {"value": 1}),
+            HyperParameter("a.c", {"value": 2, "nested": True}),
+        ]
+    )
+    with pytest.raises(ValueError):
+        make_run_config_from_params(params)
+
+
+@pytest.mark.parametrize("delimiter", [".", "_", "foo"])
+def test_make_run_config_from_params_custom_delimiters(delimiter):
+
+    runconf = make_run_config_from_params(
+        HyperParameterSet(
+            [
+                HyperParameter(
+                    f"a{delimiter}b",
+                    {"value": 1, "nested": True, "nest_delimiter": delimiter},
+                ),
+                HyperParameter(
+                    f"a{delimiter}c",
+                    {"value": 2, "nested": True, "nest_delimiter": delimiter},
+                ),
+            ]
+        )
+    )
+    assert runconf == {
+        f"a{delimiter}b": {"value": 1},
+        f"a{delimiter}c": {"value": 2},
+        "a": {"value": {"b": 1, "c": 2}},
+    }
+
+    # Throw error if delimiters are different
+    params = HyperParameterSet(
+        [
+            HyperParameter(
+                f"a{delimiter}b",
+                {"value": 1, "nested": True, "nest_delimiter": delimiter},
+            ),
+            HyperParameter("a-c", {"value": 2, "nested": True, "nest_delimiter": "-"}),
+        ]
+    )
+    with pytest.raises(ValueError):
+        make_run_config_from_params(params)
