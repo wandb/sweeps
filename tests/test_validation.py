@@ -189,7 +189,37 @@ def test_nested_run_parameter(search_type):
 
 @pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
 def test_conditional_run_parameter(search_type):
-    pass
+    sweep_config = {
+        "method": search_type,
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {
+            "batch_size": {"values": [32, 64]},
+            "model_arch": {
+                "choose_from" : {
+                    "MHA" : {
+                        "embed_size": {"values": [32, 128]},
+                        "num_heads": {"values": [1, 16]},
+                    },
+                    "fcn" : {
+                        "num_layers": {"value": False},
+                        "use_dropout": {"value": True},
+                    }
+                }
+            }
+        }
+    }
+
+    # param-dict inside a param-dict
+    sweep_config = {
+        "method": search_type,
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {
+            "a" : {
+                "b" : {"values": [1, 2]},
+                "c" : {"d" : {"value" : 3}},
+            },
+        }
+    }
 
 @pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
 def test_nested_conditional_run_parameter(search_type):
