@@ -263,7 +263,7 @@ def test_choice_param(search_type):
             run = next_run(sweep_config, [SweepRun(run_config_1), SweepRun(run_config_2)])
 
 @pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
-def test_choice_and_param_dict_combos(search_type):
+def test_choice_and_param_dict_interactions(search_type):
     # Choice param inside a nested param
     sweep_config = {
         "method": search_type,
@@ -308,7 +308,7 @@ def test_choice_and_param_dict_combos(search_type):
     run = next_run(sweep_config, [SweepRun(run_config_1)])
     assert run.config == run_config_2
 
-    # Choice param inside a nested param inside a choice param
+    # Choice param inside a choice param inside a nested param
     sweep_config = {
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
@@ -335,6 +335,40 @@ def test_choice_and_param_dict_combos(search_type):
     run_config_1 = {"a" : {"value": {"b" : 1}}}
     run_config_2 = {"a" : {"value": {"b" : 2}}}
     run_config_3 = {"a" : {"value": {"d" : 1}}}
+    run = next_run(sweep_config, [SweepRun(run_config_1, run_config_3)])
+    assert run.config == run_config_2
+    run = next_run(sweep_config, [SweepRun(run_config_1, run_config_2)])
+    assert run.config == run_config_3
+    run = next_run(sweep_config, [SweepRun(run_config_2, run_config_3)])
+    assert run.config == run_config_1
+
+    # choice param inside nested param inside a choice param
+    sweep_config = {
+        "method": search_type,
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {
+            "_choice" : {
+                "case_1" : {
+                    "a" :{
+                        "_choice" : {
+                            "case_1" : {
+                                "b" : {"value": 1},
+                            },
+                            "case_2" : {
+                                "c" : {"value": 1},
+                            }
+                        }
+                    }
+                },
+                "case_2" : {
+                    "d" : {"value": 1},
+                }
+            }
+        }
+    }
+    run_config_1 = {"a" : {"value": {"b" : 1}}}
+    run_config_2 = {"a" : {"value": {"c" : 2}}}
+    run_config_3 = {"d" : {"value": 1}}
     run = next_run(sweep_config, [SweepRun(run_config_1, run_config_3)])
     assert run.config == run_config_2
     run = next_run(sweep_config, [SweepRun(run_config_1, run_config_2)])
