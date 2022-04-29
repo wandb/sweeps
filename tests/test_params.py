@@ -91,76 +91,50 @@ def test_hyperparameterset_normalize_runs():
     normalized_runs = valid_set.normalize_runs_as_array([r1, r2])
     assert normalized_runs.shape == (2, 1)
 
-def test_make_run_config_from_params():
+def test_hyperparameterset_from_config():
 
-    # Nested values by default use '.' as delimiter
-    runconf = make_run_config_from_params(
-        HyperParameterSet(
-            [
-                HyperParameter("a.a", {"value": 1}),
-                HyperParameter("a.b", {"value": 2, "nested": True}),
-                HyperParameter("a.c", {"value": 3, "nested": True}),
-                HyperParameter("a.d.e", {"value": 4, "nested": True}),
-            ]
-        )
-    )
-    assert runconf == {
-        "a.a": {"value": 1},
-        "a.b": {"value": 2},
-        "a.c": {"value": 3},
-        "a.d.e": {"value": 4},
-        "a": {"value": {"b": 2, "c": 3, "d": {"e": 4}}},
+    # simple case of hyperparameters from config
+    run_config = {
+
     }
-
-    # Nested values can't overwrite existing non-nested keys
-    params = HyperParameterSet(
-        [
-            HyperParameter("a", {"value": 1}),
-            HyperParameter("a.c", {"value": 2, "nested": True}),
-        ]
-    )
-    with pytest.raises(ValueError):
-        make_run_config_from_params(params)
+    hps = HyperParameterSet.from_config(run_config)
+    # sorting of config items ensures order of hyperparameters
+    assert hps[0] == HyperParameter("a.a", {"value": 1})
+    assert hps[1] == HyperParameter("a.a", {"value": 1})
+    assert hps[2] == HyperParameter("a.a", {"value": 1})
+    assert hps[3] == HyperParameter("a.a", {"value": 1})
 
 
-@pytest.mark.parametrize("delimiter", [".", "_", "foo"])
-def test_make_run_config_from_params_custom_delimiters(delimiter):
+    # Error case
+    run_config = {
 
-    runconf = make_run_config_from_params(
-        HyperParameterSet(
-            [
-                HyperParameter(
-                    f"a{delimiter}b",
-                    {"value": 1, "nested": True, "nest_delimiter": delimiter},
-                ),
-                HyperParameter(
-                    f"a{delimiter}c",
-                    {"value": 2, "nested": True, "nest_delimiter": delimiter},
-                ),
-            ]
-        )
-    )
-    assert runconf == {
-        f"a{delimiter}b": {"value": 1},
-        f"a{delimiter}c": {"value": 2},
-        "a": {"value": {"b": 1, "c": 2}},
     }
-
-    # Throw error if delimiters are different
-    params = HyperParameterSet(
-        [
-            HyperParameter(
-                f"a{delimiter}b",
-                {"value": 1, "nested": True, "nest_delimiter": delimiter},
-            ),
-            HyperParameter("a-c", {"value": 2, "nested": True, "nest_delimiter": "-"}),
-        ]
-    )
     with pytest.raises(ValueError):
-        make_run_config_from_params(params)
+        _ = HyperParameterSet.from_config(run_config)
 
-def test_param_dict():
-    pass
 
-def test_param_choice():
-    pass
+def test_hyperparameterset_to_config():
+
+    # simple case of hyperparameters to config
+    hps = HyperParameterSet([
+        HyperParameter("a.a", {"value": 1}),
+        HyperParameter("a.a", {"value": 1}),
+        HyperParameter("a.a", {"value": 1}),
+        HyperParameter("a.a", {"value": 1}),
+    ])
+    desired_run_config = {
+
+    }
+    run_config = hps.to_config()
+    assert desired_run_config == run_config
+
+
+    # Error case
+    hps = HyperParameterSet([
+        HyperParameter("a.a", {"value": 1}),
+        HyperParameter("a.a", {"value": 1}),
+        HyperParameter("a.a", {"value": 1}),
+        HyperParameter("a.a", {"value": 1}),
+    ])
+    with pytest.raises(ValueError):
+        _ = hps.to_config()

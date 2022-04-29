@@ -354,13 +354,14 @@ class HyperParameterSet(list):
         Args:
             config: The parameters section of a SweepConfig.
         """
-        hpd = cls(
-            [
-                HyperParameter(param_name, param_config)
-                for param_name, param_config in sorted(config.items())
-            ]
-        )
-        return hpd
+        hyperparameters: List[HyperParameter] = []
+        for _name, _value in sorted(config.items()):
+            if _name == "_choice":
+                pass
+            if isinstance(_value, dict):
+                pass
+            hyperparameters.append(HyperParameter(_name, _value))
+        return hyperparameters
 
     def to_config(self) -> Dict:
         """Convert a HyperParameterSet to a SweepRun config."""
