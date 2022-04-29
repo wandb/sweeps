@@ -158,3 +158,9 @@ def test_make_run_config_from_params_custom_delimiters(delimiter):
     )
     with pytest.raises(ValueError):
         make_run_config_from_params(params)
+
+def test_param_dict():
+    pass
+
+def test_param_choice():
+    pass
