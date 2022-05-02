@@ -8,7 +8,11 @@ import numpy as np
 
 from .config.cfg import SweepConfig
 from .run import SweepRun
-from .params import HyperParameter, HyperParameterSet
+from .params import (
+    HyperParameter,
+    HyperParameterSet,
+    validate_hyperparam_search_space_in_runs,
+)
 
 
 def yaml_hash(value: Any) -> str:
@@ -45,6 +49,7 @@ def grid_search_next_runs(
     # make sure the sweep config is valid
     if validate:
         sweep_config = SweepConfig(sweep_config)
+    validate_hyperparam_search_space_in_runs(runs, sweep_config)
 
     if sweep_config["method"] != "grid":
         raise ValueError("Invalid sweep configuration for grid_search_next_run.")

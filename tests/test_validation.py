@@ -155,6 +155,7 @@ def test_invalid_run_parameter():
     with pytest.raises(ValueError):
         next_run(config, runs, validate=False)
 
+
 @pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
 def test_param_dict(search_type):
     # param dict inside param dict
@@ -162,14 +163,14 @@ def test_param_dict(search_type):
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "a" : {
-                "b" : {"value": 1},
-                "c" : {"d" : {"value" : 2}},
+            "a": {
+                "b": {"value": 1},
+                "c": {"d": {"value": 2}},
             },
-        }
+        },
     }
     desired_run_config = {
-        "a" : {"value" : {"b" : 1, "c" : {"d" : 2}}},
+        "a": {"value": {"b": 1, "c": {"d": 2}}},
     }
     run = next_run(sweep_config, [SweepRun(config=sweep_config)])
     assert run.config == desired_run_config
@@ -179,19 +180,20 @@ def test_param_dict(search_type):
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "a" : {
-                "b" : {"value": 1},
-                "c" : {"d" : {"value" : 2}},
+            "a": {
+                "b": {"value": 1},
+                "c": {"d": {"value": 2}},
             },
-            "b" : {"value": 2},
-        }
+            "b": {"value": 2},
+        },
     }
     desired_run_config = {
-        "a" : {"value" : {"b" : 1, "c" : {"d" : 2}}},
-        "b" : {"value": 2},
+        "a": {"value": {"b": 1, "c": {"d": 2}}},
+        "b": {"value": 2},
     }
     run = next_run(sweep_config, [SweepRun(config=sweep_config)])
     assert run.config == desired_run_config
+
 
 @pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
 def test_choice_param(search_type):
@@ -200,18 +202,18 @@ def test_choice_param(search_type):
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "_choice" : {
-                "case_1" : {
-                    "a" : {"value": 1},
+            "_choice": {
+                "case_1": {
+                    "a": {"value": 1},
                 },
-                "case_2" : {
-                    "a" : {"value": 2},
-                }
+                "case_2": {
+                    "a": {"value": 2},
+                },
             },
-        }
+        },
     }
-    run_config_1 = {"a" : {"value": 1}}
-    run_config_2 = {"a" : {"value": 2}}
+    run_config_1 = {"a": {"value": 1}}
+    run_config_2 = {"a": {"value": 2}}
     run = next_run(sweep_config, [SweepRun(run_config_1)])
     assert run.config == run_config_2
 
@@ -220,20 +222,20 @@ def test_choice_param(search_type):
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "_choice" : {
-                "case_1" : {
-                    "a" : {"value": 1},
-                    "b" : {"value": 1},
+            "_choice": {
+                "case_1": {
+                    "a": {"value": 1},
+                    "b": {"value": 1},
                 },
-                "case_2" : {
-                    "a" : {"value": 2},
-                    "b" : {"value": 2},
-                }
+                "case_2": {
+                    "a": {"value": 2},
+                    "b": {"value": 2},
+                },
             },
-        }
+        },
     }
-    run_config_1 = {"a" : {"value": 1}, "b" : {"value": 1}}
-    run_config_2 = {"a" : {"value": 2}, "b" : {"value": 2}}
+    run_config_1 = {"a": {"value": 1}, "b": {"value": 1}}
+    run_config_2 = {"a": {"value": 2}, "b": {"value": 2}}
     run = next_run(sweep_config, [SweepRun(run_config_1)])
     assert run.config == run_config_2
 
@@ -242,25 +244,28 @@ def test_choice_param(search_type):
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "_choice" : {
-                "case_1" : {
-                    "a" : {"value": 1},
+            "_choice": {
+                "case_1": {
+                    "a": {"value": 1},
                 },
-                "case_2" : {
-                    "b" : {"value": 1},
-                    "c" : {"value": 1},
-                }
+                "case_2": {
+                    "b": {"value": 1},
+                    "c": {"value": 1},
+                },
             },
-        }
+        },
     }
-    run_config_1 = {"a" : {"value": 1}}
-    run_config_2 = {"b" : {"value": 1}}
-    if search_type in ['grid', 'random']:
+    run_config_1 = {"a": {"value": 1}}
+    run_config_2 = {"b": {"value": 1}}
+    if search_type in ["grid", "random"]:
         run = next_run(sweep_config, [SweepRun(run_config_1)])
         assert run.config == run_config_2
-    else: # bayes search
+    else:  # bayes search
         with pytest.raises(ValueError):
-            run = next_run(sweep_config, [SweepRun(run_config_1), SweepRun(run_config_2)])
+            run = next_run(
+                sweep_config, [SweepRun(run_config_1), SweepRun(run_config_2)]
+            )
+
 
 @pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
 def test_choice_and_param_dict_interactions(search_type):
@@ -269,20 +274,20 @@ def test_choice_and_param_dict_interactions(search_type):
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "a" : {
-                "_choice" : {
-                    "case_1" : {
-                        "b" : {"value": 1},
+            "a": {
+                "_choice": {
+                    "case_1": {
+                        "b": {"value": 1},
                     },
-                    "case_2" : {
-                        "b" : {"value": 2},
-                    }
+                    "case_2": {
+                        "b": {"value": 2},
+                    },
                 }
             }
-        }
+        },
     }
-    run_config_1 = {"a" : {"value": {"b" : {"value": 1}}}}
-    run_config_2 = {"a" : {"value": {"b" : {"value": 2}}}}
+    run_config_1 = {"a": {"value": {"b": {"value": 1}}}}
+    run_config_2 = {"a": {"value": {"b": {"value": 2}}}}
     run = next_run(sweep_config, [SweepRun(run_config_1)])
     assert run.config == run_config_2
 
@@ -291,20 +296,20 @@ def test_choice_and_param_dict_interactions(search_type):
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "a" : {
-                "_choice" : {
-                    "case_1" : {
-                        "b" : {"value": 1},
+            "a": {
+                "_choice": {
+                    "case_1": {
+                        "b": {"value": 1},
                     },
-                    "case_2" : {
-                        "c" : {"value": 1},
-                    }
+                    "case_2": {
+                        "c": {"value": 1},
+                    },
                 }
             }
-        }
+        },
     }
-    run_config_1 = {"a" : {"value": {"b" : {"value": 1}}}}
-    run_config_2 = {"a" : {"value": {"c" : {"value": 1}}}}
+    run_config_1 = {"a": {"value": {"b": {"value": 1}}}}
+    run_config_2 = {"a": {"value": {"c": {"value": 1}}}}
     run = next_run(sweep_config, [SweepRun(run_config_1)])
     assert run.config == run_config_2
 
@@ -313,28 +318,28 @@ def test_choice_and_param_dict_interactions(search_type):
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "a" : {
-                "_choice" : {
-                    "case_1" : {
-                        "_choice" : {
-                            "case_1" : {
-                                "b" : {"value": 1},
+            "a": {
+                "_choice": {
+                    "case_1": {
+                        "_choice": {
+                            "case_1": {
+                                "b": {"value": 1},
                             },
-                            "case_2" : {
-                                "b" : {"value": 2},
-                            }
+                            "case_2": {
+                                "b": {"value": 2},
+                            },
                         }
                     },
-                    "case_2" : {
-                        "d" : {"value": 1},
-                    }
+                    "case_2": {
+                        "d": {"value": 1},
+                    },
                 }
             }
-        }
+        },
     }
-    run_config_1 = {"a" : {"value": {"b" : 1}}}
-    run_config_2 = {"a" : {"value": {"b" : 2}}}
-    run_config_3 = {"a" : {"value": {"d" : 1}}}
+    run_config_1 = {"a": {"value": {"b": 1}}}
+    run_config_2 = {"a": {"value": {"b": 2}}}
+    run_config_3 = {"a": {"value": {"d": 1}}}
     run = next_run(sweep_config, [SweepRun(run_config_1, run_config_3)])
     assert run.config == run_config_2
     run = next_run(sweep_config, [SweepRun(run_config_1, run_config_2)])
@@ -347,28 +352,28 @@ def test_choice_and_param_dict_interactions(search_type):
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "_choice" : {
-                "case_1" : {
-                    "a" :{
-                        "_choice" : {
-                            "case_1" : {
-                                "b" : {"value": 1},
+            "_choice": {
+                "case_1": {
+                    "a": {
+                        "_choice": {
+                            "case_1": {
+                                "b": {"value": 1},
                             },
-                            "case_2" : {
-                                "c" : {"value": 1},
-                            }
+                            "case_2": {
+                                "c": {"value": 1},
+                            },
                         }
                     }
                 },
-                "case_2" : {
-                    "d" : {"value": 1},
-                }
+                "case_2": {
+                    "d": {"value": 1},
+                },
             }
-        }
+        },
     }
-    run_config_1 = {"a" : {"value": {"b" : 1}}}
-    run_config_2 = {"a" : {"value": {"c" : 2}}}
-    run_config_3 = {"d" : {"value": 1}}
+    run_config_1 = {"a": {"value": {"b": 1}}}
+    run_config_2 = {"a": {"value": {"c": 2}}}
+    run_config_3 = {"d": {"value": 1}}
     run = next_run(sweep_config, [SweepRun(run_config_1, run_config_3)])
     assert run.config == run_config_2
     run = next_run(sweep_config, [SweepRun(run_config_1, run_config_2)])
@@ -376,9 +381,11 @@ def test_choice_and_param_dict_interactions(search_type):
     run = next_run(sweep_config, [SweepRun(run_config_2, run_config_3)])
     assert run.config == run_config_1
 
+
 @pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
 def test_nested_conditional_run_parameter(search_type):
     pass
+
 
 def test_invalid_minmax_with_no_sweepconfig_validation():
     config = {"method": "random", "parameters": {"a": {"max": 0, "min": 1}}}

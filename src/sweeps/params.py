@@ -16,6 +16,7 @@ from ._types import ArrayLike
 
 _logger = logging.getLogger(__name__)
 
+
 def q_log_uniform_v1_ppf(x: ArrayLike, min, max, q):
     r = np.exp(stats.uniform.ppf(x, min, max - min))
     ret_val = np.round(r / q) * q
@@ -341,7 +342,9 @@ class HyperParameterSet(list):
             elif not item.type == HyperParameter.CONSTANT:
                 # constants do not form part of the search space
                 if item.name in self.search_space:
-                    raise ValueError(f"HyperParameterSet cannot contain duplicates, got {item.name}")
+                    raise ValueError(
+                        f"HyperParameterSet cannot contain duplicates, got {item.name}"
+                    )
                 self.search_space.add(item.name)
                 self.searchable_params.append(item)
                 self.param_names_to_index[item.name] = _searchable_param_index
@@ -363,7 +366,7 @@ class HyperParameterSet(list):
         hyperparameters: List[HyperParameter] = []
 
         def _recursive_search(d: Dict):
-            """ Recursively search for HyperParameters in a potentially nested dictionary. """
+            """Recursively search for HyperParameters in a potentially nested dictionary."""
             for key, value in d.items():
                 if isinstance(value, dict):
                     _recursive_search(value)
