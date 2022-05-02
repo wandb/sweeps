@@ -379,23 +379,25 @@ class HyperParameterSet(list):
             for key, val in sorted(d.items()):
                 assert isinstance(
                     key, str
-                ), f"Config keys must be strings, found {key} of type {type(key)}"
+                ), f"Sweep config keys must be strings, found {key} of type {type(key)}"
+                assert isinstance(
+                    val, dict
+                ), f"Sweep config values must be dicts, found {val} of type {type(val)}"
+                choices.append(choice_key)
                 if key.startswith("wb.choose."):
-                    # Verify that the value is a dict containing other dicts
-                    assert isinstance(val, dict), "wb.choose must be a dict"
                     choices: List[str] = []
                     for choice_key, choice_val in val.items():
                         assert isinstance(
                             choice_key, str
-                        ), "wb.choose keys must be strings"
+                        ), f"wb.choose keys must be strings, found {choice_key} of type {type(choice_key)}"
                         assert isinstance(
                             choice_val, dict
-                        ), "wb.choose values must be dicts"
+                        ), f"wb.choose values must be dicts, found {choice_val} of type {type(choice_val)}"
                         choices.append(choice_key)
                     # Create a new HyperParameter representing the choice
                     hyperparameters.append(HyperParameter(key, {"values": choices}))
                     for _, choice_val in val.items():
-                        _unnest(choice_val, prefix=f"{key}.")
+                        _unnest(choice_val, prefix=f"{prefix}{key}{delimiter}")
                 elif isinstance(val, dict):
                     _hp = HyperParameter(key, val)
                     if _hp.type == HyperParameter.DICT:
