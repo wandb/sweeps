@@ -364,21 +364,24 @@ class HyperParameterSet(list):
             config: The parameters section of a SweepConfig.
         """
         hyperparameters: List[HyperParameter] = []
+        
 
-        def _recursive_search(d: Dict):
+        def _unnest(d: Dict, nest_map: Dict):
             """Recursively search for HyperParameters in a potentially nested dictionary."""
-            for key, value in d.items():
-                if isinstance(value, dict):
-                    _recursive_search(value)
+            for key, val in sorted(d.items()):
+                if "wbchoice" in key:
+                    pass
+                if isinstance(val, dict):
+                    nest_map[key] = dict()
+                    _unnest(val, )
+                elif key in nest_map:
+                    raise ValueError(f"Found conflict in nested HyperParameter names: {key}")
                 else:
-                    hyperparameters.append(HyperParameter(key, value))
+                    hyperparameters.append(HyperParameter(key, val))
 
-        for _name, _value in sorted(config.items()):
-            if _name == "_choice":
-                pass
-            if isinstance(_value, dict):
-                pass
-            hyperparameters.append(HyperParameter(_name, _value))
+        # Store nest map for later un-nesting
+        nest_map: Dict[str, Dict] = dict()
+        _unnest(config, nest_map)
         return cls(hyperparameters)
 
     def to_config(self) -> Dict:
