@@ -2,7 +2,7 @@
 
 import random
 import logging
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Set
 
 import numpy as np
 import scipy.stats as stats
@@ -13,6 +13,8 @@ from .run import SweepRun
 from .config import fill_parameter
 from ._types import ArrayLike
 
+
+_logger = logging.getLogger(__name__)
 
 def q_log_uniform_v1_ppf(x: ArrayLike, min, max, q):
     r = np.exp(stats.uniform.ppf(x, min, max - min))
@@ -326,6 +328,7 @@ class HyperParameterSet(list):
             items: A list of HyperParameters to construct the set from.
         """
         self.searchable_params: List[HyperParameter] = []
+        self.search_space: Set[str] = set()
         self.param_names_to_index: Dict[str, int] = dict()
         self.param_names_to_param: Dict[str, HyperParameter] = dict()
 
@@ -337,6 +340,9 @@ class HyperParameterSet(list):
                 )
             elif not item.type == HyperParameter.CONSTANT:
                 # constants do not form part of the search space
+                if item.name in self.search_space:
+                    raise ValueError(f"HyperParameterSet cannot contain duplicates, got {item.name}")
+                self.search_space.add(item.name)
                 self.searchable_params.append(item)
                 self.param_names_to_index[item.name] = _searchable_param_index
                 self.param_names_to_param[item.name] = item
@@ -355,13 +361,22 @@ class HyperParameterSet(list):
             config: The parameters section of a SweepConfig.
         """
         hyperparameters: List[HyperParameter] = []
+
+        def _recursive_search(d: Dict):
+            """ Recursively search for HyperParameters in a potentially nested dictionary. """
+            for key, value in d.items():
+                if isinstance(value, dict):
+                    _recursive_search(value)
+                else:
+                    hyperparameters.append(HyperParameter(key, value))
+
         for _name, _value in sorted(config.items()):
             if _name == "_choice":
                 pass
             if isinstance(_value, dict):
                 pass
             hyperparameters.append(HyperParameter(_name, _value))
-        return hyperparameters
+        return cls(hyperparameters)
 
     def to_config(self) -> Dict:
         """Convert a HyperParameterSet to a SweepRun config."""
@@ -388,6 +403,24 @@ class HyperParameterSet(list):
             non_nan_indices = ~np.isnan(row)
             normalized_runs[idx, non_nan_indices] = _param.cdf(row[non_nan_indices])
         return np.transpose(normalized_runs)
+
+
+def validate_hyperparam_search_space_in_runs(
+    runs: List[SweepRun],
+    config: Dict,
+    throw_error: bool = False,
+) -> None:
+    """All runs must have the same hyperparameter search space."""
+    _search_space: Set[str] = HyperParameterSet.from_config(config).search_space
+    for run in runs:
+        params = HyperParameterSet.from_config(run.config["parameters"])
+        if not params.search_space == _search_space:
+            _error_msg: str = f"Hyperparameter search space in runs is not the same, difference {params.search_space - _search_space}"
+            # Option to throw a warning or error (in some cases different search space is OK)
+            if throw_error:
+                raise ValueError(_error_msg)
+            else:
+                _logger.warning(_error_msg)
 
 
 def make_param_log_deprecation_message(
