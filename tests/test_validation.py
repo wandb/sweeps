@@ -202,7 +202,7 @@ def test_choice_param(search_type):
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "_choice": {
+            "wb.choose.foo": {
                 "case_1": {
                     "a": {"value": 1},
                 },
@@ -212,8 +212,8 @@ def test_choice_param(search_type):
             },
         },
     }
-    run_config_1 = {"a": {"value": 1}}
-    run_config_2 = {"a": {"value": 2}}
+    run_config_1 = {"a": {"value": 1}, "wb.choose.foo": "case_1"}
+    run_config_2 = {"a": {"value": 2}, "wb.choose.foo": "case_2"}
     run = next_run(sweep_config, [SweepRun(run_config_1)])
     assert run.config == run_config_2
 
@@ -222,7 +222,7 @@ def test_choice_param(search_type):
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "_choice": {
+            "wb.choose.foo": {
                 "case_1": {
                     "a": {"value": 1},
                     "b": {"value": 1},
@@ -234,8 +234,8 @@ def test_choice_param(search_type):
             },
         },
     }
-    run_config_1 = {"a": {"value": 1}, "b": {"value": 1}}
-    run_config_2 = {"a": {"value": 2}, "b": {"value": 2}}
+    run_config_1 = {"a": {"value": 1}, "b": {"value": 1}, "wb.choose.foo": "case_1"}
+    run_config_2 = {"a": {"value": 2}, "b": {"value": 2}, "wb.choose.foo": "case_2"}
     run = next_run(sweep_config, [SweepRun(run_config_1)])
     assert run.config == run_config_2
 
@@ -244,7 +244,7 @@ def test_choice_param(search_type):
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "_choice": {
+            "wb.choose.foo": {
                 "case_1": {
                     "a": {"value": 1},
                 },
@@ -255,8 +255,8 @@ def test_choice_param(search_type):
             },
         },
     }
-    run_config_1 = {"a": {"value": 1}}
-    run_config_2 = {"b": {"value": 1}}
+    run_config_1 = {"a": {"value": 1}, "wb.choose.foo": "case_1"}
+    run_config_2 = {"b": {"value": 1}, "c": {"value": 1}, "wb.choose.foo": "case_2"}
     if search_type in ["grid", "random"]:
         run = next_run(sweep_config, [SweepRun(run_config_1)])
         assert run.config == run_config_2
@@ -275,7 +275,7 @@ def test_choice_and_param_dict_interactions(search_type):
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
             "a": {
-                "_choice": {
+                "wb.choose.foo": {
                     "case_1": {
                         "b": {"value": 1},
                     },
@@ -286,8 +286,8 @@ def test_choice_and_param_dict_interactions(search_type):
             }
         },
     }
-    run_config_1 = {"a": {"value": {"b": {"value": 1}}}}
-    run_config_2 = {"a": {"value": {"b": {"value": 2}}}}
+    run_config_1 = {"a": {"value": {"b": 1, "wb.choose.foo": "case_1"}}}
+    run_config_2 = {"a": {"value": {"b": 2, "wb.choose.foo": "case_2"}}}
     run = next_run(sweep_config, [SweepRun(run_config_1)])
     assert run.config == run_config_2
 
@@ -297,7 +297,7 @@ def test_choice_and_param_dict_interactions(search_type):
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
             "a": {
-                "_choice": {
+                "wb.choose.foo": {
                     "case_1": {
                         "b": {"value": 1},
                     },
@@ -308,8 +308,8 @@ def test_choice_and_param_dict_interactions(search_type):
             }
         },
     }
-    run_config_1 = {"a": {"value": {"b": {"value": 1}}}}
-    run_config_2 = {"a": {"value": {"c": {"value": 1}}}}
+    run_config_1 = {"a": {"value": {"b": 1, "wb.choose.foo": "case_1"}}}
+    run_config_2 = {"a": {"value": {"c": 1, "wb.choose.foo": "case_2"}}}
     run = next_run(sweep_config, [SweepRun(run_config_1)])
     assert run.config == run_config_2
 
@@ -319,9 +319,9 @@ def test_choice_and_param_dict_interactions(search_type):
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
             "a": {
-                "_choice": {
+                "wb.choose.foo": {
                     "case_1": {
-                        "_choice": {
+                        "wb.choose.bar": {
                             "case_1": {
                                 "b": {"value": 1},
                             },
@@ -337,9 +337,13 @@ def test_choice_and_param_dict_interactions(search_type):
             }
         },
     }
-    run_config_1 = {"a": {"value": {"b": 1}}}
-    run_config_2 = {"a": {"value": {"b": 2}}}
-    run_config_3 = {"a": {"value": {"d": 1}}}
+    run_config_1 = {
+        "a": {"value": {"b": 1, "wb.choose.foo": "case_1", "wb.choose.bar": "case_1"}}
+    }
+    run_config_2 = {
+        "a": {"value": {"b": 2, "wb.choose.foo": "case_1", "wb.choose.bar": "case_2"}}
+    }
+    run_config_3 = {"a": {"value": {"d": 1, "wb.choose.foo": "case_2"}}}
     run = next_run(sweep_config, [SweepRun(run_config_1, run_config_3)])
     assert run.config == run_config_2
     run = next_run(sweep_config, [SweepRun(run_config_1, run_config_2)])

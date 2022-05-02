@@ -1,5 +1,6 @@
 """Hyperparameter search parameters."""
 
+from multiprocessing.sharedctypes import Value
 import random
 import logging
 from typing import List, Tuple, Dict, Any, Set
@@ -42,6 +43,7 @@ def loguniform_v1_ppf(x: ArrayLike, min, max):
 
 class HyperParameter:
 
+    DICT = "param_dict"
     CONSTANT = "param_single_value"
     CATEGORICAL = "param_categorical"
     CATEGORICAL_PROB = "param_categorical_w_probabilities"
@@ -94,9 +96,10 @@ class HyperParameter:
                 "list of allowed schemas has length zero; please provide some valid schemas"
             )
 
-        self.value = (
-            None if self.type != HyperParameter.CONSTANT else self.config["value"]
-        )
+        if self.type in [HyperParameter.CONSTANT, HyperParameter.DICT]:
+            self.value = None
+        else:
+            self.value = self.config["value"]
 
     def value_to_idx(self, value: Any) -> int:
         """Get the index of the value of a categorically distributed HyperParameter.
@@ -136,7 +139,9 @@ class HyperParameter:
             Probability that a random sample of this hyperparameter will be less
             than or equal to x.
         """
-        if self.type == HyperParameter.CONSTANT:
+        if self.type == HyperParameter.DICT:
+            raise ValueError("Cannot calculate CDF for a param dict")
+        elif self.type == HyperParameter.CONSTANT:
             return np.zeros_like(x)
         elif self.type == HyperParameter.CATEGORICAL:
             # NOTE: Indices expected for categorical parameters, not values.
@@ -207,7 +212,9 @@ class HyperParameter:
         """
         if np.any((x < 0.0) | (x > 1.0)):
             raise ValueError("Can't call ppf on value outside of [0,1]")
-        if self.type == HyperParameter.CONSTANT:
+        if self.type == HyperParameter.DICT:
+            raise ValueError("Cannot calculate PDF for a param dict")
+        elif self.type == HyperParameter.CONSTANT:
             return self.config["value"]
         elif self.type == HyperParameter.CATEGORICAL:
             # Samples uniformly over the values
@@ -364,24 +371,31 @@ class HyperParameterSet(list):
             config: The parameters section of a SweepConfig.
         """
         hyperparameters: List[HyperParameter] = []
-        
 
-        def _unnest(d: Dict, nest_map: Dict):
+        def _unnest(d: Dict, prefix: str = '', delimiter='.'):
             """Recursively search for HyperParameters in a potentially nested dictionary."""
             for key, val in sorted(d.items()):
-                if "wbchoice" in key:
-                    pass
-                if isinstance(val, dict):
-                    nest_map[key] = dict()
-                    _unnest(val, )
-                elif key in nest_map:
-                    raise ValueError(f"Found conflict in nested HyperParameter names: {key}")
-                else:
-                    hyperparameters.append(HyperParameter(key, val))
+                assert isinstance(key, str), f"Config keys must be strings, found {key} of type {type(key)}"
+                if key.startswith("wb.choose."):
+                    # Verify that the value is a dict containing other dicts
+                    assert isinstance(val, dict), "wb.choose must be a dict"
+                    choices: List[str] = []
+                    for choice_key, choice_val in val.items():
+                        assert isinstance(choice_key, str), "wb.choose keys must be strings"
+                        assert isinstance(choice_val, dict), "wb.choose values must be dicts"
+                        choices.append(choice_key)
+                    # Create a new HyperParameter representing the choice
+                    hyperparameters.append(HyperParameter(key, {"values": choices}))
+                    for _, choice_val in val.items():
+                        _unnest(choice_val, prefix=f"{key}.")
+                elif isinstance(val, dict):
+                    _hp = HyperParameter(key, val)
+                    if _hp.type == HyperParameter.DICT:
+                        _unnest(val, prefix=f"{prefix}{key}{delimiter}")
+                    else:
+                        hyperparameters.append(HyperParameter(key, val))
 
-        # Store nest map for later un-nesting
-        nest_map: Dict[str, Dict] = dict()
-        _unnest(config, nest_map)
+        _unnest(config)
         return cls(hyperparameters)
 
     def to_config(self) -> Dict:

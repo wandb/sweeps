@@ -112,6 +112,10 @@ def test_hyperparameterset_from_config():
     with pytest.raises(ValueError):
         _ = HyperParameterSet.from_config(run_config)
 
+    # Naming conflict for wb.choose
+
+    # All params in wb.choose must be param_dicts
+
 
 def test_hyperparameterset_to_config():
 
