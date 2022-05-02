@@ -372,17 +372,23 @@ class HyperParameterSet(list):
         """
         hyperparameters: List[HyperParameter] = []
 
-        def _unnest(d: Dict, prefix: str = '', delimiter='.'):
+        def _unnest(d: Dict, prefix: str = "", delimiter="."):
             """Recursively search for HyperParameters in a potentially nested dictionary."""
             for key, val in sorted(d.items()):
-                assert isinstance(key, str), f"Config keys must be strings, found {key} of type {type(key)}"
+                assert isinstance(
+                    key, str
+                ), f"Config keys must be strings, found {key} of type {type(key)}"
                 if key.startswith("wb.choose."):
                     # Verify that the value is a dict containing other dicts
                     assert isinstance(val, dict), "wb.choose must be a dict"
                     choices: List[str] = []
                     for choice_key, choice_val in val.items():
-                        assert isinstance(choice_key, str), "wb.choose keys must be strings"
-                        assert isinstance(choice_val, dict), "wb.choose values must be dicts"
+                        assert isinstance(
+                            choice_key, str
+                        ), "wb.choose keys must be strings"
+                        assert isinstance(
+                            choice_val, dict
+                        ), "wb.choose values must be dicts"
                         choices.append(choice_key)
                     # Create a new HyperParameter representing the choice
                     hyperparameters.append(HyperParameter(key, {"values": choices}))
