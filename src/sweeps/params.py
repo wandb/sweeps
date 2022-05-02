@@ -212,7 +212,7 @@ class HyperParameter:
         """
         if np.any((x < 0.0) | (x > 1.0)):
             raise ValueError("Can't call ppf on value outside of [0,1]")
-        if self.type == HyperParameter.DICT:
+        elif self.type == HyperParameter.DICT:
             raise ValueError("Cannot calculate PDF for a param dict")
         elif self.type == HyperParameter.CONSTANT:
             return self.config["value"]
@@ -320,6 +320,8 @@ class HyperParameter:
         return self.ppf(random.uniform(0.0, 1.0))
 
     def _to_config(self) -> Tuple[str, Dict]:
+        if self.type == HyperParameter.DICT:
+            raise ValueError("Param dict of type DICT has no value")
         config = dict(value=self.value)
         return self.name, config
 
@@ -406,7 +408,14 @@ class HyperParameterSet(list):
 
     def to_config(self) -> Dict:
         """Convert a HyperParameterSet to a SweepRun config."""
-        return dict([param._to_config() for param in self])
+        config: Dict = dict()
+        for param in self:
+            if param.type == HyperParameter.DICT:
+                config[param.name] = dict()
+            else:
+                _name, _value = param._to_config()
+                config[_name] = _value
+        return config
 
     def normalize_runs_as_array(self, runs: List[SweepRun]) -> np.ndarray:
         """Normalize a list of SweepRuns to an ndarray of parameter vectors."""
