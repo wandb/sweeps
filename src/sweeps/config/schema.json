@@ -28,14 +28,29 @@
     },
     "param_dict": {
       "type": "object",
-      "description": "A parameter dictionary which can contain other parameters.",
-      "propertyNames": {
-        "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
+      "description": "A categorical parameter with allowed values.",
+      "required": [
+        "parameters"
+      ],
+      "properties": {
+        "parameters": {
+          "$ref": "#/definitions/parameters"
+        }
       },
-      "additionalProperties": {
-        "$ref": "#/definitions/parameter"
+      "additionalProperties": false
+    },
+    "param_choice": {
+      "type": "object",
+      "description": "A categorical parameter with allowed values.",
+      "required": [
+        "choices"
+      ],
+      "properties": {
+        "choices": {
+          "$ref": "#/definitions/param_dict"
+        }
       },
-      "minProperties": 1
+      "additionalProperties": false
     },
     "param_categorical_w_probabilities": {
       "type": "object",
