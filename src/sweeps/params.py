@@ -44,6 +44,7 @@ def loguniform_v1_ppf(x: ArrayLike, min, max):
 class HyperParameter:
 
     DICT = "param_dict"
+    CHOICE = "param_choice"
     CONSTANT = "param_single_value"
     CATEGORICAL = "param_categorical"
     CATEGORICAL_PROB = "param_categorical_w_probabilities"
@@ -96,8 +97,10 @@ class HyperParameter:
                 "list of allowed schemas has length zero; please provide some valid schemas"
             )
 
-        if self.type in [HyperParameter.CONSTANT, HyperParameter.DICT]:
+        if self.type == HyperParameter.CONSTANT:
             self.value = None
+        if self.type == HyperParameter.DICT:
+            self.value = self.config['parameters']
         else:
             self.value = self.config["value"]
 
@@ -143,6 +146,8 @@ class HyperParameter:
             raise ValueError("Cannot calculate CDF for a param dict")
         elif self.type == HyperParameter.CONSTANT:
             return np.zeros_like(x)
+        elif self.type == HyperParameter.CHOICE:
+            return stats.randint.cdf(x, 0, len(self.config["choices"]))
         elif self.type == HyperParameter.CATEGORICAL:
             # NOTE: Indices expected for categorical parameters, not values.
             return stats.randint.cdf(x, 0, len(self.config["values"]))
@@ -216,6 +221,17 @@ class HyperParameter:
             raise ValueError("Cannot calculate PDF for a param dict")
         elif self.type == HyperParameter.CONSTANT:
             return self.config["value"]
+        elif self.type == HyperParameter.CHOICE:
+            # Samples uniformly over the values
+            retval = [
+                self.config["choices"][i]
+                for i in np.atleast_1d(
+                    stats.randint.ppf(x, 0, len(self.config["choices"])).astype(int)
+                ).tolist()
+            ]
+            if np.isscalar(x):
+                return retval[0]
+            return retval
         elif self.type == HyperParameter.CATEGORICAL:
             # Samples uniformly over the values
             retval = [
@@ -383,27 +399,17 @@ class HyperParameterSet(list):
                 assert isinstance(
                     val, dict
                 ), f"Sweep config values must be dicts, found {val} of type {type(val)}"
-                choices.append(choice_key)
-                if key.startswith("wb.choose."):
-                    choices: List[str] = []
-                    for choice_key, choice_val in val.items():
-                        assert isinstance(
-                            choice_key, str
-                        ), f"wb.choose keys must be strings, found {choice_key} of type {type(choice_key)}"
-                        assert isinstance(
-                            choice_val, dict
-                        ), f"wb.choose values must be dicts, found {choice_val} of type {type(choice_val)}"
-                        choices.append(choice_key)
-                    # Create a new HyperParameter representing the choice
-                    hyperparameters.append(HyperParameter(key, {"values": choices}))
-                    for _, choice_val in val.items():
-                        _unnest(choice_val, prefix=f"{prefix}{key}{delimiter}")
-                elif isinstance(val, dict):
-                    _hp = HyperParameter(key, val)
-                    if _hp.type == HyperParameter.DICT:
-                        _unnest(val, prefix=f"{prefix}{key}{delimiter}")
-                    else:
-                        hyperparameters.append(HyperParameter(key, val))
+                _hp = HyperParameter(key, val)
+                if _hp.type == HyperParameter.DICT:
+                    assert "parameters" in val, "Param of type DICT must have 'parameters' key"
+                    _unnest(val['parameters'], prefix=f"{prefix}{key}{delimiter}")
+                if _hp.type == HyperParameter.CHOICE:
+                    assert "choices" in val, "Param of type CHOICE must have 'choices' key"
+                    hyperparameters.append(_hp)
+                    for choice_name, choice in val.items():
+                        _unnest(choice, prefix=f"{prefix}{key}{delimiter}{choice_name}{delimiter}")
+                else:
+                    hyperparameters.append(_hp)
 
         _unnest(config)
         return cls(hyperparameters)

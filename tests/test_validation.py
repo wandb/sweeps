@@ -156,7 +156,8 @@ def test_invalid_run_parameter():
         next_run(config, runs, validate=False)
 
 
-@pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
+# @pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
+@pytest.mark.parametrize("search_type", ["random"])
 def test_param_dict(search_type):
     # param dict inside param dict
     sweep_config = {
@@ -164,15 +165,21 @@ def test_param_dict(search_type):
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
             "a": {
-                "b": {"value": 1},
-                "c": {"d": {"value": 2}},
+                "parameters": {
+                    "b": {"value": 1},
+                    "c": {
+                        "parameters": {
+                            "d": {"value": 2}
+                        },
+                    },
+                },
             },
         },
     }
     desired_run_config = {
         "a": {"value": {"b": 1, "c": {"d": 2}}},
-        "a.b" : {"value": 1},
-        "a.c.d" : {"value": 2},
+        "a.b": {"value": 1},
+        "a.c.d": {"value": 2},
     }
     run = next_run(sweep_config, [SweepRun(config=sweep_config)])
     assert run.config == desired_run_config
@@ -205,7 +212,7 @@ def test_choice_param(search_type):
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
             "foo": {
-                "choices" :{
+                "choices": {
                     "case_1": {
                         "a": {"values": [1, 2, 3]},
                     },

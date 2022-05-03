@@ -28,13 +28,21 @@
     },
     "param_dict": {
       "type": "object",
-      "description": "A categorical parameter with allowed values.",
+      "description": "A parameter dictionary containing other parameters.",
       "required": [
         "parameters"
       ],
       "properties": {
         "parameters": {
-          "$ref": "#/definitions/parameters"
+          "type": "object",
+          "description": "More config parameters",
+          "propertyNames": {
+            "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/parameter"
+          },
+          "minProperties": 1
         }
       },
       "additionalProperties": false
