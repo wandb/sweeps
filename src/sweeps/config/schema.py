@@ -84,7 +84,7 @@ def fill_parameter(parameter_name: str, config: Dict) -> Optional[Tuple[str, Dic
                 subschema, format_checker=format_checker
             ).validate(config)
         except jsonschema.ValidationError:
-            continue   
+            continue
         else:
             if schema_name == "param_dict":
                 # If this is a nested param, don't fill any defaults, just pass the config forward

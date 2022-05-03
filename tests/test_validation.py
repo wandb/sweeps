@@ -1,3 +1,4 @@
+from ssl import DER_cert_to_PEM_cert
 import pytest
 from copy import deepcopy
 from jsonschema import ValidationError
@@ -168,9 +169,7 @@ def test_param_dict(search_type):
                 "parameters": {
                     "b": {"value": 1},
                     "c": {
-                        "parameters": {
-                            "d": {"value": 2}
-                        },
+                        "parameters": {"d": {"value": 2}},
                     },
                 },
             },
@@ -178,10 +177,9 @@ def test_param_dict(search_type):
     }
     desired_run_config = {
         "a": {"value": {"b": 1, "c": {"d": 2}}},
-        "a.b": {"value": 1},
-        "a.c.d": {"value": 2},
     }
     run = next_run(sweep_config, [SweepRun(config=sweep_config)])
+    print(run.config)
     assert run.config == desired_run_config
 
     # naming conflict is ok as long as different nest levels
@@ -190,8 +188,12 @@ def test_param_dict(search_type):
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
             "a": {
-                "b": {"value": 1},
-                "c": {"d": {"value": 2}},
+                "parameters": {
+                    "b": {"value": 1},
+                    "c": {
+                        "parameters": {"d": {"value": 2}},
+                    },
+                },
             },
             "b": {"value": 2},
         },

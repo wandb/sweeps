@@ -1,9 +1,9 @@
 """Hyperparameter search parameters."""
-
+from copy import deepcopy
 from multiprocessing.sharedctypes import Value
 import random
 import logging
-from typing import List, Tuple, Dict, Any, Set
+from typing import List, Tuple, Dict, Any, Set, Union
 
 import numpy as np
 import scipy.stats as stats
@@ -97,10 +97,8 @@ class HyperParameter:
                 "list of allowed schemas has length zero; please provide some valid schemas"
             )
 
-        if self.type == HyperParameter.CONSTANT:
+        if self.type in [HyperParameter.CONSTANT, HyperParameter.DICT]:
             self.value = None
-        if self.type == HyperParameter.DICT:
-            self.value = self.config['parameters']
         else:
             self.value = self.config["value"]
 
@@ -143,7 +141,8 @@ class HyperParameter:
             than or equal to x.
         """
         if self.type == HyperParameter.DICT:
-            raise ValueError("Cannot calculate CDF for a param dict")
+            # Cannot calculate CDF for a param dict
+            pass
         elif self.type == HyperParameter.CONSTANT:
             return np.zeros_like(x)
         elif self.type == HyperParameter.CHOICE:
@@ -218,7 +217,8 @@ class HyperParameter:
         if np.any((x < 0.0) | (x > 1.0)):
             raise ValueError("Can't call ppf on value outside of [0,1]")
         elif self.type == HyperParameter.DICT:
-            raise ValueError("Cannot calculate PDF for a param dict")
+            # Cannot calculate PDF for a param dict
+            pass
         elif self.type == HyperParameter.CONSTANT:
             return self.config["value"]
         elif self.type == HyperParameter.CHOICE:
@@ -333,16 +333,22 @@ class HyperParameter:
 
     def sample(self) -> Any:
         """Randomly sample a value from the distribution of this HyperParameter."""
+        if self.type == HyperParameter.DICT:
+            pass
         return self.ppf(random.uniform(0.0, 1.0))
 
     def _to_config(self) -> Tuple[str, Dict]:
-        if self.type == HyperParameter.DICT:
-            raise ValueError("Param dict of type DICT has no value")
         config = dict(value=self.value)
         return self.name, config
 
+    def _name_and_value(self) -> Tuple[str, Any]:
+        if self.type == HyperParameter.DICT:
+            pass
+        return self.name, self.value
 
 class HyperParameterSet(list):
+
+    NESTING_DELIMITER: str = "."
     def __init__(self, items: List[HyperParameter]):
         """A set of HyperParameters.
 
@@ -390,7 +396,7 @@ class HyperParameterSet(list):
         """
         hyperparameters: List[HyperParameter] = []
 
-        def _unnest(d: Dict, prefix: str = "", delimiter="."):
+        def _unnest(d: Dict, prefix: str = "", delimiter=cls.NESTING_DELIMITER):
             """Recursively search for HyperParameters in a potentially nested dictionary."""
             for key, val in sorted(d.items()):
                 assert isinstance(
@@ -399,15 +405,22 @@ class HyperParameterSet(list):
                 assert isinstance(
                     val, dict
                 ), f"Sweep config values must be dicts, found {val} of type {type(val)}"
-                _hp = HyperParameter(key, val)
+                _hp = HyperParameter(f"{prefix}{key}", val)
                 if _hp.type == HyperParameter.DICT:
-                    assert "parameters" in val, "Param of type DICT must have 'parameters' key"
-                    _unnest(val['parameters'], prefix=f"{prefix}{key}{delimiter}")
+                    assert (
+                        "parameters" in val
+                    ), "Param of type DICT must have 'parameters' key"
+                    _unnest(val["parameters"], prefix=f"{prefix}{key}{delimiter}")
                 if _hp.type == HyperParameter.CHOICE:
-                    assert "choices" in val, "Param of type CHOICE must have 'choices' key"
+                    assert (
+                        "choices" in val
+                    ), "Param of type CHOICE must have 'choices' key"
                     hyperparameters.append(_hp)
                     for choice_name, choice in val.items():
-                        _unnest(choice, prefix=f"{prefix}{key}{delimiter}{choice_name}{delimiter}")
+                        _unnest(
+                            choice,
+                            prefix=f"{prefix}{key}{delimiter}{choice_name}{delimiter}",
+                        )
                 else:
                     hyperparameters.append(_hp)
 
@@ -417,12 +430,42 @@ class HyperParameterSet(list):
     def to_config(self) -> Dict:
         """Convert a HyperParameterSet to a SweepRun config."""
         config: Dict = dict()
+        def _renest(d: Dict, delimiter:str = self.NESTING_DELIMITER) -> None:
+            """ Nest a flattened dict based on a delimiter. """
+            if type(d) == dict:
+                # The reverse sorting here ensures that "foo.bar" will appear before "foo"
+                for k in sorted(d.keys(), reverse=True):
+                    assert isinstance(
+                        k, str
+                    ), f"Sweep config keys must be strings, found {k} of type {type(k)}"
+                    if delimiter in k:
+                        subdict: Union[Any, Dict] = d
+                        subkeys: List[str] = k.split(delimiter)
+                        for i, subkey in enumerate(subkeys[:-1]):
+                            if subkey in subdict:
+                                subdict = subdict[subkey]
+                                if not isinstance(subdict, dict):
+                                    conflict_key: str = delimiter.join(subkeys[: i + 1])
+                                    raise ValueError(
+                                        f"While nesting, found key {subkey} which conflics with key {conflict_key}"
+                                    )
+                            else:
+                                # Create a nested dictionary under the parent key
+                                _d: Dict = dict()
+                                subdict[subkey] = _d
+                                subdict = _d
+                        if isinstance(subdict, dict):
+                            subdict[subkeys[-1]] = d.pop(k)
+
         for param in self:
-            if param.type == HyperParameter.DICT:
-                config[param.name] = dict()
-            else:
-                _name, _value = param._to_config()
+            if param.type != HyperParameter.DICT:
+                _name, _value = param._name_and_value()
                 config[_name] = _value
+        config = deepcopy(config)
+        _renest(config)
+        # TODO: Because of historical reason the first level of nesting requires "value" key
+        for k, v in config.items():
+            config[k] = {"value" : v}
         return config
 
     def normalize_runs_as_array(self, runs: List[SweepRun]) -> np.ndarray:
