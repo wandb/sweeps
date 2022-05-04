@@ -218,34 +218,36 @@ def test_param_choice(search_type):
         "parameters": {
             "foo": {
                 "choices": {
-                    "case_1": {
-                        "a": {"value": 1},
-                    },
-                    "case_2": {
-                        "a": {"value": 2},
-                    },
+                    "a": {"value": 1},
+                    "b": {"value": 2},
                 },
             },
         },
     }
-    run_config_1 = {"a": {"value": 1}, "wb.choose.foo": "case_1"}
-    run_config_2 = {"a": {"value": 2}, "wb.choose.foo": "case_2"}
+    run_config_1 = {"a": {"value": 1}, "foo": {"value" : "a"}}
+    run_config_2 = {"b": {"value": 2}, "foo": {"value" : "b"}}
     run = next_run(sweep_config, [SweepRun(config=run_config_1)])
-    assert run.config == run_config_2
+    assert run.config in [run_config_1, run_config_2]
 
     # choice param with multiple params inside
     sweep_config = {
         "method": search_type,
         "metric": {"name": "loss", "goal": "minimize"},
         "parameters": {
-            "wb.choose.foo": {
-                "case_1": {
-                    "a": {"value": 1},
-                    "b": {"value": 1},
-                },
-                "case_2": {
-                    "a": {"value": 2},
-                    "b": {"value": 2},
+            "foo": {
+                "choices" : {
+                    "case_1": {
+                        "parameters" : {
+                            "a": {"value": 1},
+                            "b": {"value": 1},
+                        }
+                    },
+                    "case_2": {
+                        "parameters" : {
+                            "a": {"value": 2},
+                            "b": {"value": 2},
+                        }
+                    },
                 },
             },
         },
@@ -253,7 +255,7 @@ def test_param_choice(search_type):
     run_config_1 = {"a": {"value": 1}, "b": {"value": 1}, "wb.choose.foo": "case_1"}
     run_config_2 = {"a": {"value": 2}, "b": {"value": 2}, "wb.choose.foo": "case_2"}
     run = next_run(sweep_config, [SweepRun(config=run_config_1)])
-    assert run.config == run_config_2
+    assert run.config in [run_config_1, run_config_2]
 
     # Choice param resulting in different search space
     sweep_config = {

@@ -414,12 +414,10 @@ class HyperParameterSet(list):
                     assert (
                         "choices" in val
                     ), "Param of type CHOICE must have 'choices' key"
-                    hyperparameters.append(_hp)
-                    for choice_name, choice in val.items():
-                        _unnest(
-                            choice,
-                            prefix=f"{prefix}{key}{delimiter}{choice_name}{delimiter}",
-                        )
+                    # Add a CATEGORICAL parameter representing the choice
+                    _choice_hp = HyperParameter(f"{prefix}{key}", {"values": [_ for _ in val.keys()]})
+                    # Unnest any hyperparameters in the choice
+                    _unnest(val["choices"], prefix=f"{prefix}{key}{delimiter}")
                 else:
                     hyperparameters.append(_hp)
 
@@ -460,6 +458,8 @@ class HyperParameterSet(list):
             if param.type != HyperParameter.DICT:
                 _name, _value = param._name_and_value()
                 config[_name] = _value
+            if param.type == HyperParameter.CHOICE:
+                # TODO value depends on the choice another parameter?
         config = deepcopy(config)
         _renest(config)
         # TODO: Because of historical reason the first level of nesting requires "value" key
