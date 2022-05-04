@@ -154,5 +154,4 @@ def test_hyperparameterset_to_config():
         ]
     )
     with pytest.raises(ValueError):
-        print(hps.to_config())
         _ = hps.to_config()
