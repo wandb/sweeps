@@ -175,7 +175,6 @@ def test_param_dict(search_type):
     run_config_1 = {"a": {"value": {"b": 1, "c": {"d": 1}}}}
     run_config_2 = {"a": {"value": {"b": 2, "c": {"d": 1}}}}
     run = next_run(sweep_config, [SweepRun(config=run_config_1)])
-    print(run.config)
     assert run.config in [run_config_1, run_config_2]
 
     # naming conflict is ok as long as different nest levels
