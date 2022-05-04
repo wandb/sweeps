@@ -317,6 +317,32 @@
       },
       "additionalProperties": false
     },
+    "param_loguniform_v2": {
+      "type": "object",
+      "description": "log uniform distribution.",
+      "required": [
+        "distribution",
+        "max",
+        "min"
+      ],
+      "properties": {
+        "min": {
+          "description": "float",
+          "type": "number",
+          "exclusiveMinimum": 0.0
+        },
+        "max": {
+          "description": "float",
+          "type": "number"
+        },
+        "distribution": {
+          "enum": [
+            "log_uniform_values"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "param_inv_loguniform": {
       "type": "object",
       "description": "inverse log uniform distribution",
@@ -337,6 +363,32 @@
         "distribution": {
           "enum": [
             "inv_log_uniform"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "param_inv_loguniform_v2": {
+      "type": "object",
+      "description": "inverse log uniform distribution",
+      "required": [
+        "distribution",
+        "max",
+        "min"
+      ],
+      "properties": {
+        "min": {
+          "description": "float",
+          "type": "number",
+          "exclusiveMinimum": 0.0
+        },
+        "max": {
+          "description": "float",
+          "type": "number"
+        },
+        "distribution": {
+          "enum": [
+            "inv_log_uniform_values"
           ]
         }
       },
@@ -397,6 +449,38 @@
         "distribution": {
           "enum": [
             "q_log_uniform"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "param_qloguniform_v2": {
+      "type": "object",
+      "description": "quantized log uniform distribution",
+      "required": [
+        "distribution",
+        "max",
+        "min"
+      ],
+      "properties": {
+        "min": {
+          "description": "float",
+          "type": "number",
+          "exclusiveMinimum": 0.0
+        },
+        "max": {
+          "description": "float",
+          "type": "number"
+        },
+        "q": {
+          "type": "number",
+          "default": 1.0,
+          "description": "Quantization parameter for quantized distributions",
+          "exclusiveMinimum": 0
+        },
+        "distribution": {
+          "enum": [
+            "q_log_uniform_values"
           ]
         }
       },
@@ -529,6 +613,15 @@
         },
         {
           "$ref": "#/definitions/param_single_value"
+        },
+        {
+          "$ref": "#/definitions/param_inv_loguniform_v2"
+        },
+        {
+          "$ref": "#/definitions/param_loguniform_v2"
+        },
+        {
+          "$ref": "#/definitions/param_qloguniform_v2"
         }
       ]
     },

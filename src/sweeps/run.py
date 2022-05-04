@@ -116,7 +116,14 @@ class SweepRun(BaseModel):
             The maximum or minimum metric.
         """
 
-        cmp_func = max if kind == "maximum" else min
+        if kind.lower() in ["minimum", "min", "minimize"]:
+            cmp_func = min
+        elif kind.lower() in ["maximum", "max", "maximize"]:
+            cmp_func = max
+        else:
+            raise ValueError(
+                f'Invalid extremum type {kind}, must be one of ["maximum", "minimum"]'
+            )
         try:
             summary_metric = [self.summary_metric(metric_name)]
         except KeyError:
@@ -297,6 +304,13 @@ def stop_runs(
 
     if "early_terminate" not in sweep_config:
         raise ValueError('early terminate requires "early_terminate" section.')
+
+    if (
+        not isinstance(sweep_config["early_terminate"], Dict)
+        or "type" not in sweep_config["early_terminate"]
+    ):
+        raise ValueError('early terminate must be a dict with a "type" section')
+
     et_type = sweep_config["early_terminate"]["type"]
 
     if et_type == "hyperband":

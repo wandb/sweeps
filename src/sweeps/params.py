@@ -1,7 +1,7 @@
 """Hyperparameter search parameters."""
 
 import random
-
+import logging
 from typing import List, Tuple, Dict, Any
 
 import numpy as np
@@ -14,6 +14,29 @@ from .config import fill_parameter
 from ._types import ArrayLike
 
 
+def q_log_uniform_v1_ppf(x: ArrayLike, min, max, q):
+    r = np.exp(stats.uniform.ppf(x, min, max - min))
+    ret_val = np.round(r / q) * q
+    if isinstance(q, int):
+        return ret_val.astype(int)
+    else:
+        return ret_val
+
+
+def inv_log_uniform_v1_ppf(x: ArrayLike, min, max):
+    return np.exp(
+        -stats.uniform.ppf(
+            1 - x,
+            min,
+            max - min,
+        )
+    )
+
+
+def loguniform_v1_ppf(x: ArrayLike, min, max):
+    return np.exp(stats.uniform.ppf(x, min, max - min))
+
+
 class HyperParameter:
 
     CONSTANT = "param_single_value"
@@ -21,10 +44,18 @@ class HyperParameter:
     CATEGORICAL_PROB = "param_categorical_w_probabilities"
     INT_UNIFORM = "param_int_uniform"
     UNIFORM = "param_uniform"
-    LOG_UNIFORM = "param_loguniform"
-    INV_LOG_UNIFORM = "param_inv_loguniform"
+
+    LOG_UNIFORM_V1 = "param_loguniform"
+    LOG_UNIFORM_V2 = "param_loguniform_v2"
+
+    INV_LOG_UNIFORM_V1 = "param_inv_loguniform"
+    INV_LOG_UNIFORM_V2 = "param_inv_loguniform_v2"
+
     Q_UNIFORM = "param_quniform"
-    Q_LOG_UNIFORM = "param_qloguniform"
+
+    Q_LOG_UNIFORM_V1 = "param_qloguniform"
+    Q_LOG_UNIFORM_V2 = "param_qloguniform_v2"
+
     NORMAL = "param_normal"
     Q_NORMAL = "param_qnormal"
     LOG_NORMAL = "param_lognormal"
@@ -54,6 +85,7 @@ class HyperParameter:
             )
 
         self.type, self.config = result
+
         if self.config is None or self.type is None:
             raise ValueError(
                 "list of allowed schemas has length zero; please provide some valid schemas"
@@ -63,11 +95,11 @@ class HyperParameter:
             None if self.type != HyperParameter.CONSTANT else self.config["value"]
         )
 
-    def value_to_int(self, value: Any) -> int:
+    def value_to_idx(self, value: Any) -> int:
         """Get the index of the value of a categorically distributed HyperParameter.
 
         >>> parameter = HyperParameter('a', {'values': [1, 2, 3]})
-        >>> assert parameter.value_to_int(2) == 1
+        >>> assert parameter.value_to_idx(2) == 1
 
         Args:
              value: The value to look up.
@@ -77,7 +109,7 @@ class HyperParameter:
         """
 
         if self.type != HyperParameter.CATEGORICAL:
-            raise ValueError("Can only call value_to_int on categorical variable")
+            raise ValueError("Can only call value_to_idx on categorical variable")
 
         for ii, test_value in enumerate(self.config["values"]):
             if value == test_value:
@@ -117,17 +149,32 @@ class HyperParameter:
                 x, self.config["min"], self.config["max"] - self.config["min"]
             )
         elif (
-            self.type == HyperParameter.LOG_UNIFORM
-            or self.type == HyperParameter.Q_LOG_UNIFORM
+            self.type == HyperParameter.LOG_UNIFORM_V1
+            or self.type == HyperParameter.Q_LOG_UNIFORM_V1
         ):
             return stats.uniform.cdf(
                 np.log(x), self.config["min"], self.config["max"] - self.config["min"]
             )
-        elif self.type == HyperParameter.INV_LOG_UNIFORM:
+        elif (
+            self.type == HyperParameter.LOG_UNIFORM_V2
+            or self.type == HyperParameter.Q_LOG_UNIFORM_V2
+        ):
+            return stats.uniform.cdf(
+                np.log(x),
+                np.log(self.config["min"]),
+                np.log(self.config["max"]) - np.log(self.config["min"]),
+            )
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V1:
             return 1 - stats.uniform.cdf(
                 np.log(1 / x),
                 self.config["min"],
                 self.config["max"] - self.config["min"],
+            )
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V2:
+            return 1 - stats.uniform.cdf(
+                np.log(1 / x),
+                -np.log(self.config["max"]),
+                np.abs(np.log(self.config["max"]) - np.log(self.config["min"])),
             )
         elif self.type == HyperParameter.NORMAL or self.type == HyperParameter.Q_NORMAL:
             return stats.norm.cdf(x, loc=self.config["mu"], scale=self.config["sigma"])
@@ -198,31 +245,29 @@ class HyperParameter:
                 return ret_val.astype(int)
             else:
                 return ret_val
-        elif self.type == HyperParameter.LOG_UNIFORM:
-            return np.exp(
-                stats.uniform.ppf(
-                    x, self.config["min"], self.config["max"] - self.config["min"]
-                )
+        elif self.type == HyperParameter.LOG_UNIFORM_V1:
+            return loguniform_v1_ppf(x, self.config["min"], self.config["max"])
+        elif self.type == HyperParameter.LOG_UNIFORM_V2:
+            return loguniform_v1_ppf(
+                x, np.log(self.config["min"]), np.log(self.config["max"])
             )
-        elif self.type == HyperParameter.INV_LOG_UNIFORM:
-            return np.exp(
-                -stats.uniform.ppf(
-                    1 - x,
-                    self.config["min"],
-                    self.config["max"] - self.config["min"],
-                )
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V1:
+            return inv_log_uniform_v1_ppf(x, self.config["min"], self.config["max"])
+        elif self.type == HyperParameter.INV_LOG_UNIFORM_V2:
+            return inv_log_uniform_v1_ppf(
+                x, -np.log(self.config["max"]), -np.log(self.config["min"])
             )
-        elif self.type == HyperParameter.Q_LOG_UNIFORM:
-            r = np.exp(
-                stats.uniform.ppf(
-                    x, self.config["min"], self.config["max"] - self.config["min"]
-                )
+        elif self.type == HyperParameter.Q_LOG_UNIFORM_V1:
+            return q_log_uniform_v1_ppf(
+                x, self.config["min"], self.config["max"], self.config["q"]
             )
-            ret_val = np.round(r / self.config["q"]) * self.config["q"]
-            if isinstance(self.config["q"], int):
-                return ret_val.astype(int)
-            else:
-                return ret_val
+        elif self.type == HyperParameter.Q_LOG_UNIFORM_V2:
+            return q_log_uniform_v1_ppf(
+                x,
+                np.log(self.config["min"]),
+                np.log(self.config["max"]),
+                self.config["q"],
+            )
         elif self.type == HyperParameter.NORMAL:
             return stats.norm.ppf(x, loc=self.config["mu"], scale=self.config["sigma"])
         elif self.type == HyperParameter.Q_NORMAL:
@@ -280,24 +325,24 @@ class HyperParameterSet(list):
         Args:
             items: A list of HyperParameters to construct the set from.
         """
+        self.searchable_params: List[HyperParameter] = []
+        self.param_names_to_index: Dict[str, int] = dict()
+        self.param_names_to_param: Dict[str, HyperParameter] = dict()
 
+        _searchable_param_index: int = 0
         for item in items:
             if not isinstance(item, HyperParameter):
                 raise TypeError(
-                    f"each item used to initialize HyperParameterSet must be a HyperParameter, got {item}"
+                    f"Every item in HyperParameterSet must be a HyperParameter, got {item} of type {type(item)}"
                 )
+            elif not item.type == HyperParameter.CONSTANT:
+                # constants do not form part of the search space
+                self.searchable_params.append(item)
+                self.param_names_to_index[item.name] = _searchable_param_index
+                self.param_names_to_param[item.name] = item
+                _searchable_param_index += 1
 
         super().__init__(items)
-        self.searchable_params = [
-            param for param in self if param.type != HyperParameter.CONSTANT
-        ]
-
-        self.param_names_to_index = {}
-        self.param_names_to_param = {}
-
-        for ii, param in enumerate(self.searchable_params):
-            self.param_names_to_index[param.name] = ii
-            self.param_names_to_param[param.name] = param
 
     @classmethod
     def from_config(cls, config: Dict):
@@ -321,38 +366,60 @@ class HyperParameterSet(list):
         """Convert a HyperParameterSet to a SweepRun config."""
         return dict([param._to_config() for param in self])
 
-    def convert_runs_to_normalized_vector(self, runs: List[SweepRun]) -> ArrayLike:
-        """Converts a list of SweepRuns to an array of normalized parameter vectors.
+    def normalize_runs_as_array(self, runs: List[SweepRun]) -> np.ndarray:
+        """Normalize a list of SweepRuns to an ndarray of parameter vectors."""
+        normalized_runs: np.ndarray = np.zeros([len(self.searchable_params), len(runs)])
+        for param_name, idx in self.param_names_to_index.items():
+            _param: HyperParameter = self.param_names_to_param[param_name]
+            row: np.ndarray = np.zeros(len(runs))  # default to 0
+            for i, run in enumerate(runs):
+                if param_name in run.config:
+                    _val = run.config[param_name]["value"]
+                    if _param.type == HyperParameter.CATEGORICAL:
+                        row[i] = _param.value_to_idx(_val)
+                    else:
+                        row[i] = _val
+                else:
+                    logging.warning(f"Run does not contain parameter {param_name}")
+            if not np.all(np.isfinite(row)):
+                logging.warning(f"Found non-finite value in normalized run row {row}")
+            # Convert row to CDF, filter out NaNs
+            non_nan_indices = ~np.isnan(row)
+            normalized_runs[idx, non_nan_indices] = _param.cdf(row[non_nan_indices])
+        return np.transpose(normalized_runs)
 
-        Args:
-            runs: List of runs to convert.
 
-        Returns:
-            A 2d array of normalized parameter vectors.
-        """
+def make_param_log_deprecation_message(
+    param_type: str, replacement_param_type: str
+) -> str:
+    from .config import schema
 
-        runs_params = [run.config for run in runs]
-        X = np.zeros([len(self.searchable_params), len(runs)])
+    param_schema = schema.dereferenced_sweep_config_jsonschema["definitions"][
+        param_type
+    ]
+    deprecated_distribution_name = param_schema["properties"]["distribution"]["enum"][0]
 
-        for key, bayes_opt_index in self.param_names_to_index.items():
-            param = self.param_names_to_param[key]
-            row = np.array(
-                [
-                    (
-                        param.value_to_int(config[key]["value"])
-                        if param.type == HyperParameter.CATEGORICAL
-                        else config[key]["value"]
-                    )
-                    if key in config
-                    # filter out incorrectly specified runs
-                    else np.nan
-                    for config in runs_params
-                ]
-            )
+    replacement_param_schema = schema.dereferenced_sweep_config_jsonschema[
+        "definitions"
+    ][replacement_param_type]
+    replacement_distribution_name = replacement_param_schema["properties"][
+        "distribution"
+    ]["enum"][0]
 
-            X_row = param.cdf(row)
-            # only use values where input wasn't nan
-            non_nan = ~np.isnan(row)
-            X[bayes_opt_index, non_nan] = X_row[non_nan]
+    return (
+        f"uses {deprecated_distribution_name}, where min/max specify base-e exponents. "
+        f"Use {replacement_distribution_name} to specify limit values."
+    )
 
-        return np.transpose(X)
+
+PARAM_DEPRECATION_MAP = {
+    HyperParameter.LOG_UNIFORM_V1: make_param_log_deprecation_message(
+        HyperParameter.LOG_UNIFORM_V1, HyperParameter.LOG_UNIFORM_V2
+    ),
+    HyperParameter.INV_LOG_UNIFORM_V1: make_param_log_deprecation_message(
+        HyperParameter.INV_LOG_UNIFORM_V1, HyperParameter.INV_LOG_UNIFORM_V2
+    ),
+    HyperParameter.Q_LOG_UNIFORM_V1: make_param_log_deprecation_message(
+        HyperParameter.Q_LOG_UNIFORM_V1, HyperParameter.Q_LOG_UNIFORM_V2
+    ),
+}

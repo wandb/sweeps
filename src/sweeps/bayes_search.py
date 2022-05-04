@@ -394,7 +394,7 @@ def _construct_gp_data(
     current_X: ArrayLike = []
     y: ArrayLike = []
 
-    X_norms = params.convert_runs_to_normalized_vector(runs)
+    X_norms = params.normalize_runs_as_array(runs)
     worst_metric = impute(goal, metric_name, ImputeStrategy.worst, runs=runs)
     for run, X_norm in zip(runs, X_norms):
         if run.state == RunState.finished:

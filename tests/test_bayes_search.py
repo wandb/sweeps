@@ -15,7 +15,7 @@ from .test_random_search import check_that_samples_are_from_the_same_distributio
 def squiggle(x: ArrayLike) -> np.floating:
     # the maximum of this 1d function is at x=2 and the minimum is at ~3.6 over the
     # interval 0-5
-    return np.exp(-((x - 2) ** 2)) + np.exp(-((x - 6) ** 2) / 10) + 1 / (x ** 2 + 1)
+    return np.exp(-((x - 2) ** 2)) + np.exp(-((x - 6) ** 2) / 10) + 1 / (x**2 + 1)
 
 
 def rosenbrock(x: ArrayLike) -> np.floating:
@@ -68,7 +68,7 @@ def run_bayes_search(
     "x",
     [
         {"distribution": "normal", "mu": 2, "sigma": 4},
-        {"distribution": "log_uniform", "min": -2, "max": 3},
+        {"distribution": "log_uniform_values", "min": np.exp(-2), "max": np.exp(3)},
         {"min": 0.0, "max": 5.0},
         {"min": 0, "max": 5},
         {"distribution": "q_uniform", "min": 0.0, "max": 10.0, "q": 0.25},
@@ -93,7 +93,7 @@ def test_squiggle_convergence_full(x):
         }
     )
 
-    run_bayes_search(y, config, runs, num_iterations=200, optimium={"x": 2.0})
+    run_bayes_search(y, config, runs, num_iterations=256, optimium={"x": 2.0})
 
 
 def run_iterations(
