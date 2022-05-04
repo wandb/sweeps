@@ -347,7 +347,9 @@ class HyperParameter:
 
 class HyperParameterSet(list):
 
-    NESTING_DELIMITER: str = "."
+    NESTING_DELIMITER: str = ".wbnest."
+    CHOICE_PREFIX: str = ".wbchoice."
+
     def __init__(self, items: List[HyperParameter]):
         """A set of HyperParameters.
 
@@ -418,7 +420,7 @@ class HyperParameterSet(list):
                     _choice_hp = HyperParameter(f"{prefix}{key}", {"values": [_ for _ in val.keys()]})
                     hyperparameters.append(_choice_hp)
                     # Unnest any hyperparameters in the choice
-                    _unnest(val["choices"], prefix=f"{prefix}")
+                    _unnest(val["choices"], prefix=f"{prefix}{key}{cls.CHOICE_PREFIX}")
                 else:
                     hyperparameters.append(_hp)
 
@@ -427,7 +429,6 @@ class HyperParameterSet(list):
 
     def to_config(self) -> Dict:
         """Convert a HyperParameterSet to a SweepRun config."""
-        config: Dict = dict()
         def _renest(d: Dict, delimiter:str = self.NESTING_DELIMITER) -> None:
             """ Nest a flattened dict based on a delimiter. """
             if type(d) == dict:
@@ -455,13 +456,26 @@ class HyperParameterSet(list):
                         if isinstance(subdict, dict):
                             subdict[subkeys[-1]] = d.pop(k)
 
+        # Get all the choice params to later filter out unused values
+        choices_filter: List[str] = dict()
+        for param in self:
+            if param.type == HyperParameter.CHOICE:
+                _name, _value = param._name_and_value()
+                choices_filter[_name] = _value
+
+        # Add only the hyperparameters which aren't dicts, or filtered by a choice
+        config: Dict = dict()
         for param in self:
             if param.type not in [HyperParameter.DICT, HyperParameter.CHOICE]:
                 _name, _value = param._name_and_value()
+                # Param is the result of a choice, see if it should be filtered out
+                if self.CHOICE_PREFIX in _name:
+                    choice_param_name = _name.split(self.CHOICE_PREFIX)[0]
+                    if choice_param_name in choices_filter:
+                        if _value not in choices_filter[choice_param_name]:
+                            continue
                 config[_name] = _value
-            if param.type == HyperParameter.CHOICE:
-                # TODO value depends on the choice another parameter?
-                pass
+
         config = deepcopy(config)
         _renest(config)
         # Because of historical reason the first level of nesting requires "value" key
