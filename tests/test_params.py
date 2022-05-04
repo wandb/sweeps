@@ -3,11 +3,7 @@ import pytest
 import numpy as np
 
 from sweeps import SweepRun, RunState
-from sweeps.params import (
-    HyperParameter,
-    HyperParameterSet,
-    validate_hyperparam_search_space_in_runs,
-)
+from sweeps.params import HyperParameter, HyperParameterSet
 
 
 def test_hyperparameterset_initialize():
@@ -143,20 +139,3 @@ def test_hyperparameterset_to_config():
     )
     with pytest.raises(ValueError):
         _ = hps.to_config()
-
-
-def test_validate_hyperparam_search_space_in_runs():
-
-    hps = HyperParameterSet(
-        [
-            HyperParameter("a.a", {"value": 1}),
-            HyperParameter("a.a", {"value": 1}),
-            HyperParameter("a.a", {"value": 1}),
-            HyperParameter("a.a", {"value": 1}),
-        ]
-    )
-    run_config = {}
-    # Only throws hard error if throw_error flag is specified
-    validate_hyperparam_search_space_in_runs(hps, run_config)
-    with pytest.raises(ValueError):
-        validate_hyperparam_search_space_in_runs(hps, run_config, throw_error=True)
