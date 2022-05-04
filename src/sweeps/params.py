@@ -44,7 +44,6 @@ def loguniform_v1_ppf(x: ArrayLike, min, max):
 class HyperParameter:
 
     DICT = "param_dict"
-    CHOICE = "param_choice"
     CONSTANT = "param_single_value"
     CATEGORICAL = "param_categorical"
     CATEGORICAL_PROB = "param_categorical_w_probabilities"
@@ -144,8 +143,6 @@ class HyperParameter:
             pass
         elif self.type == HyperParameter.CONSTANT:
             return np.zeros_like(x)
-        elif self.type == HyperParameter.CHOICE:
-            return stats.randint.cdf(x, 0, len(self.config["choices"]))
         elif self.type == HyperParameter.CATEGORICAL:
             # NOTE: Indices expected for categorical parameters, not values.
             return stats.randint.cdf(x, 0, len(self.config["values"]))
@@ -220,17 +217,6 @@ class HyperParameter:
             pass
         elif self.type == HyperParameter.CONSTANT:
             return self.config["value"]
-        elif self.type == HyperParameter.CHOICE:
-            # Samples uniformly over the values
-            retval = [
-                self.config["choices"][i]
-                for i in np.atleast_1d(
-                    stats.randint.ppf(x, 0, len(self.config["choices"])).astype(int)
-                ).tolist()
-            ]
-            if np.isscalar(x):
-                return retval[0]
-            return retval
         elif self.type == HyperParameter.CATEGORICAL:
             # Samples uniformly over the values
             retval = [
@@ -348,7 +334,6 @@ class HyperParameter:
 class HyperParameterSet(list):
 
     NESTING_DELIMITER: str = ".wbnest."
-    CHOICE_PREFIX: str = ".wbchoice."
 
     def __init__(self, items: List[HyperParameter]):
         """A set of HyperParameters.
@@ -412,15 +397,6 @@ class HyperParameterSet(list):
                         "parameters" in val
                     ), "Param of type DICT must have 'parameters' key"
                     _unnest(val["parameters"], prefix=f"{prefix}{key}{delimiter}")
-                elif _hp.type == HyperParameter.CHOICE:
-                    assert (
-                        "choices" in val
-                    ), "Param of type CHOICE must have 'choices' key"
-                    # Add a CATEGORICAL parameter representing the choice
-                    _choice_hp = HyperParameter(f"{prefix}{key}", {"values": [_ for _ in val.keys()]})
-                    hyperparameters.append(_choice_hp)
-                    # Unnest any hyperparameters in the choice
-                    _unnest(val["choices"], prefix=f"{prefix}{key}{cls.CHOICE_PREFIX}")
                 else:
                     hyperparameters.append(_hp)
 
@@ -456,24 +432,11 @@ class HyperParameterSet(list):
                         if isinstance(subdict, dict):
                             subdict[subkeys[-1]] = d.pop(k)
 
-        # Get all the choice params to later filter out unused values
-        choices_filter: List[str] = dict()
-        for param in self:
-            if param.type == HyperParameter.CHOICE:
-                _name, _value = param._name_and_value()
-                choices_filter[_name] = _value
-
-        # Add only the hyperparameters which aren't dicts, or filtered by a choice
+        # Add only the hyperparameters which aren't dicts
         config: Dict = dict()
         for param in self:
-            if param.type not in [HyperParameter.DICT, HyperParameter.CHOICE]:
+            if param.type != HyperParameter.DICT:
                 _name, _value = param._name_and_value()
-                # Param is the result of a choice, see if it should be filtered out
-                if self.CHOICE_PREFIX in _name:
-                    choice_param_name = _name.split(self.CHOICE_PREFIX)[0]
-                    if choice_param_name in choices_filter:
-                        if _value not in choices_filter[choice_param_name]:
-                            continue
                 config[_name] = _value
 
         config = deepcopy(config)

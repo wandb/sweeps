@@ -47,27 +47,6 @@
       },
       "additionalProperties": false
     },
-    "param_choice": {
-      "type": "object",
-      "description": "A categorical parameter with allowed values.",
-      "required": [
-        "choices"
-      ],
-      "properties": {
-        "choices": {
-          "type": "object",
-          "description": "Possible choices to choose from",
-          "propertyNames": {
-            "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
-          },
-          "additionalProperties": {
-            "$ref": "#/definitions/parameter"
-          },
-          "minProperties": 1
-        }
-      },
-      "additionalProperties": false
-    },
     "param_categorical_w_probabilities": {
       "type": "object",
       "description": "A categorical parameter with allowed values and corresponding probabilities",
@@ -667,9 +646,6 @@
         },
         {
           "$ref": "#/definitions/param_dict"
-        },
-        {
-          "$ref": "#/definitions/param_choice"
         }
       ]
     },

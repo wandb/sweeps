@@ -86,10 +86,9 @@ def fill_parameter(parameter_name: str, config: Dict) -> Optional[Tuple[str, Dic
         except jsonschema.ValidationError:
             continue
         else:
-            if schema_name in ["param_dict", "param_choice"]:
+            if schema_name == "param_dict":
                 # Don't try and fill default values for these
                 # just pass the config forward.
-                print(f"Skipping filling default values for {schema_name}, {config}")
                 return schema_name, config
             validate_min_max(parameter_name, config)
             filler = DefaultFiller(subschema, format_checker=format_checker)
