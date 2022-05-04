@@ -207,6 +207,7 @@ def test_param_dict(search_type):
     run = next_run(sweep_config, [SweepRun(config=run_config_1)])
     assert run.config in [run_config_1, run_config_2]
 
+
 def test_invalid_minmax_with_no_sweepconfig_validation():
     config = {"method": "random", "parameters": {"a": {"max": 0, "min": 1}}}
 

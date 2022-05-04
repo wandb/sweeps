@@ -15,9 +15,6 @@ from .config import fill_parameter
 from ._types import ArrayLike
 
 
-_logger = logging.getLogger(__name__)
-
-
 def q_log_uniform_v1_ppf(x: ArrayLike, min, max, q):
     r = np.exp(stats.uniform.ppf(x, min, max - min))
     ret_val = np.round(r / q) * q
@@ -331,6 +328,7 @@ class HyperParameter:
             pass
         return self.name, self.value
 
+
 class HyperParameterSet(list):
 
     NESTING_DELIMITER: str = ".wbnest."
@@ -405,8 +403,9 @@ class HyperParameterSet(list):
 
     def to_config(self) -> Dict:
         """Convert a HyperParameterSet to a SweepRun config."""
-        def _renest(d: Dict, delimiter:str = self.NESTING_DELIMITER) -> None:
-            """ Nest a flattened dict based on a delimiter. """
+
+        def _renest(d: Dict, delimiter: str = self.NESTING_DELIMITER) -> None:
+            """Nest a flattened dict based on a delimiter."""
             if type(d) == dict:
                 # The reverse sorting here ensures that "foo.bar" will appear before "foo"
                 for k in sorted(d.keys(), reverse=True):
@@ -443,7 +442,7 @@ class HyperParameterSet(list):
         _renest(config)
         # Because of historical reason the first level of nesting requires "value" key
         for k, v in config.items():
-            config[k] = {"value" : v}
+            config[k] = {"value": v}
         return config
 
     def normalize_runs_as_array(self, runs: List[SweepRun]) -> np.ndarray:
@@ -467,35 +466,6 @@ class HyperParameterSet(list):
             non_nan_indices = ~np.isnan(row)
             normalized_runs[idx, non_nan_indices] = _param.cdf(row[non_nan_indices])
         return np.transpose(normalized_runs)
-
-
-def validate_hyperparam_search_space_in_runs(
-    runs: List[SweepRun],
-    config: Dict,
-    throw_error: bool = False,
-) -> None:
-    """All runs must have the same hyperparameter search space."""
-    _search_space: Set[str] = HyperParameterSet.from_config(config["parameters"]).search_space
-    _logger.info(f"Search space: {_search_space}")
-    print(f"Search space: {_search_space}")
-    for run in runs:
-        for param in _search_space:
-            _d: Dict[str, Any] = run.config
-            _nest_path: List[str] = param.split(HyperParameterSet.NESTING_DELIMITER)
-            # Because of historical reason the first level of nesting requires "value" key
-            _nest_path_hacked: List[str] = [_nest_path[0], 'value'] + _nest_path[1:]
-            for nest_key in _nest_path_hacked:
-                if _d.get(nest_key) is None:
-                    _pretty_nest_path: str = ''.join(['[\'{}\']'.format(k) for k in _nest_path])
-                    _error_msg: str = "Hyperparameter search space in runs does not match sweep config"
-                    _error_msg += f" could not find key run.config{_pretty_nest_path}"
-                    # Option to throw a warning or error (in some cases different search space is OK)
-                    if throw_error:
-                        raise ValueError(_error_msg)
-                    else:
-                        _logger.warning(_error_msg)
-                else:
-                    _d = _d[nest_key]
 
 
 def make_param_log_deprecation_message(

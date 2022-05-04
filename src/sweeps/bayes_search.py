@@ -7,11 +7,7 @@ from typing import List, Tuple, Optional, Union, Dict
 from .config.cfg import SweepConfig
 from .config.schema import fill_validate_metric
 from .run import SweepRun, RunState, run_state_is_terminal
-from .params import (
-    HyperParameter,
-    HyperParameterSet,
-    validate_hyperparam_search_space_in_runs,
-)
+from .params import HyperParameter, HyperParameterSet
 from sklearn import gaussian_process as sklearn_gaussian
 from scipy import stats as scipy_stats
 
@@ -483,7 +479,6 @@ def bayes_search_next_run(
 
     if validate:
         config = SweepConfig(config)
-    validate_hyperparam_search_space_in_runs(runs, config, throw_error=True)
 
     config = bayes_baseline_validate_and_fill(config)
 
