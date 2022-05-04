@@ -343,7 +343,6 @@ class HyperParameterSet(list):
             items: A list of HyperParameters to construct the set from.
         """
         self.searchable_params: List[HyperParameter] = []
-        self.search_space: Set[str] = set()
         self.param_names_to_index: Dict[str, int] = dict()
         self.param_names_to_param: Dict[str, HyperParameter] = dict()
 
@@ -355,11 +354,6 @@ class HyperParameterSet(list):
                 )
             elif not item.type == HyperParameter.CONSTANT:
                 # constants do not form part of the search space
-                if item.name in self.search_space:
-                    raise ValueError(
-                        f"HyperParameterSet cannot contain duplicates, got {item.name}"
-                    )
-                self.search_space.add(item.name)
                 self.searchable_params.append(item)
                 self.param_names_to_index[item.name] = _searchable_param_index
                 self.param_names_to_param[item.name] = item
