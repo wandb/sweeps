@@ -324,7 +324,7 @@ class HyperParameter:
 
     def _name_and_value(self) -> Tuple[str, Any]:
         if self.type == HyperParameter.DICT:
-            pass
+            return
         return self.name, self.value
 
 
