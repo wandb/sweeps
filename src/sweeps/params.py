@@ -315,7 +315,7 @@ class HyperParameter:
     def sample(self) -> Any:
         """Randomly sample a value from the distribution of this HyperParameter."""
         if self.type == HyperParameter.DICT:
-            pass
+            return
         return self.ppf(random.uniform(0.0, 1.0))
 
     def _to_config(self) -> Tuple[str, Dict]:
