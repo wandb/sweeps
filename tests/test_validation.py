@@ -157,8 +157,7 @@ def test_invalid_run_parameter():
         next_run(config, runs, validate=False)
 
 
-# @pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
-@pytest.mark.parametrize("search_type", ["random"])
+@pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
 def test_param_dict(search_type):
     # param dict inside param dict
     sweep_config = {
@@ -167,20 +166,19 @@ def test_param_dict(search_type):
         "parameters": {
             "a": {
                 "parameters": {
-                    "b": {"value": 1},
+                    "b": {"values": [1, 2]},
                     "c": {
-                        "parameters": {"d": {"value": 2}},
+                        "parameters": {"d": {"value": 1}},
                     },
                 },
             },
         },
     }
-    desired_run_config = {
-        "a": {"value": {"b": 1, "c": {"d": 2}}},
-    }
-    run = next_run(sweep_config, [SweepRun(config=sweep_config)])
+    run_config_1 = {"a": {"value": {"b": 1, "c": {"d": 1}}}}
+    run_config_2 = {"a": {"value": {"b": 2, "c": {"d": 1}}}}
+    run = next_run(sweep_config, [SweepRun(config=run_config_1)])
     print(run.config)
-    assert run.config == desired_run_config
+    assert run.config in [run_config_1, run_config_2]
 
     # naming conflict is ok as long as different nest levels
     sweep_config = {
@@ -195,19 +193,24 @@ def test_param_dict(search_type):
                     },
                 },
             },
-            "b": {"value": 2},
+            "b": {"values": [2, 3]},
         },
     }
-    desired_run_config = {
+    run_config_1 = {
         "a": {"value": {"b": 1, "c": {"d": 2}}},
         "b": {"value": 2},
     }
-    run = next_run(sweep_config, [SweepRun(config=sweep_config)])
-    assert run.config == desired_run_config
+    run_config_2 = {
+        "a": {"value": {"b": 1, "c": {"d": 2}}},
+        "b": {"value": 3},
+    }
+    run = next_run(sweep_config, [SweepRun(config=run_config_1)])
+    assert run.config in [run_config_1, run_config_2]
 
 
 @pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
-def test_choice_param(search_type):
+
+def test_param_choice(search_type):
     # simplest case of choice param
     sweep_config = {
         "method": search_type,
@@ -216,7 +219,7 @@ def test_choice_param(search_type):
             "foo": {
                 "choices": {
                     "case_1": {
-                        "a": {"values": [1, 2, 3]},
+                        "a": {"value": 1},
                     },
                     "case_2": {
                         "a": {"value": 2},
@@ -227,7 +230,7 @@ def test_choice_param(search_type):
     }
     run_config_1 = {"a": {"value": 1}, "wb.choose.foo": "case_1"}
     run_config_2 = {"a": {"value": 2}, "wb.choose.foo": "case_2"}
-    run = next_run(sweep_config, [SweepRun(run_config_1)])
+    run = next_run(sweep_config, [SweepRun(config=run_config_1)])
     assert run.config == run_config_2
 
     # choice param with multiple params inside
@@ -249,7 +252,7 @@ def test_choice_param(search_type):
     }
     run_config_1 = {"a": {"value": 1}, "b": {"value": 1}, "wb.choose.foo": "case_1"}
     run_config_2 = {"a": {"value": 2}, "b": {"value": 2}, "wb.choose.foo": "case_2"}
-    run = next_run(sweep_config, [SweepRun(run_config_1)])
+    run = next_run(sweep_config, [SweepRun(config=run_config_1)])
     assert run.config == run_config_2
 
     # Choice param resulting in different search space

@@ -97,10 +97,9 @@ class HyperParameter:
                 "list of allowed schemas has length zero; please provide some valid schemas"
             )
 
-        if self.type in [HyperParameter.CONSTANT, HyperParameter.DICT]:
-            self.value = None
-        else:
-            self.value = self.config["value"]
+        self.value = (
+            None if self.type != HyperParameter.CONSTANT else self.config["value"]
+        )
 
     def value_to_idx(self, value: Any) -> int:
         """Get the index of the value of a categorically distributed HyperParameter.
@@ -411,7 +410,7 @@ class HyperParameterSet(list):
                         "parameters" in val
                     ), "Param of type DICT must have 'parameters' key"
                     _unnest(val["parameters"], prefix=f"{prefix}{key}{delimiter}")
-                if _hp.type == HyperParameter.CHOICE:
+                elif _hp.type == HyperParameter.CHOICE:
                     assert (
                         "choices" in val
                     ), "Param of type CHOICE must have 'choices' key"
@@ -497,16 +496,27 @@ def validate_hyperparam_search_space_in_runs(
     throw_error: bool = False,
 ) -> None:
     """All runs must have the same hyperparameter search space."""
-    _search_space: Set[str] = HyperParameterSet.from_config(config).search_space
+    _search_space: Set[str] = HyperParameterSet.from_config(config["parameters"]).search_space
+    _logger.info(f"Search space: {_search_space}")
+    print(f"Search space: {_search_space}")
     for run in runs:
-        params = HyperParameterSet.from_config(run.config["parameters"])
-        if not params.search_space == _search_space:
-            _error_msg: str = f"Hyperparameter search space in runs is not the same, difference {params.search_space - _search_space}"
-            # Option to throw a warning or error (in some cases different search space is OK)
-            if throw_error:
-                raise ValueError(_error_msg)
-            else:
-                _logger.warning(_error_msg)
+        for param in _search_space:
+            _d: Dict[str, Any] = run.config
+            _nest_path: List[str] = param.split(HyperParameterSet.NESTING_DELIMITER)
+            # Absolutely haineous shit right here
+            _nest_path_hacked: List[str] = [_nest_path[0], 'value'] + _nest_path[1:]
+            for nest_key in _nest_path_hacked:
+                if _d.get(nest_key) is None:
+                    _pretty_nest_path: str = ''.join(['[\'{}\']'.format(k) for k in _nest_path])
+                    _error_msg: str = "Hyperparameter search space in runs does not match sweep config"
+                    _error_msg += f" could not find key run.config{_pretty_nest_path}"
+                    # Option to throw a warning or error (in some cases different search space is OK)
+                    if throw_error:
+                        raise ValueError(_error_msg)
+                    else:
+                        _logger.warning(_error_msg)
+                else:
+                    _d = _d[nest_key]
 
 
 def make_param_log_deprecation_message(

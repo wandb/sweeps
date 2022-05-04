@@ -55,7 +55,15 @@
       ],
       "properties": {
         "choices": {
-          "$ref": "#/definitions/param_dict"
+          "type": "object",
+          "description": "Possible choices to choose from",
+          "propertyNames": {
+            "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/parameter"
+          },
+          "minProperties": 1
         }
       },
       "additionalProperties": false
@@ -604,12 +612,6 @@
     "parameter": {
       "anyOf": [
         {
-          "$ref": "#/definitions/param_dict"
-        },
-        {
-          "$ref": "#/definitions/param_choice"
-        },
-        {
           "$ref": "#/definitions/param_qbeta"
         },
         {
@@ -662,6 +664,12 @@
         },
         {
           "$ref": "#/definitions/param_qloguniform_v2"
+        },
+        {
+          "$ref": "#/definitions/param_dict"
+        },
+        {
+          "$ref": "#/definitions/param_choice"
         }
       ]
     },
