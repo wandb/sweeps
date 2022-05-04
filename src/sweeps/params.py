@@ -416,8 +416,9 @@ class HyperParameterSet(list):
                     ), "Param of type CHOICE must have 'choices' key"
                     # Add a CATEGORICAL parameter representing the choice
                     _choice_hp = HyperParameter(f"{prefix}{key}", {"values": [_ for _ in val.keys()]})
+                    hyperparameters.append(_choice_hp)
                     # Unnest any hyperparameters in the choice
-                    _unnest(val["choices"], prefix=f"{prefix}{key}{delimiter}")
+                    _unnest(val["choices"], prefix=f"{prefix}")
                 else:
                     hyperparameters.append(_hp)
 
@@ -455,14 +456,15 @@ class HyperParameterSet(list):
                             subdict[subkeys[-1]] = d.pop(k)
 
         for param in self:
-            if param.type != HyperParameter.DICT:
+            if param.type not in [HyperParameter.DICT, HyperParameter.CHOICE]:
                 _name, _value = param._name_and_value()
                 config[_name] = _value
             if param.type == HyperParameter.CHOICE:
                 # TODO value depends on the choice another parameter?
+                pass
         config = deepcopy(config)
         _renest(config)
-        # TODO: Because of historical reason the first level of nesting requires "value" key
+        # Because of historical reason the first level of nesting requires "value" key
         for k, v in config.items():
             config[k] = {"value" : v}
         return config
@@ -503,7 +505,7 @@ def validate_hyperparam_search_space_in_runs(
         for param in _search_space:
             _d: Dict[str, Any] = run.config
             _nest_path: List[str] = param.split(HyperParameterSet.NESTING_DELIMITER)
-            # Absolutely haineous shit right here
+            # Because of historical reason the first level of nesting requires "value" key
             _nest_path_hacked: List[str] = [_nest_path[0], 'value'] + _nest_path[1:]
             for nest_key in _nest_path_hacked:
                 if _d.get(nest_key) is None:
