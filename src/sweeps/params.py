@@ -408,7 +408,7 @@ class HyperParameterSet(list):
             """Nest a flattened dict based on a delimiter."""
             if type(d) == dict:
                 # The reverse sorting here ensures that "foo.bar" will appear before "foo"
-                for k in sorted(d.keys(), reverse=True):
+                for k in sorted(d.keys()):
                     assert isinstance(
                         k, str
                     ), f"Sweep config keys must be strings, found {k} of type {type(k)}"
@@ -437,7 +437,6 @@ class HyperParameterSet(list):
             if param.type != HyperParameter.DICT:
                 _name, _value = param._name_and_value()
                 config[_name] = _value
-
         config = deepcopy(config)
         _renest(config)
         # Because of historical reason the first level of nesting requires "value" key

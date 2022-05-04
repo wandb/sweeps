@@ -95,47 +95,64 @@ def test_hyperparameterset_normalize_runs():
 def test_hyperparameterset_from_config():
 
     # simple case of hyperparameters from config
-    run_config = {}
-    hps = HyperParameterSet.from_config(run_config)
+    sweep_config = {
+        "method": "grid",
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {
+            "a": {
+                "parameters": {
+                    "b": {"value": 1},
+                    "c": {
+                        "parameters": {"d": {"value": 1}},
+                    },
+                },
+            },
+        },
+    }
+    hps = HyperParameterSet.from_config(sweep_config["parameters"])
     # sorting of config items ensures order of hyperparameters
-    assert hps[0] == HyperParameter("a.a", {"value": 1})
-    assert hps[1] == HyperParameter("a.a", {"value": 1})
-    assert hps[2] == HyperParameter("a.a", {"value": 1})
-    assert hps[3] == HyperParameter("a.a", {"value": 1})
+    _delimiter = HyperParameterSet.NESTING_DELIMITER
+    assert hps[0]._name_and_value() == (f"a{_delimiter}b", 1)
+    assert hps[1]._name_and_value() == (f"a{_delimiter}c{_delimiter}d", 1)
 
     # Error case
-    run_config = {}
-    with pytest.raises(ValueError):
-        _ = HyperParameterSet.from_config(run_config)
-
-    # Naming conflict for wb.choose
-
-    # All params in wb.choose must be param_dicts
+    bad_run_config = {
+        "method": "grid",
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {
+            42: {
+                "parameters": {
+                    "b": 42,
+                },
+            },
+        },
+    }
+    with pytest.raises(AssertionError):
+        _ = HyperParameterSet.from_config(bad_run_config)
 
 
 def test_hyperparameterset_to_config():
 
     # simple case of hyperparameters to config
+    _delimiter = HyperParameterSet.NESTING_DELIMITER
     hps = HyperParameterSet(
         [
-            HyperParameter("a.a", {"value": 1}),
-            HyperParameter("a.a", {"value": 1}),
-            HyperParameter("a.a", {"value": 1}),
-            HyperParameter("a.a", {"value": 1}),
+            HyperParameter(f"a{_delimiter}b", {"value": 1}),
+            HyperParameter(f"a{_delimiter}c{_delimiter}d", {"value": 1}),
         ]
     )
-    desired_run_config = {}
+    desired_run_config = {"a": {"value": {"b": 1, "c": {"d": 1}}}}
     run_config = hps.to_config()
     assert desired_run_config == run_config
 
-    # Error case
+    # Error case - Name conflict upon nesting
     hps = HyperParameterSet(
         [
-            HyperParameter("a.a", {"value": 1}),
-            HyperParameter("a.a", {"value": 1}),
-            HyperParameter("a.a", {"value": 1}),
-            HyperParameter("a.a", {"value": 1}),
+            HyperParameter(f"a{_delimiter}b", {"value": 1}),
+            HyperParameter(f"a{_delimiter}c{_delimiter}d", {"value": 1}),
+            HyperParameter(f"a{_delimiter}c", {"value": 1}),
         ]
     )
     with pytest.raises(ValueError):
+        print(hps.to_config())
         _ = hps.to_config()
