@@ -2,7 +2,7 @@
 from copy import deepcopy
 import random
 import logging
-from typing import List, Tuple, Dict, Any, Set, Union
+from typing import List, Tuple, Dict, Any, Union
 
 import numpy as np
 import scipy.stats as stats
