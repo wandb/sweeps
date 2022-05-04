@@ -23,6 +23,7 @@ class ImputeStrategy(str, Enum):
 
 
 def bayes_baseline_validate_and_fill(config: Dict) -> Dict:
+    print("test")
     config = deepcopy(config)
 
     if "metric" not in config:
