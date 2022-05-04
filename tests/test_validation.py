@@ -1,6 +1,4 @@
-from ssl import DER_cert_to_PEM_cert
 import pytest
-from copy import deepcopy
 from jsonschema import ValidationError
 from sweeps import next_run, stop_runs, SweepRun
 from sweeps.config import (
