@@ -2,7 +2,7 @@
 from copy import deepcopy
 import random
 import logging
-from typing import List, Tuple, Dict, Any, Union, Callable
+from typing import List, Tuple, Dict, Any, Union
 
 import numpy as np
 import scipy.stats as stats
@@ -373,7 +373,7 @@ class HyperParameterSet(list):
                 ), f"Sweep config values must be dicts, found {val} of type {type(val)}"
                 try:
                     _hp = HyperParameter(f"{prefix}{key}", val)
-                except ParamValidationError as e:
+                except ParamValidationError:
                     assert (
                         "parameters" in val
                     ), "Param of type DICT must have 'parameters' key"
