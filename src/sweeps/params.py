@@ -319,7 +319,7 @@ class HyperParameter:
 
 class HyperParameterSet(list):
 
-    NESTING_DELIMITER: str = '.wbnest[599c28ca25da].'
+    NESTING_DELIMITER: str = ".wbnest[599c28ca25da]."
 
     def __init__(self, items: List[HyperParameter]):
         """A set of HyperParameters.
@@ -377,7 +377,10 @@ class HyperParameterSet(list):
                     assert (
                         "parameters" in val
                     ), "Param of type DICT must have 'parameters' key"
-                    _unnest(val["parameters"], prefix=f"{prefix}{key}{cls.NESTING_DELIMITER}")
+                    _unnest(
+                        val["parameters"],
+                        prefix=f"{prefix}{key}{cls.NESTING_DELIMITER}",
+                    )
                 else:
                     hyperparameters.append(_hp)
 
@@ -401,7 +404,9 @@ class HyperParameterSet(list):
                             if subkey in subdict:
                                 subdict = subdict[subkey]
                                 if not isinstance(subdict, dict):
-                                    conflict_key: str = self.NESTING_DELIMITER.join(subkeys[: i + 1])
+                                    conflict_key: str = self.NESTING_DELIMITER.join(
+                                        subkeys[: i + 1]
+                                    )
                                     raise ValueError(
                                         f"While nesting, found key {subkey} which conflics with key {conflict_key}"
                                     )
