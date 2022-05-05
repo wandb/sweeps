@@ -94,6 +94,10 @@ def test_hyperparameterset_normalize_runs():
 
 def test_hyperparameterset_from_config():
 
+    # Delimiter is based on the root key of the hyperparameter
+    a_delimiter: str = HyperParameterSet._make_delimiter("a")
+    c_delimiter: str = HyperParameterSet._make_delimiter("c")
+
     # simple case of hyperparameters from config
     sweep_config = {
         "method": "grid",
@@ -111,9 +115,8 @@ def test_hyperparameterset_from_config():
     }
     hps = HyperParameterSet.from_config(sweep_config["parameters"])
     # sorting of config items ensures order of hyperparameters
-    _delimiter = HyperParameterSet.NESTING_DELIMITER
-    assert hps[0]._name_and_value() == (f"a{_delimiter}b", 1)
-    assert hps[1]._name_and_value() == (f"a{_delimiter}c{_delimiter}d", 1)
+    assert hps[0]._name_and_value() == (f"a{a_delimiter}b", 1)
+    assert hps[1]._name_and_value() == (f"a{a_delimiter}c{c_delimiter}d", 1)
 
     # Error case
     bad_run_config = {
@@ -133,12 +136,15 @@ def test_hyperparameterset_from_config():
 
 def test_hyperparameterset_to_config():
 
+    # Delimiter is based on the root key of the hyperparameter
+    a_delimiter: str = HyperParameterSet._make_delimiter("a")
+    c_delimiter: str = HyperParameterSet._make_delimiter("c")
+
     # simple case of hyperparameters to config
-    _delimiter = HyperParameterSet.NESTING_DELIMITER
     hps = HyperParameterSet(
         [
-            HyperParameter(f"a{_delimiter}b", {"value": 1}),
-            HyperParameter(f"a{_delimiter}c{_delimiter}d", {"value": 1}),
+            HyperParameter(f"a{a_delimiter}b", {"value": 1}),
+            HyperParameter(f"a{a_delimiter}c{c_delimiter}d", {"value": 1}),
         ]
     )
     desired_run_config = {"a": {"value": {"b": 1, "c": {"d": 1}}}}
@@ -148,10 +154,28 @@ def test_hyperparameterset_to_config():
     # Error case - Name conflict upon nesting
     hps = HyperParameterSet(
         [
-            HyperParameter(f"a{_delimiter}b", {"value": 1}),
-            HyperParameter(f"a{_delimiter}c{_delimiter}d", {"value": 1}),
-            HyperParameter(f"a{_delimiter}c", {"value": 1}),
+            HyperParameter(f"a{a_delimiter}b", {"value": 1}),
+            HyperParameter(f"a{a_delimiter}c{c_delimiter}d", {"value": 1}),
+            HyperParameter(f"a{a_delimiter}c", {"value": 1}),
         ]
     )
     with pytest.raises(ValueError):
         _ = hps.to_config()
+
+
+def test_param_dict_default_values(search_type):
+
+    # Default values should be properly filled in nested parameter
+    sweep_config = {
+        "method": "grid",
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {
+            "a": {
+                "parameters": {
+                    "b": {"min": 0, "max": 1},
+                },
+            },
+        },
+    }
+    hps = HyperParameterSet.from_config(sweep_config["parameters"])
+    assert hps[0].config == {"min": 0, "max": 1, "distribution": "int_uniform"}

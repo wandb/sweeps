@@ -2,7 +2,7 @@
 from copy import deepcopy
 import random
 import logging
-from typing import List, Tuple, Dict, Any, Union
+from typing import List, Tuple, Dict, Any, Union, Callable
 
 import numpy as np
 import scipy.stats as stats
@@ -318,9 +318,6 @@ class HyperParameter:
 
 
 class HyperParameterSet(list):
-
-    NESTING_DELIMITER: str = ".wbnest."
-
     def __init__(self, items: List[HyperParameter]):
         """A set of HyperParameters.
 
@@ -350,6 +347,11 @@ class HyperParameterSet(list):
 
         super().__init__(items)
 
+    @staticmethod
+    def _make_delimiter(param_name: str) -> str:
+        """Make a unique temporary delimiter."""
+        return f".wbnest({param_name})."
+
     @classmethod
     def from_config(cls, config: Dict):
         """Instantiate a HyperParameterSet based the parameters section of a SweepConfig.
@@ -362,7 +364,7 @@ class HyperParameterSet(list):
         """
         hyperparameters: List[HyperParameter] = []
 
-        def _unnest(d: Dict, prefix: str = "", delimiter=cls.NESTING_DELIMITER):
+        def _unnest(d: Dict, prefix: str = ""):
             """Recursively search for HyperParameters in a potentially nested dictionary."""
             for key, val in sorted(d.items()):
                 assert isinstance(
@@ -377,31 +379,55 @@ class HyperParameterSet(list):
                     assert (
                         "parameters" in val
                     ), "Param of type DICT must have 'parameters' key"
-                    _unnest(val["parameters"], prefix=f"{prefix}{key}{delimiter}")
+                    _delimiter = cls._make_delimiter(key)
+                    _unnest(val["parameters"], prefix=f"{prefix}{key}REPLACEWITHCUSTOMDELIMITER")
                 else:
                     hyperparameters.append(_hp)
 
         _unnest(config)
+        for key, item in config.items():
+            _new_key = key.replace("REPLACEWITHCUSTOMDELIMITER", cls._make_delimiter(key))
+            config[_new_key] = item
+            del config[key]
         return cls(hyperparameters)
 
     def to_config(self) -> Dict:
         """Convert a HyperParameterSet to a SweepRun config."""
 
-        def _renest(d: Dict, delimiter: str = self.NESTING_DELIMITER) -> None:
+        def _renest(d: Dict) -> None:
             """Nest a flattened dict based on a delimiter."""
             if isinstance(d, dict):
                 for k in sorted(d.keys()):
                     assert isinstance(
                         k, str
                     ), f"Sweep config keys must be strings, found {k} of type {type(k)}"
+                    delimiter = self._make_delimiter(k)
                     if delimiter in k:
                         subdict: Union[Any, Dict] = d
-                        subkeys: List[str] = k.split(delimiter)
+                        # Gnarly split based on delimiter that changes based on root key
+                        # if delimiter was consistent, this would be k.split(delimiter)
+                        _root = k.split(delimiter)[0]
+                        _leaf = k.split(delimiter)[1]
+                        subkeys: List[str] = [_root]
+                        _delimiter = self._make_delimiter(_root)
+                        while _delimiter in _leaf:
+                            _root = k.split(delimiter)[0]
+                            _leaf = k.split(delimiter)[1]
+                            _delimiter = self._make_delimiter(_root)
+                            subkeys.append(_root)
+                        subkeys.append(_leaf)
                         for i, subkey in enumerate(subkeys[:-1]):
                             if subkey in subdict:
                                 subdict = subdict[subkey]
                                 if not isinstance(subdict, dict):
-                                    conflict_key: str = delimiter.join(subkeys[: i + 1])
+                                    # Gnarly join based on delimiter that changes based on key
+                                    # if delimiter was consistent, this would be delimiter.join(...)
+                                    conflict_key: str = ""
+                                    for _subkey in subkeys[:i]:
+                                        conflict_key += _subkey + self._make_delimiter(
+                                            _subkey
+                                        )
+                                    conflict_key += subkeys[i + 1]
                                     raise ValueError(
                                         f"While nesting, found key {subkey} which conflics with key {conflict_key}"
                                     )

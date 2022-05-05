@@ -12,6 +12,7 @@ from copy import deepcopy
 class ParamValidationError(Exception):
     pass
 
+
 sweep_config_jsonschema_fname = Path(__file__).parent / "schema.json"
 with open(sweep_config_jsonschema_fname, "r") as f:
     sweep_config_jsonschema = json.load(f)
