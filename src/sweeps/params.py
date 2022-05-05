@@ -318,6 +318,9 @@ class HyperParameter:
 
 
 class HyperParameterSet(list):
+
+    NESTING_DELIMITER: str = '.wbnest[599c28ca25da].'
+
     def __init__(self, items: List[HyperParameter]):
         """A set of HyperParameters.
 
@@ -347,11 +350,6 @@ class HyperParameterSet(list):
 
         super().__init__(items)
 
-    @staticmethod
-    def _make_delimiter(param_name: str) -> str:
-        """Make a unique temporary delimiter."""
-        return f".wbnest({param_name})."
-
     @classmethod
     def from_config(cls, config: Dict):
         """Instantiate a HyperParameterSet based the parameters section of a SweepConfig.
@@ -379,16 +377,11 @@ class HyperParameterSet(list):
                     assert (
                         "parameters" in val
                     ), "Param of type DICT must have 'parameters' key"
-                    _delimiter = cls._make_delimiter(key)
-                    _unnest(val["parameters"], prefix=f"{prefix}{key}REPLACEWITHCUSTOMDELIMITER")
+                    _unnest(val["parameters"], prefix=f"{prefix}{key}{cls.NESTING_DELIMITER}")
                 else:
                     hyperparameters.append(_hp)
 
         _unnest(config)
-        for key, item in config.items():
-            _new_key = key.replace("REPLACEWITHCUSTOMDELIMITER", cls._make_delimiter(key))
-            config[_new_key] = item
-            del config[key]
         return cls(hyperparameters)
 
     def to_config(self) -> Dict:
@@ -401,33 +394,14 @@ class HyperParameterSet(list):
                     assert isinstance(
                         k, str
                     ), f"Sweep config keys must be strings, found {k} of type {type(k)}"
-                    delimiter = self._make_delimiter(k)
-                    if delimiter in k:
+                    if self.NESTING_DELIMITER in k:
                         subdict: Union[Any, Dict] = d
-                        # Gnarly split based on delimiter that changes based on root key
-                        # if delimiter was consistent, this would be k.split(delimiter)
-                        _root = k.split(delimiter)[0]
-                        _leaf = k.split(delimiter)[1]
-                        subkeys: List[str] = [_root]
-                        _delimiter = self._make_delimiter(_root)
-                        while _delimiter in _leaf:
-                            _root = k.split(delimiter)[0]
-                            _leaf = k.split(delimiter)[1]
-                            _delimiter = self._make_delimiter(_root)
-                            subkeys.append(_root)
-                        subkeys.append(_leaf)
+                        subkeys: List[str] = k.split(self.NESTING_DELIMITER)
                         for i, subkey in enumerate(subkeys[:-1]):
                             if subkey in subdict:
                                 subdict = subdict[subkey]
                                 if not isinstance(subdict, dict):
-                                    # Gnarly join based on delimiter that changes based on key
-                                    # if delimiter was consistent, this would be delimiter.join(...)
-                                    conflict_key: str = ""
-                                    for _subkey in subkeys[:i]:
-                                        conflict_key += _subkey + self._make_delimiter(
-                                            _subkey
-                                        )
-                                    conflict_key += subkeys[i + 1]
+                                    conflict_key: str = self.NESTING_DELIMITER.join(subkeys[: i + 1])
                                     raise ValueError(
                                         f"While nesting, found key {subkey} which conflics with key {conflict_key}"
                                     )
