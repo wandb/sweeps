@@ -5,6 +5,17 @@
   "description": "Weights & Biases Sweep Configuration.",
   "type": "object",
   "definitions": {
+    "parameters": {
+      "type": "object",
+      "description": "Config parameters to sweep",
+      "propertyNames": {
+        "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/parameter"
+      },
+      "minProperties": 1
+    },
     "param_categorical": {
       "type": "object",
       "description": "A categorical parameter with allowed values.",
@@ -34,15 +45,7 @@
       ],
       "properties": {
         "parameters": {
-          "type": "object",
-          "description": "More config parameters",
-          "propertyNames": {
-            "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
-          },
-          "additionalProperties": {
-            "$ref": "#/definitions/parameter"
-          },
-          "minProperties": 1
+          "$ref": "#/definitions/parameters"
         }
       },
       "additionalProperties": false
@@ -807,15 +810,7 @@
       ]
     },
     "parameters": {
-      "type": "object",
-      "description": "Config parameters to sweep",
-      "propertyNames": {
-        "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
-      },
-      "additionalProperties": {
-        "$ref": "#/definitions/parameter"
-      },
-      "minProperties": 1
+      "$ref": "#/definitions/parameters"
     }
   }
 }
