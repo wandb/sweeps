@@ -10,7 +10,7 @@ import scipy.stats as stats
 import jsonschema
 
 from .run import SweepRun
-from .config import fill_parameter
+from .config import fill_parameter, ParamValidationError
 from ._types import ArrayLike
 
 
@@ -39,7 +39,6 @@ def loguniform_v1_ppf(x: ArrayLike, min, max):
 
 class HyperParameter:
 
-    DICT = "param_dict"
     CONSTANT = "param_single_value"
     CATEGORICAL = "param_categorical"
     CATEGORICAL_PROB = "param_categorical_w_probabilities"
@@ -134,10 +133,7 @@ class HyperParameter:
             Probability that a random sample of this hyperparameter will be less
             than or equal to x.
         """
-        if self.type == HyperParameter.DICT:
-            # Cannot calculate CDF for a param dict
-            pass
-        elif self.type == HyperParameter.CONSTANT:
+        if self.type == HyperParameter.CONSTANT:
             return np.zeros_like(x)
         elif self.type == HyperParameter.CATEGORICAL:
             # NOTE: Indices expected for categorical parameters, not values.
@@ -208,9 +204,6 @@ class HyperParameter:
         """
         if np.any((x < 0.0) | (x > 1.0)):
             raise ValueError("Can't call ppf on value outside of [0,1]")
-        elif self.type == HyperParameter.DICT:
-            # Cannot calculate PDF for a param dict
-            pass
         elif self.type == HyperParameter.CONSTANT:
             return self.config["value"]
         elif self.type == HyperParameter.CATEGORICAL:
@@ -314,8 +307,6 @@ class HyperParameter:
 
     def sample(self) -> Any:
         """Randomly sample a value from the distribution of this HyperParameter."""
-        if self.type == HyperParameter.DICT:
-            return
         return self.ppf(random.uniform(0.0, 1.0))
 
     def _to_config(self) -> Tuple[str, Dict]:
@@ -323,8 +314,6 @@ class HyperParameter:
         return self.name, config
 
     def _name_and_value(self) -> Tuple[str, Any]:
-        if self.type == HyperParameter.DICT:
-            return
         return self.name, self.value
 
 
@@ -382,8 +371,9 @@ class HyperParameterSet(list):
                 assert isinstance(
                     val, dict
                 ), f"Sweep config values must be dicts, found {val} of type {type(val)}"
-                _hp = HyperParameter(f"{prefix}{key}", val)
-                if _hp.type == HyperParameter.DICT:
+                try:
+                    _hp = HyperParameter(f"{prefix}{key}", val)
+                except ParamValidationError as e:
                     assert (
                         "parameters" in val
                     ), "Param of type DICT must have 'parameters' key"
@@ -399,8 +389,7 @@ class HyperParameterSet(list):
 
         def _renest(d: Dict, delimiter: str = self.NESTING_DELIMITER) -> None:
             """Nest a flattened dict based on a delimiter."""
-            if type(d) == dict:
-                # The reverse sorting here ensures that "foo.bar" will appear before "foo"
+            if isinstance(d, dict):
                 for k in sorted(d.keys()):
                     assert isinstance(
                         k, str
@@ -427,9 +416,8 @@ class HyperParameterSet(list):
         # Add only the hyperparameters which aren't dicts
         config: Dict = dict()
         for param in self:
-            if param.type != HyperParameter.DICT:
-                _name, _value = param._name_and_value()
-                config[_name] = _value
+            _name, _value = param._name_and_value()
+            config[_name] = _value
         config = deepcopy(config)
         _renest(config)
         # Because of historical reason the first level of nesting requires "value" key
