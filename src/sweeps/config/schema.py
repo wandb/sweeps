@@ -8,6 +8,11 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 from copy import deepcopy
 
+
+class ParamValidationError(Exception):
+    pass
+
+
 sweep_config_jsonschema_fname = Path(__file__).parent / "schema.json"
 with open(sweep_config_jsonschema_fname, "r") as f:
     sweep_config_jsonschema = json.load(f)
@@ -86,6 +91,8 @@ def fill_parameter(parameter_name: str, config: Dict) -> Optional[Tuple[str, Dic
         except jsonschema.ValidationError:
             continue
         else:
+            if schema_name == "param_dict":
+                raise ParamValidationError("Parameter dict cannot be filled.")
             validate_min_max(parameter_name, config)
             filler = DefaultFiller(subschema, format_checker=format_checker)
             # this sets the defaults, modifying config inplace

@@ -5,6 +5,17 @@
   "description": "Weights & Biases Sweep Configuration.",
   "type": "object",
   "definitions": {
+    "parameters": {
+      "type": "object",
+      "description": "Config parameters to sweep",
+      "propertyNames": {
+        "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/parameter"
+      },
+      "minProperties": 1
+    },
     "param_categorical": {
       "type": "object",
       "description": "A categorical parameter with allowed values.",
@@ -22,6 +33,19 @@
             "categorical"
           ],
           "default": "categorical"
+        }
+      },
+      "additionalProperties": false
+    },
+    "param_dict": {
+      "type": "object",
+      "description": "A parameter dictionary containing other parameters.",
+      "required": [
+        "parameters"
+      ],
+      "properties": {
+        "parameters": {
+          "$ref": "#/definitions/parameters"
         }
       },
       "additionalProperties": false
@@ -622,6 +646,9 @@
         },
         {
           "$ref": "#/definitions/param_qloguniform_v2"
+        },
+        {
+          "$ref": "#/definitions/param_dict"
         }
       ]
     },
@@ -783,15 +810,7 @@
       ]
     },
     "parameters": {
-      "type": "object",
-      "description": "Config parameters to sweep",
-      "propertyNames": {
-        "pattern": "^^[A-Za-z_][A-Za-z0-9_.-]*$"
-      },
-      "additionalProperties": {
-        "$ref": "#/definitions/parameter"
-      },
-      "minProperties": 1
+      "$ref": "#/definitions/parameters"
     }
   }
 }
