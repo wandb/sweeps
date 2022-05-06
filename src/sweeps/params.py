@@ -1,8 +1,8 @@
 """Hyperparameter search parameters."""
-
+from copy import deepcopy
 import random
 import logging
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Union
 
 import numpy as np
 import scipy.stats as stats
@@ -10,7 +10,7 @@ import scipy.stats as stats
 import jsonschema
 
 from .run import SweepRun
-from .config import fill_parameter
+from .config import fill_parameter, ParamValidationError
 from ._types import ArrayLike
 
 
@@ -204,7 +204,7 @@ class HyperParameter:
         """
         if np.any((x < 0.0) | (x > 1.0)):
             raise ValueError("Can't call ppf on value outside of [0,1]")
-        if self.type == HyperParameter.CONSTANT:
+        elif self.type == HyperParameter.CONSTANT:
             return self.config["value"]
         elif self.type == HyperParameter.CATEGORICAL:
             # Samples uniformly over the values
@@ -313,8 +313,14 @@ class HyperParameter:
         config = dict(value=self.value)
         return self.name, config
 
+    def _name_and_value(self) -> Tuple[str, Any]:
+        return self.name, self.value
+
 
 class HyperParameterSet(list):
+
+    NESTING_DELIMITER: str = ".wbnest[599c28ca25da]."
+
     def __init__(self, items: List[HyperParameter]):
         """A set of HyperParameters.
 
@@ -354,17 +360,75 @@ class HyperParameterSet(list):
         Args:
             config: The parameters section of a SweepConfig.
         """
-        hpd = cls(
-            [
-                HyperParameter(param_name, param_config)
-                for param_name, param_config in sorted(config.items())
-            ]
-        )
-        return hpd
+        hyperparameters: List[HyperParameter] = []
+
+        def _unnest(d: Dict, prefix: str = ""):
+            """Recursively search for HyperParameters in a potentially nested dictionary."""
+            for key, val in sorted(d.items()):
+                assert isinstance(
+                    key, str
+                ), f"Sweep config keys must be strings, found {key} of type {type(key)}"
+                assert isinstance(
+                    val, dict
+                ), f"Sweep config values must be dicts, found {val} of type {type(val)}"
+                try:
+                    _hp = HyperParameter(f"{prefix}{key}", val)
+                except ParamValidationError:
+                    assert (
+                        "parameters" in val
+                    ), "Param of type DICT must have 'parameters' key"
+                    _unnest(
+                        val["parameters"],
+                        prefix=f"{prefix}{key}{cls.NESTING_DELIMITER}",
+                    )
+                else:
+                    hyperparameters.append(_hp)
+
+        _unnest(config)
+        return cls(hyperparameters)
 
     def to_config(self) -> Dict:
         """Convert a HyperParameterSet to a SweepRun config."""
-        return dict([param._to_config() for param in self])
+
+        def _renest(d: Dict) -> None:
+            """Nest a flattened dict based on a delimiter."""
+            if isinstance(d, dict):
+                for k in sorted(d.keys()):
+                    assert isinstance(
+                        k, str
+                    ), f"Sweep config keys must be strings, found {k} of type {type(k)}"
+                    if self.NESTING_DELIMITER in k:
+                        subdict: Union[Any, Dict] = d
+                        subkeys: List[str] = k.split(self.NESTING_DELIMITER)
+                        for i, subkey in enumerate(subkeys[:-1]):
+                            if subkey in subdict:
+                                subdict = subdict[subkey]
+                                if not isinstance(subdict, dict):
+                                    conflict_key: str = self.NESTING_DELIMITER.join(
+                                        subkeys[: i + 1]
+                                    )
+                                    raise ValueError(
+                                        f"While nesting, found key {subkey} which conflics with key {conflict_key}"
+                                    )
+                            else:
+                                # Create a nested dictionary under the parent key
+                                _d: Dict = dict()
+                                subdict[subkey] = _d
+                                subdict = _d
+                        if isinstance(subdict, dict):
+                            subdict[subkeys[-1]] = d.pop(k)
+
+        # Add only the hyperparameters which aren't dicts
+        config: Dict = dict()
+        for param in self:
+            _name, _value = param._name_and_value()
+            config[_name] = _value
+        config = deepcopy(config)
+        _renest(config)
+        # Because of historical reason the first level of nesting requires "value" key
+        for k, v in config.items():
+            config[k] = {"value": v}
+        return config
 
     def normalize_runs_as_array(self, runs: List[SweepRun]) -> np.ndarray:
         """Normalize a list of SweepRuns to an ndarray of parameter vectors."""

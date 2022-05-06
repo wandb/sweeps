@@ -155,6 +155,56 @@ def test_invalid_run_parameter():
         next_run(config, runs, validate=False)
 
 
+@pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])
+def test_param_dict(search_type):
+    # param dict inside param dict
+    sweep_config = {
+        "method": search_type,
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {
+            "a": {
+                "parameters": {
+                    "b": {"values": [1, 2]},
+                    "c": {
+                        "parameters": {"d": {"value": 1}},
+                    },
+                },
+            },
+        },
+    }
+    run_config_1 = {"a": {"value": {"b": 1, "c": {"d": 1}}}}
+    run_config_2 = {"a": {"value": {"b": 2, "c": {"d": 1}}}}
+    run = next_run(sweep_config, [SweepRun(config=run_config_1)])
+    assert run.config in [run_config_1, run_config_2]
+
+    # naming conflict is ok as long as different nest levels
+    sweep_config = {
+        "method": search_type,
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {
+            "a": {
+                "parameters": {
+                    "b": {"value": 1},
+                    "c": {
+                        "parameters": {"d": {"value": 2}},
+                    },
+                },
+            },
+            "b": {"values": [2, 3]},
+        },
+    }
+    run_config_1 = {
+        "a": {"value": {"b": 1, "c": {"d": 2}}},
+        "b": {"value": 2},
+    }
+    run_config_2 = {
+        "a": {"value": {"b": 1, "c": {"d": 2}}},
+        "b": {"value": 3},
+    }
+    run = next_run(sweep_config, [SweepRun(config=run_config_1)])
+    assert run.config in [run_config_1, run_config_2]
+
+
 def test_invalid_minmax_with_no_sweepconfig_validation():
     config = {"method": "random", "parameters": {"a": {"max": 0, "min": 1}}}
 
