@@ -139,7 +139,7 @@ def check_for_deprecated_distributions(
         )  # will raise if parameter config is malformed
     except ParamValidationError:
         pass
-    finally:
+    else:
         # check if type is deprecated
         if param.type in PARAM_DEPRECATION_MAP:
             raise ValueError(f"{parameter_name} {PARAM_DEPRECATION_MAP[param.type]}")
@@ -211,7 +211,7 @@ def fill_validate_schema(d: Dict) -> Dict:
             result = fill_parameter(k, v)
         except ParamValidationError:
             continue
-        finally:
+        else:
             if result is None:
                 raise jsonschema.ValidationError(f"Parameter {k} is malformed")
             _, config = result
