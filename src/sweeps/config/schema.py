@@ -204,7 +204,11 @@ def fill_validate_schema(d: Dict) -> Dict:
     # update the parameters
     filled = {}
     for k, v in validated["parameters"].items():
-        result = fill_parameter(k, v)
+        try:
+            result = fill_parameter(k, v)
+        except ParamValidationError as e:
+            # Ignore param validation errors
+            continue
         if result is None:
             raise jsonschema.ValidationError(f"Parameter {k} is malformed")
         _, config = result
