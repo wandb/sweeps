@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 parser.add_argument("--project", type=str, default=None, help="project")
 parser.add_argument("--epochs", type=int, default=5)
 parser.add_argument("--batch_size", type=int, default=16)
-parser.add_argument("--optimizer", type=dict, default=None)
+# parser.add_argument("--optimizer", type=dict, default=None)
 # parser.add_argument("--lr", type=float, default=0.01)
 # parser.add_argument("--optimizer.lr", type=float, default=0.01)
 
@@ -26,12 +26,17 @@ if __name__ == "__main__":
     wandb.init(project=args.project, config=args)
     
     # Do some fake taining
-    for _ in range(wandb.config["epochs"]):
+    for epoch in range(wandb.config["epochs"]):
         # You can access nested properties in the config!
         _batch_size = wandb.config["batch_size"]
         _lr = wandb.config["optimizer"]["lr"]
         print(f"Fake training with batch size {_batch_size} and lr {_lr}")
-        wandb.log({"loss": 0.01})
+        # Fake loss has following relationships:
+        # - goes down with each epoch
+        # - larger batch size makes it go down faster
+        # - larger learning rate makes it go down faster
+        _fake_loss = 1 - (epoch / wandb.config["epochs"])*_lr*_batch_size
+        wandb.log({"loss": _fake_loss})
         time.sleep(0.3)
 
     wandb.finish()

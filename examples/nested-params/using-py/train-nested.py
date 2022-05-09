@@ -41,12 +41,17 @@ SWEEP_CONFIG = {
 
 def _train_function(config):
     # Do some fake taining
-    for _ in range(config["epochs"]):
+    for epoch in range(config["epochs"]):
         # You can access nested properties in the config!
         _batch_size = config["batch_size"]
         _lr = config["optimizer"]["lr"]
         print(f"Fake training with batch size {_batch_size} and lr {_lr}")
-        wandb.log({"loss_metric": 0.01})
+        # Fake loss has following relationships:
+        # - goes down with each epoch
+        # - larger batch size makes it go down faster
+        # - larger learning rate makes it go down faster
+        _fake_loss = 1 - (epoch / config["epochs"])*_lr*_batch_size
+        wandb.log({"loss": _fake_loss})
         time.sleep(0.3)
 
 
