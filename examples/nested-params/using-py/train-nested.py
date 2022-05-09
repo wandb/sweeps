@@ -18,8 +18,8 @@ CONFIG = {
     "epochs": 5,
     "batch_size": 32,
     "optimizer": {
-        "lr": 0.01, # The "lr" is nested behind "optimizer"
-    }
+        "lr": 0.01,  # The "lr" is nested behind "optimizer"
+    },
 }
 
 SWEEP_CONFIG = {
@@ -28,14 +28,14 @@ SWEEP_CONFIG = {
         "name": "loss",
         "goal": "minimize",
     },
-    "parameters"  :{
+    "parameters": {
         "batch_size": {"values": [32, 64]},
         "optimizer": {
             "parameters": {
                 "lr": {"values": [0.001, 0.0001]},
             },
         },
-    }
+    },
 }
 
 
@@ -49,14 +49,15 @@ def _train_function(config):
         wandb.log({"loss_metric": 0.01})
         time.sleep(0.3)
 
+
 if __name__ == "__main__":
     args = parser.parse_args()
-    print('Create sweep from python.')
+    print("Create sweep from python.")
     sweep_id = wandb.sweep(SWEEP_CONFIG, project=args.project)
-    
+
     def train_function():
         with wandb.init(project=args.project, config=CONFIG):
             _train_function(wandb.config)
 
-    print('Create and run agent from python.')
-    wandb.agent(sweep_id, train_function, count=2)
+    print("Create and run agent from python.")
+    wandb.agent(sweep_id, train_function, count=3)

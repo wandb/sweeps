@@ -30,6 +30,7 @@ def train_function(config):
         wandb.log({"loss": 0.01})
         time.sleep(0.3)
 
+
 if __name__ == "__main__":
     args = parser.parse_args()
     wandb.init(project=args.project, config=args)
