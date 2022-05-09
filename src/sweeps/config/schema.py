@@ -139,9 +139,10 @@ def check_for_deprecated_distributions(
         )  # will raise if parameter config is malformed
     except ParamValidationError:
         pass
-    # check if type is deprecated
-    if param.type in PARAM_DEPRECATION_MAP:
-        raise ValueError(f"{parameter_name} {PARAM_DEPRECATION_MAP[param.type]}")
+    finally:
+        # check if type is deprecated
+        if param.type in PARAM_DEPRECATION_MAP:
+            raise ValueError(f"{parameter_name} {PARAM_DEPRECATION_MAP[param.type]}")
 
 
 def fill_validate_metric(d: Dict) -> Dict:
@@ -210,10 +211,11 @@ def fill_validate_schema(d: Dict) -> Dict:
             result = fill_parameter(k, v)
         except ParamValidationError:
             continue
-        if result is None:
-            raise jsonschema.ValidationError(f"Parameter {k} is malformed")
-        _, config = result
-        filled[k] = config
+        finally:
+            if result is None:
+                raise jsonschema.ValidationError(f"Parameter {k} is malformed")
+            _, config = result
+            filled[k] = config
     validated["parameters"] = filled
 
     if "early_terminate" in validated:
