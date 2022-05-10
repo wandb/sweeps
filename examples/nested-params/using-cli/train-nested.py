@@ -17,9 +17,7 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 parser.add_argument("--project", type=str, default=None, help="project")
 parser.add_argument("--epochs", type=int, default=5)
 parser.add_argument("--batch_size", type=int, default=16)
-# parser.add_argument("--optimizer", type=dict, default=None)
-# parser.add_argument("--lr", type=float, default=0.01)
-# parser.add_argument("--optimizer.lr", type=float, default=0.01)
+parser.add_argument("--optimizer", type=str, default=None)
 
 if __name__ == "__main__":
     args = parser.parse_args()
