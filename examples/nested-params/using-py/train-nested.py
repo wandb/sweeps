@@ -50,7 +50,7 @@ def _train_function(config):
         # - goes down with each epoch
         # - larger batch size makes it go down faster
         # - larger learning rate makes it go down faster
-        _fake_loss = 1 - (epoch / config["epochs"])*_lr*_batch_size
+        _fake_loss = 1 - (epoch / config["epochs"]) * _lr * _batch_size
         wandb.log({"loss": _fake_loss})
         time.sleep(0.3)
 

@@ -22,7 +22,7 @@ parser.add_argument("--optimizer", type=str, default=None)
 if __name__ == "__main__":
     args = parser.parse_args()
     wandb.init(project=args.project, config=args)
-    
+
     # Do some fake taining
     for epoch in range(wandb.config["epochs"]):
         # You can access nested properties in the config!
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         # - goes down with each epoch
         # - larger batch size makes it go down faster
         # - larger learning rate makes it go down faster
-        _fake_loss = 1 - (epoch / wandb.config["epochs"])*_lr*_batch_size
+        _fake_loss = 1 - (epoch / wandb.config["epochs"]) * _lr * _batch_size
         wandb.log({"loss": _fake_loss})
         time.sleep(0.3)
 
