@@ -1,0 +1,22 @@
+description: sweep using nested params
+
+# Training script to run
+program: train-nested.py
+
+# Method can be bayes, random, grid
+method: grid
+
+# Metric to optimize
+metric:
+  name: loss
+  goal: minimize
+
+# Parameter space to search
+parameters:
+  batch_size:
+    values: [32, 64]
+  optimizer:
+    parameters:
+      # lr parameter is nested behind "optimizer"
+      lr:
+        values: [0.001, 0.0001]

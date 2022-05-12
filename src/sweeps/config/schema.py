@@ -133,13 +133,16 @@ def check_for_deprecated_distributions(
 ) -> None:
     from ..params import HyperParameter, PARAM_DEPRECATION_MAP
 
-    param = HyperParameter(
-        parameter_name, parameter_config
-    )  # will raise if parameter config is malformed
-
-    # check if type is deprecated
-    if param.type in PARAM_DEPRECATION_MAP:
-        raise ValueError(f"{parameter_name} {PARAM_DEPRECATION_MAP[param.type]}")
+    try:
+        param = HyperParameter(
+            parameter_name, parameter_config
+        )  # will raise if parameter config is malformed
+    except ParamValidationError:
+        pass
+    else:
+        # check if type is deprecated
+        if param.type in PARAM_DEPRECATION_MAP:
+            raise ValueError(f"{parameter_name} {PARAM_DEPRECATION_MAP[param.type]}")
 
 
 def fill_validate_metric(d: Dict) -> Dict:
@@ -204,11 +207,15 @@ def fill_validate_schema(d: Dict) -> Dict:
     # update the parameters
     filled = {}
     for k, v in validated["parameters"].items():
-        result = fill_parameter(k, v)
-        if result is None:
-            raise jsonschema.ValidationError(f"Parameter {k} is malformed")
-        _, config = result
-        filled[k] = config
+        try:
+            result = fill_parameter(k, v)
+        except ParamValidationError:
+            continue
+        else:
+            if result is None:
+                raise jsonschema.ValidationError(f"Parameter {k} is malformed")
+            _, config = result
+            filled[k] = config
     validated["parameters"] = filled
 
     if "early_terminate" in validated:
