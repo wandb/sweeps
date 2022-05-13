@@ -1,7 +1,7 @@
 description: sweep using nested params
 
 # Training script to run
-program: train-nested.py
+program: train-nested-cli.py
 
 # Method can be bayes, random, grid
 method: grid

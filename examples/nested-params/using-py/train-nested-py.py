@@ -2,7 +2,7 @@
     Example using nested configs for sweeps and agents that
     are defined and run from python. To run this example:
 
-    > python train-nested.py
+    > python train-nested-py.py
 """
 
 import argparse
