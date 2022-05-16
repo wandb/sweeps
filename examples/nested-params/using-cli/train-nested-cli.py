@@ -29,7 +29,9 @@ if __name__ == "__main__":
         _batch_size = wandb.config["batch_size"]
         _lr = wandb.config["optimizer"]["lr"]
         _beta = wandb.config["optimizer"]["nadam"]["beta"]
-        print(f"Fake training with batch size {_batch_size} and lr {_lr} and beta {_beta}")
+        print(
+            f"Fake training with batch size {_batch_size} and lr {_lr} and beta {_beta}"
+        )
         # Fake loss has following relationships:
         # - goes down with each epoch
         # - larger batch size makes it go down faster

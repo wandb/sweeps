@@ -37,7 +37,7 @@ SWEEP_CONFIG = {
                     "parameters": {
                         "beta": {"values": [0.9, 0.95]},
                     },
-                }
+                },
             }
         },
     },
@@ -51,7 +51,9 @@ def _train_function(config):
         _batch_size = config["batch_size"]
         _lr = config["optimizer"]["lr"]
         _beta = wandb.config["optimizer"]["nadam"]["beta"]
-        print(f"Fake training with batch size {_batch_size} and lr {_lr} and beta {_beta}")
+        print(
+            f"Fake training with batch size {_batch_size} and lr {_lr} and beta {_beta}"
+        )
         # Fake loss has following relationships:
         # - goes down with each epoch
         # - larger batch size makes it go down faster
