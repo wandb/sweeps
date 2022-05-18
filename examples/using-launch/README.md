@@ -7,7 +7,7 @@ Using Launch to run a sweep:
 Create the sweep as you would normally, but specify a `queue`. 
 
 ```
-wandb sweep sweep-nested.yaml --queue mylaunchsweep
+wandb sweep sweep-nested.yaml --queue default
 ```
 
 Within the Launch UI in your workspace you should now see a launch queue with agent work on it.
@@ -17,5 +17,5 @@ Within the Launch UI in your workspace you should now see a launch queue with ag
 Start a launch agent to work through that queue.
 
 ```
-wandb launch-agent -q mylaunchsweep
+wandb launch-agent -q default -p nested-examples
 ```
