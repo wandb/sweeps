@@ -5,7 +5,7 @@ _Using Launch to run a sweep._
 Create the sweep as you would normally, but specify a `queue`. Here we specify the default queue
 
 ```
-wandb sweep sweep-nested.yaml --queue default
+WANDB_BASE_URL=https://api.wandb.test wandb sweep sweep-nested.yaml --queue default
 ```
 
 Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/launch) you should now see a launch queue with a daimyo job on it.
@@ -13,7 +13,7 @@ Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/l
 Start the daimyo by pointing a launch agent at the queue:
 
 ```
-wandb launch-agent -q default -p nested-examples
+WANDB_BASE_URL=https://api.wandb.test wandb launch-agent -q default -p nested-examples
 ```
 
 Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/launch) you should now see sweeps jobs on the launch queue, these are being added there by the daimyo.
@@ -21,5 +21,5 @@ Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/l
 Start another launch agent to work through these jobs.
 
 ```
-wandb launch-agent -q default -p nested-examples
+WANDB_BASE_URL=https://api.wandb.test wandb launch-agent -q default -p nested-examples
 ```
