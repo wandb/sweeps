@@ -11,7 +11,7 @@ import time
 import wandb
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--project", type=str, default="nested-examples", help="project")
+parser.add_argument("--project", type=str, default="sweeps-examples", help="project")
 
 # A user-specified nested config.
 CONFIG = {

@@ -4,7 +4,7 @@ description: sweep using nested params
 program: train-nested-cli.py
 
 # Project this sweep is part of
-project: nested-examples
+project: sweeps-examples
 
 # Method can be bayes, random, grid
 method: grid

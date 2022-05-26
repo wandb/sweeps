@@ -13,7 +13,7 @@ Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/l
 Start the daimyo by pointing a launch agent at the queue:
 
 ```
-WANDB_BASE_URL=https://api.wandb.test wandb launch-agent -q my_nested_sweep -j 2
+WANDB_BASE_URL=https://api.wandb.test wandb launch-agent -q my_nested_sweep -p sweeps-examples -j 2
 ```
 
 Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/launch) you should now see sweeps jobs on the launch queue, these are being added there by the daimyo. The launch agent will now work through these jobs.
