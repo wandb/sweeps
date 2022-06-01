@@ -22,6 +22,7 @@ parser.add_argument("--optimizer", type=str, default=None)
 if __name__ == "__main__":
     args = parser.parse_args()
     wandb.init(project=args.project, config=args)
+    # The wandb config object holds the latest hyperparameter values
     print(f"wandb.config: {wandb.config}")
     # Do some fake taining
     for epoch in range(wandb.config["epochs"]):

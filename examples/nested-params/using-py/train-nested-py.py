@@ -45,6 +45,8 @@ SWEEP_CONFIG = {
 
 
 def _train_function(config):
+    # The wandb config object holds the latest hyperparameter values
+    print(f"wandb.config: {wandb.config}")
     # Do some fake taining
     for epoch in range(config["epochs"]):
         # You can access nested properties in the config!
