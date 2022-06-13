@@ -3,6 +3,9 @@ description: sweep using nested params
 # Training script to run
 program: train-nested-cli.py
 
+# Project this sweep is part of
+project: sweeps-examples
+
 # Method can be bayes, random, grid
 method: grid
 

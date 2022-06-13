@@ -21,6 +21,9 @@ wandb.config.update({"dummy": 1})
 
 time.sleep(1)
 
+# The wandb config object holds the latest hyperparameter values
+print(f"wandb.config: {wandb.config}")
+
 metric = args.base + random.random() * args.variance
 for e, x in enumerate(range(args.epochs)):
     metric += args.increment * args.direction
