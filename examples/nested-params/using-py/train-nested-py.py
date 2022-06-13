@@ -11,7 +11,7 @@ import time
 import wandb
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--project", type=str, default=None, help="project")
+parser.add_argument("--project", type=str, default="sweeps-examples", help="project")
 
 # A user-specified nested config.
 CONFIG = {
@@ -45,6 +45,8 @@ SWEEP_CONFIG = {
 
 
 def _train_function(config):
+    # The wandb config object holds the latest hyperparameter values
+    print(f"wandb.config: {wandb.config}")
     # Do some fake taining
     for epoch in range(config["epochs"]):
         # You can access nested properties in the config!
