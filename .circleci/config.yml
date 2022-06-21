@@ -55,7 +55,7 @@ jobs:
       - checkout
       - run:
           name: Load python
-          command: pyenv global 3.8.3
+          command: pyenv global 3.8.5
       - run:
           name: Run Tests
           command: pip install tox==3.24.0 && tox -e py38
