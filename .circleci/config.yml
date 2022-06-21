@@ -7,7 +7,7 @@ orbs:
 jobs:
   linux36:
     machine:
-      image: ubuntu-1604:202007-01
+      image:  ubuntu-2004:202010-01
     steps:
       - checkout
       - run:
@@ -28,7 +28,7 @@ jobs:
     resource_class: large
   linux37:
     machine:
-      image: ubuntu-1604:202007-01
+      image:  ubuntu-2004:202010-01
     steps:
       - checkout
       - run:
@@ -50,12 +50,12 @@ jobs:
 
   linux38:
     machine:
-      image: ubuntu-1604:202007-01
+      image:  ubuntu-2004:202010-01
     steps:
       - checkout
       - run:
           name: Load python
-          command: pyenv global 3.8.3
+          command: pyenv global 3.8.5
       - run:
           name: Run Tests
           command: pip install tox==3.24.0 && tox -e py38
@@ -68,7 +68,7 @@ jobs:
     resource_class: large
   linux39:
     machine:
-      image: ubuntu-1604:202007-01
+      image:  ubuntu-2004:202010-01
     steps:
       - checkout
       - run:
