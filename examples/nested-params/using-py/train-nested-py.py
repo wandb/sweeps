@@ -73,6 +73,7 @@ if __name__ == "__main__":
     def train_function():
         with wandb.init(project=args.project, config=CONFIG):
             _train_function(wandb.config)
+        # This line is recommended, but not required.
         wandb.finish()
 
     print("Create and run agent from python.")

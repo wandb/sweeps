@@ -33,5 +33,5 @@ for e, x in enumerate(range(args.epochs)):
     print("INFO:  %3d = %f" % (e, metric))
     time.sleep(args.sleep)
 
-# Should not be needed for non-Launch sweeps
+# This line is recommended, but not required.
 run.finish()

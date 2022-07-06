@@ -41,4 +41,5 @@ if __name__ == "__main__":
         wandb.log({"loss": _fake_loss})
         time.sleep(0.3)
 
+    # This line is recommended, but not required.
     wandb.finish()
