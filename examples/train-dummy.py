@@ -32,6 +32,3 @@ for e, x in enumerate(range(args.epochs)):
     wandb.log({"loss_metric": metric})
     print("INFO:  %3d = %f" % (e, metric))
     time.sleep(args.sleep)
-
-# This line is recommended, but not required.
-run.finish()
