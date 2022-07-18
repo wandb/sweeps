@@ -6,7 +6,7 @@ import time
 import wandb
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--use_jobs", type=bool, default=False, help="Uses Jobs, an experimental feature of Launch")
+parser.add_argument("--use_jobs", action='store_true', help="Uses Jobs, an experimental feature of Launch")
 parser.add_argument("--project", type=str, default=None, help="project")
 parser.add_argument("--epochs", type=int, default=27, help="epochs")
 parser.add_argument("--variance", type=float, default=1, help="param1")
