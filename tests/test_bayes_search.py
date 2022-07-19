@@ -299,9 +299,8 @@ def test_runs_bayes_runs2(sweep_config_bayes_search_2params_with_metric):
     np.testing.assert_array_less(np.abs(best_x - optimum), 0.2)
 
 
+# search with 2 finished runs - hardcoded results - missing metric
 def test_runs_bayes_runs2_missingmetric():
-    # TODO(hupo): GP debug
-    # search with 2 finished runs - hardcoded results - missing metric
 
     config = SweepConfig(
         {
@@ -346,7 +345,6 @@ def test_runs_bayes_runs2_missingmetric():
 
 
 def test_runs_bayes_runs2_missingmetric_acc():
-    # TODO(hupo): GP debug
 
     config = SweepConfig(
         {
@@ -392,7 +390,6 @@ def test_runs_bayes_runs2_missingmetric_acc():
 
 
 def test_runs_bayes_nan(sweep_config_bayes_search_2params_with_metric):
-    # TODO(hupo): GP debug
 
     r1 = SweepRun(
         name="b",
@@ -888,9 +885,8 @@ def test_metric_extremum_in_bayes_search():
     np.testing.assert_array_less(np.abs(y + 98), 5)
 
 
+# search with 2 finished runs - metrics are ignored because they are boolean
 def test_runs_bayes_runs2_boolmetric():
-    # TODO(hupo): GP debug
-    # search with 2 finished runs - metrics are ignored because they are boolean
 
     config = SweepConfig(
         {

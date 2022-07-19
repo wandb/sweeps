@@ -8,7 +8,6 @@ from .config.cfg import SweepConfig
 from .config.schema import fill_validate_metric
 from .run import SweepRun, RunState, run_state_is_terminal
 from .params import HyperParameter, HyperParameterSet
-import sklearn
 from sklearn import gaussian_process as sklearn_gaussian
 from scipy import stats as scipy_stats
 
@@ -84,7 +83,7 @@ def predict(
     X: ArrayLike, y: ArrayLike, test_X: ArrayLike, nu: floating = 1.5
 ) -> Tuple[ArrayLike, ArrayLike]:
     gp, norm_mean, norm_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
-    y_pred, y_std = gp.predict(test_X, return_std=True)
+    y_pred, y_std = gp.predict([test_X], return_std=True)
     y_std_norm = y_std * norm_stddev
     y_pred_norm = (y_pred * norm_stddev) + norm_mean
     return y_pred_norm[0], y_std_norm[0]
