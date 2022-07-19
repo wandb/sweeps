@@ -390,7 +390,6 @@ def test_runs_bayes_runs2_missingmetric_acc():
 
 
 def test_runs_bayes_nan(sweep_config_bayes_search_2params_with_metric):
-
     r1 = SweepRun(
         name="b",
         state=RunState.finished,
