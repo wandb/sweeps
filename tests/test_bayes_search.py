@@ -63,6 +63,14 @@ def run_bayes_search(
             )
             np.testing.assert_allclose(left_comp, right_comp, atol=atol)
 
+# @pytest.mark.parametrize("X,y,xtest", [
+#     (np.array([[0.2],[0.4],[0.6],[0.8],[0.9]]), np.array([8, 6, 4, 2, 1]), np.array([[3], [2], [-1], [0], [0.1]]))
+# ])
+# def test_gaussian_process(X, y, xtest):
+#     # bayes.fit_normalized_gaussian_process(X, y)
+#     bayes.predict(X, y, xtest)
+#     breakpoint()
+
 
 @pytest.mark.parametrize(
     "x",
@@ -299,8 +307,9 @@ def test_runs_bayes_runs2(sweep_config_bayes_search_2params_with_metric):
     np.testing.assert_array_less(np.abs(best_x - optimum), 0.2)
 
 
-# search with 2 finished runs - hardcoded results - missing metric
 def test_runs_bayes_runs2_missingmetric():
+    # TODO(hupo): GP debug
+    # search with 2 finished runs - hardcoded results - missing metric
 
     config = SweepConfig(
         {
@@ -345,6 +354,7 @@ def test_runs_bayes_runs2_missingmetric():
 
 
 def test_runs_bayes_runs2_missingmetric_acc():
+    # TODO(hupo): GP debug
 
     config = SweepConfig(
         {
@@ -390,6 +400,8 @@ def test_runs_bayes_runs2_missingmetric_acc():
 
 
 def test_runs_bayes_nan(sweep_config_bayes_search_2params_with_metric):
+    # TODO(hupo): GP debug
+
     r1 = SweepRun(
         name="b",
         state=RunState.finished,
@@ -884,8 +896,9 @@ def test_metric_extremum_in_bayes_search():
     np.testing.assert_array_less(np.abs(y + 98), 5)
 
 
-# search with 2 finished runs - metrics are ignored because they are boolean
 def test_runs_bayes_runs2_boolmetric():
+    # TODO(hupo): GP debug
+    # search with 2 finished runs - metrics are ignored because they are boolean
 
     config = SweepConfig(
         {
