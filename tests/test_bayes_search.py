@@ -63,14 +63,6 @@ def run_bayes_search(
             )
             np.testing.assert_allclose(left_comp, right_comp, atol=atol)
 
-# @pytest.mark.parametrize("X,y,xtest", [
-#     (np.array([[0.2],[0.4],[0.6],[0.8],[0.9]]), np.array([8, 6, 4, 2, 1]), np.array([[3], [2], [-1], [0], [0.1]]))
-# ])
-# def test_gaussian_process(X, y, xtest):
-#     # bayes.fit_normalized_gaussian_process(X, y)
-#     bayes.predict(X, y, xtest)
-#     breakpoint()
-
 
 @pytest.mark.parametrize(
     "x",

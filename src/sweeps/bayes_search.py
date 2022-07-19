@@ -10,8 +10,6 @@ from .run import SweepRun, RunState, run_state_is_terminal
 from .params import HyperParameter, HyperParameterSet
 import sklearn
 from sklearn import gaussian_process as sklearn_gaussian
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import Matern as MaternKernel
 from scipy import stats as scipy_stats
 
 from ._types import floating, integer, ArrayLike
@@ -42,8 +40,6 @@ def bayes_baseline_validate_and_fill(config: Dict) -> Dict:
 def fit_normalized_gaussian_process(
     X: ArrayLike, y: ArrayLike, nu: floating = 1.5
 ) -> Tuple[sklearn_gaussian.GaussianProcessRegressor, floating, floating]:
-    print(f"\n sklearn {sklearn.__version__} 0.X {X} \n")
-    print(f"\n sklearn {sklearn.__version__} 0.Y {y} \n")
     gp = sklearn_gaussian.GaussianProcessRegressor(
         kernel=sklearn_gaussian.kernels.Matern(nu=nu),
         n_restarts_optimizer=2,
@@ -61,8 +57,6 @@ def fit_normalized_gaussian_process(
         y_stddev = np.std(y) + 0.0001
     y_norm = (y - y_mean) / y_stddev
     gp.fit(X, y_norm)
-    print(f"\n sklearn {sklearn.__version__} 0.y_mean {y_mean} \n")
-    print(f"\n sklearn {sklearn.__version__} 0.y_stddev {y_stddev} \n")
     return gp, y_mean, y_stddev
 
 
@@ -86,19 +80,13 @@ def random_sample(X_bounds: ArrayLike, num_test_samples: integer) -> ArrayLike:
     return test_X
 
 
-# TODO(hupo) this might be entirely unused?
 def predict(
     X: ArrayLike, y: ArrayLike, test_X: ArrayLike, nu: floating = 1.5
 ) -> Tuple[ArrayLike, ArrayLike]:
-    print(f"\n sklearn {sklearn.__version__} 1.X {X} \n")
-    print(f"\n sklearn {sklearn.__version__} 1.Y {y} \n")
-    print(f"\n sklearn {sklearn.__version__} 1.test_X {test_X} \n")
     gp, norm_mean, norm_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
     y_pred, y_std = gp.predict(test_X, return_std=True)
     y_std_norm = y_std * norm_stddev
     y_pred_norm = (y_pred * norm_stddev) + norm_mean
-    print(f"\n sklearn {sklearn.__version__} 1.y_pred_norm {y_pred_norm} \n")
-    print(f"\n sklearn {sklearn.__version__} 1.y_std_norm {y_std_norm} \n")
     return y_pred_norm[0], y_std_norm[0]
 
 
@@ -290,19 +278,7 @@ def next_sample(
     # Look for the minimum value of our fitted-target-function + (kappa * fitted-target-std_dev)
     if test_X is None:  # this is the usual case
         test_X = random_sample(X_bounds, num_points_to_try)
-        # test_X = np.empty((4, len(X_bounds)))
-        # test_X[0, :] = [0.99] * len(X_bounds)
-        # test_X[1, :] = [0.01] * len(X_bounds)
-        # test_X[2, :] = [0.5] * len(X_bounds)
-
     y_pred, y_pred_std = gp.predict(test_X, return_std=True)
-    print(f"\n sklearn {sklearn.__version__} 2.X_bounds {X_bounds} \n")
-    print(f"\n sklearn {sklearn.__version__} 2.test_X {test_X} \n")
-    print(f"\n sklearn {sklearn.__version__} 2.y_pred {y_pred} \n")
-    print(f"\n sklearn {sklearn.__version__} 2.test_X {test_X} \n")
-    print(f"\n sklearn {sklearn.__version__} 2.y_mean {y_mean} \n")
-    print(f"\n sklearn {sklearn.__version__} 2.y_stddev {y_stddev} \n")
-    # breakpoint()
 
     # best value of y we've seen so far.  i.e. y*
     min_unnorm_y = np.min(filtered_y)
@@ -322,21 +298,16 @@ def next_sample(
         Z
     ) + y_pred_std * scipy_stats.norm.pdf(Z)
 
-    
-    e_i = np.around(e_i, decimals=4)
-
     """
     if opt_func == "probability_of_improvement":
         best_test_X_index = np.argmax(prob_of_improve)
     else:
     """
+    # When all these are really close to 0, using argmax doesn't work. In that case the largest e_i has more
+    # to do with getting lucky and sampling a point that is right on the boundaries of the parameter space
+    # (which has unwanted and not well understood numerical dynamics with epsilon and the cdf and pdf).
+    e_i = np.around(e_i, decimals=4)
     best_test_X_index = np.argmax(e_i)
-
-    print(f"\n sklearn {sklearn.__version__} 6.min_unnorm_y {min_unnorm_y} \n")
-    print(f"\n sklearn {sklearn.__version__} 6.min_norm_y {min_norm_y} \n")
-    print(f"\n sklearn {sklearn.__version__} 6.Z {Z} \n")
-    print(f"\n sklearn {sklearn.__version__} 6.e_i {e_i} \n")
-    print(f"\n sklearn {sklearn.__version__} 6.best_test_X_index {best_test_X_index} \n")
 
     suggested_X = test_X[best_test_X_index]
     suggested_X_prob_of_improvement = prob_of_improve[best_test_X_index]
@@ -482,9 +453,6 @@ def _construct_gp_data(
     # maximize, we need to negate y
     y *= -1 if goal == "maximize" else 1
 
-    # print(f"\n sklearn {sklearn.__version__} 4.sample_X {sample_X} \n")
-    # print(f"\n sklearn {sklearn.__version__} 4.current_X {current_X} \n")
-    # print(f"\n sklearn {sklearn.__version__} 4.y {y} \n")
     return params, sample_X, current_X, y
 
 
@@ -535,13 +503,6 @@ def bayes_search_next_run(
         current_X=current_X if len(current_X) > 0 else None,
         improvement=minimum_improvement,
     )
-
-    print(f"\n sklearn {sklearn.__version__} 5.suggested_X {suggested_X} \n")
-    print(f"\n sklearn {sklearn.__version__} 5.suggested_X_prob_of_improvement {suggested_X_prob_of_improvement} \n")
-    print(f"\n sklearn {sklearn.__version__} 5.suggested_X_predicted_y {suggested_X_predicted_y} \n")
-    print(f"\n sklearn {sklearn.__version__} 5.suggested_X_predicted_std {suggested_X_predicted_std} \n")
-    print(f"\n sklearn {sklearn.__version__} 5.suggested_X_expected_improvement {suggested_X_expected_improvement} \n")
-    # breakpoint()
 
     # convert the parameters from vector of [0,1] values
     # to the original ranges
