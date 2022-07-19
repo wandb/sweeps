@@ -6,7 +6,7 @@ import time
 import wandb
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--project", type=str, default=None, help="project")
+parser.add_argument("--project", type=str, default="sweeps-examples", help="project")
 parser.add_argument("--epochs", type=int, default=27, help="epochs")
 parser.add_argument("--variance", type=float, default=1, help="param1")
 parser.add_argument("--base", type=float, default=5, help="param2")

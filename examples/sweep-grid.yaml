@@ -3,11 +3,11 @@ description: sweep local bayes
 # Training script to run
 program: train-dummy.py
 
+# Method can be bayes, random, grid
+method: grid
+
 # Project this sweep is part of
 project: sweeps-examples
-
-# Method can be bayes, random, grid
-method: bayes
 
 # Metric to optimize
 metric:
