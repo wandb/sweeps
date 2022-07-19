@@ -20,6 +20,7 @@ def check_that_samples_are_from_the_same_distribution(
     bins,
 ):
 
+    # bin the samples for comparison
     n_pred, _ = np.histogram(pred_samples, bins=bins)
     n_true, _ = np.histogram(true_samples, bins=bins)
 
@@ -36,6 +37,8 @@ def check_that_samples_are_from_the_same_distribution(
     sigma_diff = np.abs(n_pred - n_true) / denom
     sigma_diff[~np.isfinite(sigma_diff)] = 0
 
+    # less than 5 sigma different
+    plot_two_distributions(true_samples, pred_samples, bins)
     np.testing.assert_array_less(sigma_diff, 5)
 
 
