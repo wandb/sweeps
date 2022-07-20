@@ -15,7 +15,6 @@ from ._types import floating, integer, ArrayLike
 
 
 GAUSSIAN_PROCESS_NUGGET = 1e-7
-METRIC_VALUE_ATOL = 1e-6
 STD_NUMERICAL_STABILITY_EPSILON = 1e-6
 
 
@@ -215,7 +214,7 @@ def next_sample(
         predicted_y: predicted value
         predicted_std: stddev of predicted value
         expected_improvement: expected improvement
-        warnings <List[str]>: warnings encountered
+        warnings: warnings encountered
     """
     # Sanity check the data
     sample_X = np.array(sample_X)
@@ -243,10 +242,6 @@ def next_sample(
 
     filtered_X, filtered_y = filter_nans(sample_X, sample_y)
 
-    warnings = ""
-    if sample_y.shape[0] == 0:
-        warnings += "\nSweep has no valid samples of the metric."
-
     # we can't run this algothim with less than two sample points, so we'll
     # just return a random point
     if filtered_X.shape[0] < 2:
@@ -266,7 +261,7 @@ def next_sample(
             prediction,
             np.nan,
             np.nan,
-            warnings,
+            "",
         )
 
     # build the acquisition function
@@ -304,13 +299,22 @@ def next_sample(
     else:
     """
 
-    # Check to see that the metric varies accross the samples
-    if np.all(np.isclose(filtered_y, filtered_y[0], atol=METRIC_VALUE_ATOL)):
-        warnings += f"\nAll instances of metric are within the minimum tolerance of {METRIC_VALUE_ATOL}, the next sample will be a random sample within parameter space"
-        best_test_X_index = np.random.randint(0, test_X.shape[0] - 1)
-    else:
-        # Round for numerical stability
-        best_test_X_index = np.argmax(e_i)
+    best_test_X_index = np.argmax(e_i)
+
+    # Make sure Kernel is not too close to boundaries
+    # from https://github.com/scikit-learn/scikit-learn/blob/baf0ea25d6dd034403370fea552b21a6776bef18/sklearn/gaussian_process/kernels.py#L411
+    list_close = np.isclose(gp.kernel_.bounds, np.atleast_2d(gp.kernel_.theta).T)
+    warnings = ""
+    idx = 0
+    for hyp in gp.kernel_.hyperparameters:
+        if hyp.fixed:
+            continue
+        for _ in range(hyp.n_elements):
+            if list_close[idx, 0] or list_close[idx, 1]:
+                warnings = f"\n Some dimmensions of kernel are close to their bounds (bad fit), the next sample will be a random sample within parameter space"
+                best_test_X_index = np.random.randint(0, test_X.shape[0] - 1)
+                break
+            idx += 1
 
     suggested_X = test_X[best_test_X_index]
     suggested_X_prob_of_improvement = prob_of_improve[best_test_X_index]
@@ -390,7 +394,7 @@ def impute(
 
 def _construct_gp_data(
     runs: List[SweepRun], config: Union[dict, SweepConfig]
-) -> Tuple[HyperParameterSet, ArrayLike, ArrayLike, ArrayLike]:
+) -> Tuple[HyperParameterSet, ArrayLike, ArrayLike, ArrayLike, str]:
     goal = config["metric"]["goal"]
     metric_name = config["metric"]["name"]
     impute_strategy = ImputeStrategy(config["metric"]["impute"])
@@ -453,11 +457,15 @@ def _construct_gp_data(
     if len(y) > 0:
         y[~np.isfinite(y)] = worst_metric
 
+    warnings = ""
+    if len(y) == 0:
+        warnings += "\nSweep has no valid samples of the metric."
+
     # next_sample is a minimizer, so if we are trying to
     # maximize, we need to negate y
     y *= -1 if goal == "maximize" else 1
 
-    return params, sample_X, current_X, y
+    return params, sample_X, current_X, y, warnings
 
 
 def bayes_search_next_run(
@@ -491,7 +499,9 @@ def bayes_search_next_run(
 
     config = bayes_baseline_validate_and_fill(config)
 
-    params, sample_X, current_X, y = _construct_gp_data(runs, config)
+    params, sample_X, current_X, y, warnings_construct_gp_data = _construct_gp_data(
+        runs, config
+    )
     X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
 
     (
@@ -500,7 +510,7 @@ def bayes_search_next_run(
         suggested_X_predicted_y,
         suggested_X_predicted_std,
         suggested_X_expected_improvement,
-        warnings,
+        warnings_next_sample,
     ) = next_sample(
         sample_X=sample_X,
         sample_y=y,
@@ -523,7 +533,7 @@ def bayes_search_next_run(
         "predicted_value": suggested_X_predicted_y,
         "predicted_value_std_dev": suggested_X_predicted_std,
         "expected_improvement": suggested_X_expected_improvement,
-        "warnings": warnings,
+        "warnings": warnings_construct_gp_data + warnings_next_sample,
     }
     return SweepRun(config=ret_dict, search_info=info)
 

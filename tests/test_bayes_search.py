@@ -878,7 +878,7 @@ def test_metric_extremum_in_bayes_search():
     with open(data_path, "r") as f:
         data = json.load(f)
     data["jsonPayload"]["data"]["config"]["metric"]["impute"] = "worst"
-    _, _, _, y = bayes._construct_gp_data(
+    _, _, _, y, _ = bayes._construct_gp_data(
         [SweepRun(**r) for r in data["jsonPayload"]["data"]["runs"]],
         data["jsonPayload"]["data"]["config"],
     )
