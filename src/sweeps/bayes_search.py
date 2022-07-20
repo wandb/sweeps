@@ -311,7 +311,7 @@ def next_sample(
             continue
         for _ in range(hyp.n_elements):
             if list_close[idx, 0] or list_close[idx, 1]:
-                warnings = f"\n Some dimmensions of kernel are close to their bounds (bad fit), the next sample will be a random sample within parameter space"
+                warnings = "\n Some dimmensions of kernel are close to their bounds (bad fit), the next sample will be a random sample within parameter space"
                 best_test_X_index = np.random.randint(0, test_X.shape[0] - 1)
                 break
             idx += 1
