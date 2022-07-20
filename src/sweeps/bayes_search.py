@@ -225,7 +225,7 @@ def next_sample(
         expected_improvement: expected improvement
     """
     if sample_X is None or (isinstance(sample_X, list) and len(sample_X) == 0):
-        logging.warning(f"No valid instances of metric, next sample will be random")
+        logging.warning("No valid instances of metric, next sample will be random")
     # Sanity check the data
     sample_X = np.array(sample_X)
     sample_y = np.array(sample_y)
