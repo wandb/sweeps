@@ -14,7 +14,9 @@ from scipy import stats as scipy_stats
 
 from ._types import floating, integer, ArrayLike
 
-NUGGET = 1e-10
+
+GAUSSIAN_PROCESS_NUGGET = 1e-7
+METRIC_VALUE_ATOL = 1e-6
 
 
 class ImputeStrategy(str, Enum):
@@ -43,7 +45,7 @@ def fit_normalized_gaussian_process(
     gp = sklearn_gaussian.GaussianProcessRegressor(
         kernel=sklearn_gaussian.kernels.Matern(nu=nu),
         n_restarts_optimizer=2,
-        alpha=0.0000001,
+        alpha=GAUSSIAN_PROCESS_NUGGET,
         random_state=2,
     )
 
@@ -78,16 +80,6 @@ def random_sample(X_bounds: ArrayLike, num_test_samples: integer) -> ArrayLike:
                     + X_bounds[jj][0]
                 )
     return test_X
-
-
-def predict(
-    X: ArrayLike, y: ArrayLike, test_X: ArrayLike, nu: floating = 1.5
-) -> Tuple[ArrayLike, ArrayLike]:
-    gp, norm_mean, norm_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
-    y_pred, y_std = gp.predict([test_X], return_std=True)
-    y_std_norm = y_std * norm_stddev
-    y_pred_norm = (y_pred * norm_stddev) + norm_mean
-    return y_pred_norm[0], y_std_norm[0]
 
 
 def train_gaussian_process(
@@ -224,8 +216,6 @@ def next_sample(
         predicted_std: stddev of predicted value
         expected_improvement: expected improvement
     """
-    if sample_X is None or (isinstance(sample_X, list) and len(sample_X) == 0):
-        logging.warning("No valid instances of metric, next sample will be random")
     # Sanity check the data
     sample_X = np.array(sample_X)
     sample_y = np.array(sample_y)
@@ -280,7 +270,11 @@ def next_sample(
     # Look for the minimum value of our fitted-target-function + (kappa * fitted-target-std_dev)
     if test_X is None:  # this is the usual case
         test_X = random_sample(X_bounds, num_points_to_try)
-    y_pred, y_pred_std = gp.predict(test_X, return_std=True)
+    y_pred, y_pred_cov = gp.predict(test_X, return_cov=True)
+
+    # HACK: Covariance matrix uses cholenky decomposition, so
+    # use the diagonal of the covariance matrix to get the std_dev
+    y_pred_std = np.sqrt(np.diag(y_pred_cov))
 
     # best value of y we've seen so far.  i.e. y*
     min_unnorm_y = np.min(filtered_y)
@@ -308,7 +302,15 @@ def next_sample(
 
     # Round for numerical stability
     e_i = np.around(e_i, decimals=4)
-    best_test_X_index = np.argmax(e_i)
+
+    # Check to see that the metric varies accross the samples
+    if np.all(np.isclose(filtered_y, filtered_y[0], atol=METRIC_VALUE_ATOL)):
+        logging.warning(
+            f"All instances of metric are within the minimum tolerance of {METRIC_VALUE_ATOL}, the next sample will be a random sample within parameter space"
+        )
+        best_test_X_index = np.random.randint(0, test_X.shape[0] - 1)
+    else:
+        best_test_X_index = np.argmax(e_i)
 
     suggested_X = test_X[best_test_X_index]
     suggested_X_prob_of_improvement = prob_of_improve[best_test_X_index]
