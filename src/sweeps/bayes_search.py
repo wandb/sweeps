@@ -177,7 +177,7 @@ def next_sample(
     num_points_to_try: integer = 1000,
     opt_func: str = "expected_improvement",
     test_X: Optional[ArrayLike] = None,
-) -> Tuple[ArrayLike, floating, floating, floating, floating, List[str]]:
+) -> Tuple[ArrayLike, floating, floating, floating, floating, str]:
     """Calculates the best next sample to look at via bayesian optimization.
 
     Args:
@@ -244,9 +244,9 @@ def next_sample(
 
     filtered_X, filtered_y = filter_nans(sample_X, sample_y)
 
-    warnings = []
+    warnings = ""
     if sample_y.shape[0] == 0:
-        warnings += ["Sweep has no valid samples of the metric."]
+        warnings += "\nSweep has no valid samples of the metric."
 
     # we can't run this algothim with less than two sample points, so we'll
     # just return a random point
@@ -267,6 +267,7 @@ def next_sample(
             prediction,
             np.nan,
             np.nan,
+            warnings,
         )
 
     # build the acquisition function
@@ -306,10 +307,7 @@ def next_sample(
 
     # Check to see that the metric varies accross the samples
     if np.all(np.isclose(filtered_y, filtered_y[0], atol=METRIC_VALUE_ATOL)):
-        warnings += [
-            f"All instances of metric are within the minimum tolerance of {METRIC_VALUE_ATOL},"
-            + "the next sample will be a random sample within parameter space"
-        ]
+        warnings += f"\nAll instances of metric are within the minimum tolerance of {METRIC_VALUE_ATOL}, the next sample will be a random sample within parameter space"
         best_test_X_index = np.random.randint(0, test_X.shape[0] - 1)
     else:
         # Round for numerical stability
