@@ -309,7 +309,6 @@ def next_sample(
         best_test_X_index = np.random.randint(0, test_X.shape[0] - 1)
     else:
         # Round for numerical stability
-        e_i = np.around(e_i, decimals=EXPECTED_IMPROVEMENT_SIGNIFICANT_DECIMAL_PLACES)
         best_test_X_index = np.argmax(e_i)
 
     suggested_X = test_X[best_test_X_index]
