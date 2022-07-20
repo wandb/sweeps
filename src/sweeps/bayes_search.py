@@ -1,5 +1,4 @@
 import numpy as np
-import logging
 
 from enum import Enum
 from copy import deepcopy
