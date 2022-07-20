@@ -1,8 +1,8 @@
 import numpy as np
+import logging
 
 from enum import Enum
 from copy import deepcopy
-import logging
 from typing import List, Tuple, Optional, Union, Dict
 
 from .config.cfg import SweepConfig
@@ -17,7 +17,6 @@ from ._types import floating, integer, ArrayLike
 
 GAUSSIAN_PROCESS_NUGGET = 1e-7
 METRIC_VALUE_ATOL = 1e-6
-EXPECTED_IMPROVEMENT_SIGNIFICANT_DECIMAL_PLACES = 4
 STD_NUMERICAL_STABILITY_EPSILON = 1e-6
 
 
@@ -178,7 +177,7 @@ def next_sample(
     num_points_to_try: integer = 1000,
     opt_func: str = "expected_improvement",
     test_X: Optional[ArrayLike] = None,
-) -> Tuple[ArrayLike, floating, floating, floating, floating]:
+) -> Tuple[ArrayLike, floating, floating, floating, floating, List[str]]:
     """Calculates the best next sample to look at via bayesian optimization.
 
     Args:
@@ -217,6 +216,7 @@ def next_sample(
         predicted_y: predicted value
         predicted_std: stddev of predicted value
         expected_improvement: expected improvement
+        warnings <List[str]>: warnings encountered
     """
     # Sanity check the data
     sample_X = np.array(sample_X)
@@ -243,6 +243,10 @@ def next_sample(
             raise ValueError("Must pass in test_X or X_bounds")
 
     filtered_X, filtered_y = filter_nans(sample_X, sample_y)
+
+    warnings = []
+    if sample_y.shape[0] == 0:
+        warnings += ["Sweep has no valid samples of the metric."]
 
     # we can't run this algothim with less than two sample points, so we'll
     # just return a random point
@@ -302,10 +306,10 @@ def next_sample(
 
     # Check to see that the metric varies accross the samples
     if np.all(np.isclose(filtered_y, filtered_y[0], atol=METRIC_VALUE_ATOL)):
-        logging.warning(
+        warnings += [
             f"All instances of metric are within the minimum tolerance of {METRIC_VALUE_ATOL},"
             + "the next sample will be a random sample within parameter space"
-        )
+        ]
         best_test_X_index = np.random.randint(0, test_X.shape[0] - 1)
     else:
         # Round for numerical stability
@@ -335,6 +339,7 @@ def next_sample(
         suggested_X_predicted_y,
         suggested_X_predicted_std,
         suggested_X_expected_improvement,
+        warnings,
     )
 
 
@@ -498,6 +503,7 @@ def bayes_search_next_run(
         suggested_X_predicted_y,
         suggested_X_predicted_std,
         suggested_X_expected_improvement,
+        warnings,
     ) = next_sample(
         sample_X=sample_X,
         sample_y=y,
@@ -520,6 +526,7 @@ def bayes_search_next_run(
         "predicted_value": suggested_X_predicted_y,
         "predicted_value_std_dev": suggested_X_predicted_std,
         "expected_improvement": suggested_X_expected_improvement,
+        "warnings": warnings,
     }
     return SweepRun(config=ret_dict, search_info=info)
 
