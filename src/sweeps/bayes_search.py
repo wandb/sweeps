@@ -17,6 +17,8 @@ from ._types import floating, integer, ArrayLike
 
 GAUSSIAN_PROCESS_NUGGET = 1e-7
 METRIC_VALUE_ATOL = 1e-6
+EXPECTED_IMPROVEMENT_SIGNIFICANT_DECIMAL_PLACES = 4
+STD_NUMERICAL_STABILITY_EPSILON = 1e-6
 
 
 class ImputeStrategy(str, Enum):
@@ -56,7 +58,7 @@ def fit_normalized_gaussian_process(
         y_stddev = 1.0
     else:
         y_mean = np.mean(y)
-        y_stddev = np.std(y) + 0.0001
+        y_stddev = np.std(y) + STD_NUMERICAL_STABILITY_EPSILON
     y_norm = (y - y_mean) / y_stddev
     gp.fit(X, y_norm)
     return gp, y_mean, y_stddev
@@ -278,8 +280,6 @@ def next_sample(
 
     # best value of y we've seen so far.  i.e. y*
     min_unnorm_y = np.min(filtered_y)
-    # hack for dealing with predicted std of 0
-    epsilon = 0.00000001
 
     """
     if opt_func == "probability_of_improvement":
@@ -288,7 +288,7 @@ def next_sample(
     """
     min_norm_y = (min_unnorm_y - y_mean) / y_stddev
 
-    Z = -(y_pred - min_norm_y) / (y_pred_std + epsilon)
+    Z = -(y_pred - min_norm_y) / (y_pred_std + STD_NUMERICAL_STABILITY_EPSILON)
     prob_of_improve: np.ndarray = scipy_stats.norm.cdf(Z)
     e_i = -(y_pred - min_norm_y) * scipy_stats.norm.cdf(
         Z
@@ -300,16 +300,16 @@ def next_sample(
     else:
     """
 
-    # Round for numerical stability
-    e_i = np.around(e_i, decimals=4)
-
     # Check to see that the metric varies accross the samples
     if np.all(np.isclose(filtered_y, filtered_y[0], atol=METRIC_VALUE_ATOL)):
         logging.warning(
-            f"All instances of metric are within the minimum tolerance of {METRIC_VALUE_ATOL}, the next sample will be a random sample within parameter space"
+            f"All instances of metric are within the minimum tolerance of {METRIC_VALUE_ATOL},"
+            + "the next sample will be a random sample within parameter space"
         )
         best_test_X_index = np.random.randint(0, test_X.shape[0] - 1)
     else:
+        # Round for numerical stability
+        e_i = np.around(e_i, decimals=EXPECTED_IMPROVEMENT_SIGNIFICANT_DECIMAL_PLACES)
         best_test_X_index = np.argmax(e_i)
 
     suggested_X = test_X[best_test_X_index]
@@ -320,7 +320,7 @@ def next_sample(
     # recalculate expected improvement
     min_norm_y = (min_unnorm_y - y_mean) / y_stddev
     z_best = -(y_pred[best_test_X_index] - min_norm_y) / (
-        y_pred_std[best_test_X_index] + epsilon
+        y_pred_std[best_test_X_index] + STD_NUMERICAL_STABILITY_EPSILON
     )
     suggested_X_expected_improvement = -(
         y_pred[best_test_X_index] - min_norm_y
