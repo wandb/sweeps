@@ -2,6 +2,7 @@ import numpy as np
 
 from enum import Enum
 from copy import deepcopy
+import logging
 from typing import List, Tuple, Optional, Union, Dict
 
 from .config.cfg import SweepConfig
@@ -223,6 +224,8 @@ def next_sample(
         predicted_std: stddev of predicted value
         expected_improvement: expected improvement
     """
+    if sample_X is None or (isinstance(sample_X, list) and len(sample_X) == 0):
+        logging.warning(f"No valid instances of metric, next sample will be random")
     # Sanity check the data
     sample_X = np.array(sample_X)
     sample_y = np.array(sample_y)
@@ -302,9 +305,8 @@ def next_sample(
         best_test_X_index = np.argmax(prob_of_improve)
     else:
     """
-    # When all these are really close to 0, using argmax doesn't work. In that case the largest e_i has more
-    # to do with getting lucky and sampling a point that is right on the boundaries of the parameter space
-    # (which has unwanted and not well understood numerical dynamics with epsilon and the cdf and pdf).
+
+    # Round for numerical stability
     e_i = np.around(e_i, decimals=4)
     best_test_X_index = np.argmax(e_i)
 
