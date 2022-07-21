@@ -458,10 +458,7 @@ def _construct_gp_data(
         y[~np.isfinite(y)] = worst_metric
 
     warnings = ""
-    try:
-        if y[~np.asarray(list(map(is_number, y)))].size == len(y):
-            warnings += "\nSweep has no valid samples of the metric."
-    except TypeError:
+    if len(y) == 0 or y[~np.asarray(list(map(is_number, y)))].size == len(y):
         warnings += "\nSweep has no valid samples of the metric."
 
     # next_sample is a minimizer, so if we are trying to
