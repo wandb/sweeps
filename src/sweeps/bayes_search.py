@@ -6,7 +6,7 @@ from typing import List, Tuple, Optional, Union, Dict
 
 from .config.cfg import SweepConfig
 from .config.schema import fill_validate_metric
-from .run import SweepRun, RunState, run_state_is_terminal
+from .run import SweepRun, RunState, run_state_is_terminal, is_number
 from .params import HyperParameter, HyperParameterSet
 from sklearn import gaussian_process as sklearn_gaussian
 from scipy import stats as scipy_stats
@@ -458,7 +458,10 @@ def _construct_gp_data(
         y[~np.isfinite(y)] = worst_metric
 
     warnings = ""
-    if y[~np.asarray(list(map(is_number, y)))].size == len(y):
+    try:
+        if y[~np.asarray(list(map(is_number, y)))].size == len(y):
+            warnings += "\nSweep has no valid samples of the metric."
+    except TypeError:
         warnings += "\nSweep has no valid samples of the metric."
 
     # next_sample is a minimizer, so if we are trying to

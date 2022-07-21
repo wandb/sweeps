@@ -335,6 +335,10 @@ def test_runs_bayes_runs2_missingmetric():
         suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
+        assert (
+            "Some dimmensions of kernel are close to their bounds"
+            in suggestion.search_info["warnings"]
+        )
 
     # should just choose random runs in this case as they are all imputed with the same value (zero)
     # for the loss function
@@ -380,6 +384,10 @@ def test_runs_bayes_runs2_missingmetric_acc():
         suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
+        assert (
+            "Some dimmensions of kernel are close to their bounds"
+            in suggestion.search_info["warnings"]
+        )
 
     # should just choose random runs in this case as they are all imputed with the same value (zero)
     # for the loss function
@@ -430,6 +438,10 @@ def test_runs_bayes_nan(sweep_config_bayes_search_2params_with_metric):
         suggestion = next_run(sweep_config_bayes_search_2params_with_metric, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
+        assert (
+            "Some dimmensions of kernel are close to their bounds"
+            in suggestion.search_info["warnings"]
+        )
 
     # should just choose random runs in this case as they are all imputed with the same value (zero)
     # for the loss function
@@ -920,6 +932,10 @@ def test_runs_bayes_runs2_boolmetric():
         suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
+        assert (
+            "Some dimmensions of kernel are close to their bounds"
+            in suggestion.search_info["warnings"]
+        )
 
     # should just choose random runs in this case as they are all imputed with the same value (zero)
     # for the loss function
