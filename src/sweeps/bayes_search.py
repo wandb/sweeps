@@ -6,14 +6,16 @@ from typing import List, Tuple, Optional, Union, Dict
 
 from .config.cfg import SweepConfig
 from .config.schema import fill_validate_metric
-from .run import SweepRun, RunState, run_state_is_terminal
+from .run import SweepRun, RunState, run_state_is_terminal, is_number
 from .params import HyperParameter, HyperParameterSet
 from sklearn import gaussian_process as sklearn_gaussian
 from scipy import stats as scipy_stats
 
 from ._types import floating, integer, ArrayLike
 
-NUGGET = 1e-10
+
+GAUSSIAN_PROCESS_NUGGET = 1e-7
+STD_NUMERICAL_STABILITY_EPSILON = 1e-6
 
 
 class ImputeStrategy(str, Enum):
@@ -42,7 +44,7 @@ def fit_normalized_gaussian_process(
     gp = sklearn_gaussian.GaussianProcessRegressor(
         kernel=sklearn_gaussian.kernels.Matern(nu=nu),
         n_restarts_optimizer=2,
-        alpha=0.0000001,
+        alpha=GAUSSIAN_PROCESS_NUGGET,
         random_state=2,
     )
 
@@ -53,7 +55,7 @@ def fit_normalized_gaussian_process(
         y_stddev = 1.0
     else:
         y_mean = np.mean(y)
-        y_stddev = np.std(y) + 0.0001
+        y_stddev = np.std(y) + STD_NUMERICAL_STABILITY_EPSILON
     y_norm = (y - y_mean) / y_stddev
     gp.fit(X, y_norm)
     return gp, y_mean, y_stddev
@@ -77,16 +79,6 @@ def random_sample(X_bounds: ArrayLike, num_test_samples: integer) -> ArrayLike:
                     + X_bounds[jj][0]
                 )
     return test_X
-
-
-def predict(
-    X: ArrayLike, y: ArrayLike, test_X: ArrayLike, nu: floating = 1.5
-) -> Tuple[ArrayLike, ArrayLike]:
-    gp, norm_mean, norm_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
-    y_pred, y_std = gp.predict([test_X], return_std=True)
-    y_std_norm = y_std * norm_stddev
-    y_pred_norm = (y_pred * norm_stddev) + norm_mean
-    return y_pred_norm[0], y_std_norm[0]
 
 
 def train_gaussian_process(
@@ -183,7 +175,7 @@ def next_sample(
     num_points_to_try: integer = 1000,
     opt_func: str = "expected_improvement",
     test_X: Optional[ArrayLike] = None,
-) -> Tuple[ArrayLike, floating, floating, floating, floating]:
+) -> Tuple[ArrayLike, floating, floating, floating, floating, str]:
     """Calculates the best next sample to look at via bayesian optimization.
 
     Args:
@@ -222,6 +214,7 @@ def next_sample(
         predicted_y: predicted value
         predicted_std: stddev of predicted value
         expected_improvement: expected improvement
+        warnings: warnings encountered
     """
     # Sanity check the data
     sample_X = np.array(sample_X)
@@ -268,6 +261,7 @@ def next_sample(
             prediction,
             np.nan,
             np.nan,
+            "",
         )
 
     # build the acquisition function
@@ -277,12 +271,14 @@ def next_sample(
     # Look for the minimum value of our fitted-target-function + (kappa * fitted-target-std_dev)
     if test_X is None:  # this is the usual case
         test_X = random_sample(X_bounds, num_points_to_try)
-    y_pred, y_pred_std = gp.predict(test_X, return_std=True)
+    y_pred, y_pred_cov = gp.predict(test_X, return_cov=True)
+
+    # HACK: Covariance matrix uses cholenky decomposition, so
+    # use the diagonal of the covariance matrix to get the std_dev
+    y_pred_std = np.sqrt(np.diag(y_pred_cov))
 
     # best value of y we've seen so far.  i.e. y*
     min_unnorm_y = np.min(filtered_y)
-    # hack for dealing with predicted std of 0
-    epsilon = 0.00000001
 
     """
     if opt_func == "probability_of_improvement":
@@ -291,7 +287,7 @@ def next_sample(
     """
     min_norm_y = (min_unnorm_y - y_mean) / y_stddev
 
-    Z = -(y_pred - min_norm_y) / (y_pred_std + epsilon)
+    Z = -(y_pred - min_norm_y) / (y_pred_std + STD_NUMERICAL_STABILITY_EPSILON)
     prob_of_improve: np.ndarray = scipy_stats.norm.cdf(Z)
     e_i = -(y_pred - min_norm_y) * scipy_stats.norm.cdf(
         Z
@@ -302,7 +298,23 @@ def next_sample(
         best_test_X_index = np.argmax(prob_of_improve)
     else:
     """
+
     best_test_X_index = np.argmax(e_i)
+
+    # Make sure Kernel is not too close to boundaries
+    # from https://github.com/scikit-learn/scikit-learn/blob/baf0ea25d6dd034403370fea552b21a6776bef18/sklearn/gaussian_process/kernels.py#L411
+    list_close = np.isclose(gp.kernel_.bounds, np.atleast_2d(gp.kernel_.theta).T)
+    warnings = ""
+    idx = 0
+    for hyp in gp.kernel_.hyperparameters:
+        if hyp.fixed:
+            continue
+        for _ in range(hyp.n_elements):
+            if list_close[idx, 0] or list_close[idx, 1]:
+                warnings = "\n Some dimmensions of kernel are close to their bounds (bad fit), the next sample will be a random sample within parameter space"
+                best_test_X_index = np.random.randint(0, test_X.shape[0] - 1)
+                break
+            idx += 1
 
     suggested_X = test_X[best_test_X_index]
     suggested_X_prob_of_improvement = prob_of_improve[best_test_X_index]
@@ -312,7 +324,7 @@ def next_sample(
     # recalculate expected improvement
     min_norm_y = (min_unnorm_y - y_mean) / y_stddev
     z_best = -(y_pred[best_test_X_index] - min_norm_y) / (
-        y_pred_std[best_test_X_index] + epsilon
+        y_pred_std[best_test_X_index] + STD_NUMERICAL_STABILITY_EPSILON
     )
     suggested_X_expected_improvement = -(
         y_pred[best_test_X_index] - min_norm_y
@@ -328,6 +340,7 @@ def next_sample(
         suggested_X_predicted_y,
         suggested_X_predicted_std,
         suggested_X_expected_improvement,
+        warnings,
     )
 
 
@@ -381,7 +394,7 @@ def impute(
 
 def _construct_gp_data(
     runs: List[SweepRun], config: Union[dict, SweepConfig]
-) -> Tuple[HyperParameterSet, ArrayLike, ArrayLike, ArrayLike]:
+) -> Tuple[HyperParameterSet, ArrayLike, ArrayLike, ArrayLike, str]:
     goal = config["metric"]["goal"]
     metric_name = config["metric"]["name"]
     impute_strategy = ImputeStrategy(config["metric"]["impute"])
@@ -444,11 +457,15 @@ def _construct_gp_data(
     if len(y) > 0:
         y[~np.isfinite(y)] = worst_metric
 
+    warnings = ""
+    if len(y) == 0 or y[~np.asarray(list(map(is_number, y)))].size == len(y):
+        warnings += "\nSweep has no valid samples of the metric."
+
     # next_sample is a minimizer, so if we are trying to
     # maximize, we need to negate y
     y *= -1 if goal == "maximize" else 1
 
-    return params, sample_X, current_X, y
+    return params, sample_X, current_X, y, warnings
 
 
 def bayes_search_next_run(
@@ -482,7 +499,9 @@ def bayes_search_next_run(
 
     config = bayes_baseline_validate_and_fill(config)
 
-    params, sample_X, current_X, y = _construct_gp_data(runs, config)
+    params, sample_X, current_X, y, warnings_construct_gp_data = _construct_gp_data(
+        runs, config
+    )
     X_bounds = [[0.0, 1.0]] * len(params.searchable_params)
 
     (
@@ -491,6 +510,7 @@ def bayes_search_next_run(
         suggested_X_predicted_y,
         suggested_X_predicted_std,
         suggested_X_expected_improvement,
+        warnings_next_sample,
     ) = next_sample(
         sample_X=sample_X,
         sample_y=y,
@@ -513,6 +533,7 @@ def bayes_search_next_run(
         "predicted_value": suggested_X_predicted_y,
         "predicted_value_std_dev": suggested_X_predicted_std,
         "expected_improvement": suggested_X_expected_improvement,
+        "warnings": warnings_construct_gp_data + warnings_next_sample,
     }
     return SweepRun(config=ret_dict, search_info=info)
 

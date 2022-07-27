@@ -120,7 +120,7 @@ def run_iterations(
         for cc in range(chunk_size):
             if counter >= num_iterations:
                 break
-            (sample, prob, pred, _, _,) = bayes.next_sample(
+            (sample, prob, pred, _, _, _,) = bayes.next_sample(
                 sample_X=X,
                 sample_y=y,
                 X_bounds=bounds,
@@ -157,7 +157,7 @@ def test_squiggle_explores_parameter_space():
     # we sample a ton of positive examples, ignoring the negative side
     X = np.random.uniform(0, 5, 200)[:, None]
     Y = squiggle(X.ravel())
-    (sample, prob, pred, _, _,) = bayes.next_sample(
+    (sample, prob, pred, _, _, _,) = bayes.next_sample(
         sample_X=X, sample_y=Y, X_bounds=[[-5.0, 5.0]], improvement=1.0
     )
     assert sample[0] < 0.0, "Greater than 0 {}".format(sample[0])
@@ -170,6 +170,7 @@ def test_squiggle_explores_parameter_space():
         sample,
         prob,
         pred,
+        _,
         _,
         _,
     ) = bayes.next_sample(sample_X=X, sample_y=Y, X_bounds=[[0.0, 5.0]])
@@ -334,6 +335,10 @@ def test_runs_bayes_runs2_missingmetric():
         suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
+        assert (
+            "Some dimmensions of kernel are close to their bounds"
+            in suggestion.search_info["warnings"]
+        )
 
     # should just choose random runs in this case as they are all imputed with the same value (zero)
     # for the loss function
@@ -379,6 +384,10 @@ def test_runs_bayes_runs2_missingmetric_acc():
         suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
+        assert (
+            "Some dimmensions of kernel are close to their bounds"
+            in suggestion.search_info["warnings"]
+        )
 
     # should just choose random runs in this case as they are all imputed with the same value (zero)
     # for the loss function
@@ -429,6 +438,10 @@ def test_runs_bayes_nan(sweep_config_bayes_search_2params_with_metric):
         suggestion = next_run(sweep_config_bayes_search_2params_with_metric, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
+        assert (
+            "Some dimmensions of kernel are close to their bounds"
+            in suggestion.search_info["warnings"]
+        )
 
     # should just choose random runs in this case as they are all imputed with the same value (zero)
     # for the loss function
@@ -877,7 +890,7 @@ def test_metric_extremum_in_bayes_search():
     with open(data_path, "r") as f:
         data = json.load(f)
     data["jsonPayload"]["data"]["config"]["metric"]["impute"] = "worst"
-    _, _, _, y = bayes._construct_gp_data(
+    _, _, _, y, _ = bayes._construct_gp_data(
         [SweepRun(**r) for r in data["jsonPayload"]["data"]["runs"]],
         data["jsonPayload"]["data"]["config"],
     )
@@ -919,6 +932,10 @@ def test_runs_bayes_runs2_boolmetric():
         suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
+        assert (
+            "Some dimmensions of kernel are close to their bounds"
+            in suggestion.search_info["warnings"]
+        )
 
     # should just choose random runs in this case as they are all imputed with the same value (zero)
     # for the loss function

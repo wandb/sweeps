@@ -52,5 +52,3 @@ if __name__ == "__main__":
         _fake_loss = 1 - (epoch / wandb.config["epochs"]) * _lr * _batch_size
         wandb.log({"loss": _fake_loss})
         time.sleep(0.3)
-
-    wandb.finish()

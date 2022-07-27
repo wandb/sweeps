@@ -1,4 +1,4 @@
-description: sweep example using bayes search
+description: sweep example using grid search
 
 # Training script to run
 program: train.py
@@ -7,7 +7,7 @@ program: train.py
 project: sweeps-examples
 
 # Method can be bayes, random, grid
-method: bayes
+method: grid
 
 # Metric to optimize
 metric:
