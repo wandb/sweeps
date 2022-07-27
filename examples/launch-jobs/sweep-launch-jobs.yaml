@@ -1,14 +1,13 @@
-description: sweep local bayes
+description: sweep examples using launch jobs
 
 # Training script to run
-program: train-dummy.py
+program: train-launch-jobs.py
+
+# Project this sweep is part of
+project: sweeps-examples
 
 # Method can be bayes, random, grid
 method: bayes
-
-# default is cloud based controller
-controller:
-  type: local
 
 # Metric to optimize
 metric:
@@ -18,11 +17,11 @@ metric:
 # Parameter space to search
 parameters:
   epochs:
-    value: 27
+    value: 5
   variance:
     value: 5
   sleep:
-    value: 2
+    value: 0.5
   base:
     values: [10,15,20]
   increment:

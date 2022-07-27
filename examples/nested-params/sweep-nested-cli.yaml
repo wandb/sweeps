@@ -1,4 +1,4 @@
-description: sweep using nested params
+description: sweep examples with nested parameters using cli
 
 # Training script to run
 program: train-nested-cli.py

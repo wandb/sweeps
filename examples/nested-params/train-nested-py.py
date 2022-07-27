@@ -11,7 +11,11 @@ import time
 import wandb
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--use_jobs", action='store_true', help="Uses Jobs, an experimental feature of Launch")
+parser.add_argument(
+    "--use_jobs",
+    action="store_true",
+    help="Uses Jobs, an experimental feature of Launch",
+)
 parser.add_argument("--project", type=str, default="sweeps-examples", help="project")
 
 # A user-specified nested config.
