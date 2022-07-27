@@ -1,7 +1,7 @@
-description: sweep local bayes
+description: sweep example using bayes search
 
 # Training script to run
-program: train-dummy.py
+program: train.py
 
 # Project this sweep is part of
 project: sweeps-examples

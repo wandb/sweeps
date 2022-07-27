@@ -11,6 +11,11 @@ import time
 import wandb
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument(
+    "--use_jobs",
+    action="store_true",
+    help="Uses Jobs, an experimental feature of Launch",
+)
 parser.add_argument("--project", type=str, default="sweeps-examples", help="project")
 
 # A user-specified nested config.
@@ -67,11 +72,19 @@ def _train_function(config):
 
 if __name__ == "__main__":
     args = parser.parse_args()
+
+    settings = wandb.Settings()
+    if args.use_jobs:
+        settings.update({"enable_job_creation": True})
+
     print("Create sweep from python.")
-    sweep_id = wandb.sweep(SWEEP_CONFIG, project=args.project)
+    sweep_id = wandb.sweep(SWEEP_CONFIG, project=args.project, settings=settings)
 
     def train_function():
         with wandb.init(project=args.project, config=CONFIG):
+            if args.use_jobs:
+                # This will trigger the creation of a Job artifact.
+                wandb.log_code()
             _train_function(wandb.config)
 
     print("Create and run agent from python.")

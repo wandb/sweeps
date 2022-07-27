@@ -1,7 +1,7 @@
-description: sweep example using grid search
+description: sweep examples using local controller and hyperband
 
 # Training script to run
-program: train.py
+program: train-local.py
 
 # Project this sweep is part of
 project: sweeps-examples
@@ -9,19 +9,30 @@ project: sweeps-examples
 # Method can be bayes, random, grid
 method: grid
 
+# default is cloud based controller
+controller:
+  type: local
+
 # Metric to optimize
 metric:
   name: loss_metric
   goal: minimize
 
+# Should we early terminate runs
+early_terminate:
+  type: hyperband
+  max_iter: 10
+  s: 2
+  eta: 3
+
 # Parameter space to search
 parameters:
   epochs:
-    value: 5
+    value: 20
   variance:
     value: 5
   sleep:
-    value: 0.5
+    value: 2
   base:
     values: [10,15,20]
   increment:
