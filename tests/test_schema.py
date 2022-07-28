@@ -1,9 +1,9 @@
-import pytest
 import jsonschema
-from sweeps.params import HyperParameter
+import pytest
 from sweeps.config import SweepConfig, fill_validate_early_terminate
 from sweeps.config.schema import fill_validate_metric
 from sweeps.hyperband_stopping import hyperband_baseline_validate_and_fill
+from sweeps.params import HyperParameter
 
 
 def test_json_type_inference_int_uniform():

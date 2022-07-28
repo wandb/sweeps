@@ -1,13 +1,13 @@
-import os
 import json
-from typing import Callable, Optional, Tuple, Iterable, Dict
+import os
+from typing import Callable, Dict, Iterable, Optional, Tuple
 
-import pytest
 import numpy as np
-
+import pytest
+from sweeps import RunState, SweepConfig, SweepRun
 from sweeps import bayes_search as bayes
-from sweeps._types import integer, floating, ArrayLike
-from sweeps import SweepRun, RunState, next_run, SweepConfig
+from sweeps import next_run
+from sweeps._types import ArrayLike, floating, integer
 
 from .test_random_search import check_that_samples_are_from_the_same_distribution
 

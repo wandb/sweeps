@@ -1,14 +1,13 @@
-import pytest
+import os
+from pathlib import Path
 
+import numpy as np
+import pytest
+from scipy import stats
+from sweeps._types import ArrayLike
 from sweeps.config import SweepConfig
 from sweeps.params import HyperParameter
-import numpy as np
 from sweeps.run import next_run
-from sweeps._types import ArrayLike
-import os
-from scipy import stats
-
-from pathlib import Path
 
 test_results_dir = Path(__file__).parent.parent / "test_results"
 test_results_dir.mkdir(parents=True, exist_ok=True)

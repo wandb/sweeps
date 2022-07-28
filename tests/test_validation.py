@@ -1,15 +1,15 @@
 import pytest
 from jsonschema import ValidationError
-from sweeps import next_run, stop_runs, SweepRun
+from sweeps import SweepRun, next_run, stop_runs
+from sweeps.bayes_search import bayes_search_next_runs
 from sweeps.config import (
     SweepConfig,
-    schema_violations_from_proposed_config,
     fill_parameter,
+    schema_violations_from_proposed_config,
 )
-from sweeps.bayes_search import bayes_search_next_runs
 from sweeps.grid_search import grid_search_next_runs
-from sweeps.random_search import random_search_next_runs
 from sweeps.hyperband_stopping import hyperband_stop_runs
+from sweeps.random_search import random_search_next_runs
 
 
 @pytest.mark.parametrize("search_type", ["bayes", "grid", "random"])

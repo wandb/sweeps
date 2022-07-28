@@ -1,12 +1,11 @@
-from typing import List, Union, Dict, Any
 from copy import deepcopy
+from typing import Any, Dict, List, Union
 
 import numpy as np
 
 from .config import SweepConfig, fill_validate_early_terminate
-from .config.schema import fill_validate_metric
-from .run import SweepRun, RunState
-from .config.schema import dereferenced_sweep_config_jsonschema
+from .config.schema import dereferenced_sweep_config_jsonschema, fill_validate_metric
+from .run import RunState, SweepRun
 
 
 def hyperband_baseline_validate_and_fill(config: Dict) -> Dict:

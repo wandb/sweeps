@@ -1,8 +1,8 @@
-from .config.cfg import SweepConfig
-from .run import SweepRun
-from .params import HyperParameterSet
+from typing import List, Union
 
-from typing import Union, List
+from .config.cfg import SweepConfig
+from .params import HyperParameterSet
+from .run import SweepRun
 
 
 def random_search_next_runs(

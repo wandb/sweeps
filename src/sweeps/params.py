@@ -1,17 +1,16 @@
 """Hyperparameter search parameters."""
-from copy import deepcopy
-import random
 import logging
-from typing import List, Tuple, Dict, Any, Union
+import random
+from copy import deepcopy
+from typing import Any, Dict, List, Tuple, Union
 
+import jsonschema
 import numpy as np
 import scipy.stats as stats
 
-import jsonschema
-
-from .run import SweepRun
-from .config import fill_parameter, ParamValidationError
 from ._types import ArrayLike
+from .config import ParamValidationError, fill_parameter
+from .run import SweepRun
 
 
 def q_log_uniform_v1_ppf(x: ArrayLike, min, max, q):

@@ -1,12 +1,12 @@
 import json
+from copy import deepcopy
+from pathlib import Path
+from typing import Dict, Optional, Tuple
+
 import jsonref
 import jsonschema
 import numpy as np
 from jsonschema import Draft7Validator, validators
-
-from pathlib import Path
-from typing import Dict, Optional, Tuple
-from copy import deepcopy
 
 
 class ParamValidationError(Exception):

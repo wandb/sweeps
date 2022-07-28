@@ -2,10 +2,10 @@
 """Sweep config interface."""
 from .cfg import SweepConfig, schema_violations_from_proposed_config
 from .schema import (
-    fill_validate_schema,
+    ParamValidationError,
     fill_parameter,
     fill_validate_early_terminate,
-    ParamValidationError,
+    fill_validate_schema,
 )
 
 __all__ = [

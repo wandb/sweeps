@@ -1,12 +1,13 @@
-from typing import Sequence, List, Optional, Union, Any, Dict
+import datetime
 from enum import Enum
 from numbers import Number
-import numpy as np
-import datetime
+from typing import Any, Dict, List, Optional, Sequence, Union
 
+import numpy as np
 from pydantic import BaseModel, Field
-from .config import SweepConfig
+
 from ._types import floating
+from .config import SweepConfig
 
 
 class RunState(str, Enum):
