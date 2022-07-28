@@ -6,7 +6,6 @@ import sys
 
 import bumpversion
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--to-dev", action="store_true", help="bump the dev version")
 parser.add_argument("--from-dev", action="store_true", help="bump the dev version")

@@ -1,5 +1,5 @@
-import pytest
 import jsonschema
+import pytest
 from sweeps import config, grid_search
 
 

@@ -1,10 +1,9 @@
-import pytest
-
 from typing import List, Sequence, Tuple
-from sweeps.run import RunState, SweepRun, next_run, next_runs
-from sweeps.config import SweepConfig
 
 import numpy as np
+import pytest
+from sweeps.config import SweepConfig
+from sweeps.run import RunState, SweepRun, next_run, next_runs
 
 
 def kernel_for_grid_search_tests(

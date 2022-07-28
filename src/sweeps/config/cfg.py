@@ -1,19 +1,14 @@
 """Base SweepConfig classes."""
 
-import yaml
+from copy import deepcopy
 from pathlib import Path
-
-from typing import Union, Dict, List
+from typing import Dict, List, Union
 
 import jsonschema
-from .schema import (
-    validate_categorical_prob,
-    validator,
-    fill_validate_schema,
-    validate_min_max,
-    check_for_deprecated_distributions,
-)
-from copy import deepcopy
+import yaml
+
+from .schema import (check_for_deprecated_distributions, fill_validate_schema,
+                     validate_categorical_prob, validate_min_max, validator)
 
 
 def schema_violations_from_proposed_config(config: Dict) -> List[str]:

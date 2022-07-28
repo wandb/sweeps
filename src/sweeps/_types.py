@@ -4,7 +4,6 @@ from typing import Any, Union
 
 import numpy as np
 
-
 floating = Union[float, np.floating]
 integer = Union[int, np.integer]
 ArrayLike = Any

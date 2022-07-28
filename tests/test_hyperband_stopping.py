@@ -1,5 +1,5 @@
 import pytest
-from sweeps import stop_runs, next_run, RunState, SweepRun
+from sweeps import RunState, SweepRun, next_run, stop_runs
 
 
 def test_hyperband_min_iter_bands():

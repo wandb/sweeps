@@ -1,14 +1,14 @@
+import hashlib
 import itertools
 import random
-import hashlib
-import yaml
 from typing import Any, List, Optional, Union
 
 import numpy as np
+import yaml
 
 from .config.cfg import SweepConfig
-from .run import SweepRun
 from .params import HyperParameter, HyperParameterSet
+from .run import SweepRun
 
 
 def yaml_hash(value: Any) -> str:
