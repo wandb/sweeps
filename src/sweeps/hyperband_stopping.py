@@ -4,8 +4,7 @@ from typing import Any, Dict, List, Union
 import numpy as np
 
 from .config import SweepConfig, fill_validate_early_terminate
-from .config.schema import (dereferenced_sweep_config_jsonschema,
-                            fill_validate_metric)
+from .config.schema import dereferenced_sweep_config_jsonschema, fill_validate_metric
 from .run import RunState, SweepRun
 
 

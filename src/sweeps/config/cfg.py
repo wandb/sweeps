@@ -7,8 +7,13 @@ from typing import Dict, List, Union
 import jsonschema
 import yaml
 
-from .schema import (check_for_deprecated_distributions, fill_validate_schema,
-                     validate_categorical_prob, validate_min_max, validator)
+from .schema import (
+    check_for_deprecated_distributions,
+    fill_validate_schema,
+    validate_categorical_prob,
+    validate_min_max,
+    validator,
+)
 
 
 def schema_violations_from_proposed_config(config: Dict) -> List[str]:

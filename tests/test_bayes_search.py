@@ -9,8 +9,7 @@ from sweeps import bayes_search as bayes
 from sweeps import next_run
 from sweeps._types import ArrayLike, floating, integer
 
-from .test_random_search import \
-    check_that_samples_are_from_the_same_distribution
+from .test_random_search import check_that_samples_are_from_the_same_distribution
 
 
 def squiggle(x: ArrayLike) -> np.floating:
