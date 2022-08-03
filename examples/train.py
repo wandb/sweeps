@@ -23,7 +23,7 @@ parser.add_argument(
     "--direction", type=float, default=1, help="direction of increment for mock metric."
 )
 parser.add_argument(
-    "--sleep", type=int, default=1, help="time to wait between each epoch."
+    "--sleep", type=float, default=1, help="time to wait between each epoch."
 )
 args = parser.parse_args()
 

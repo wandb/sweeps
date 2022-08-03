@@ -4,7 +4,7 @@ description: sweep examples using launch jobs
 program: train-launch-jobs.py
 
 # Project this sweep is part of
-project: sweeps-examples
+project: wandb-launch-sweeps
 
 # Method can be bayes, random, grid
 method: bayes
