@@ -3,3 +3,4 @@ job: "hupo/wandb-launch-sweeps/job-source-wandb-launch-sweeps-examples_launch-jo
 resource: "local-process"
 scheduler:
   resource: "local-process"
+  num_workers: 4

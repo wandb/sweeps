@@ -5,3 +5,4 @@ scheduler:
   docker_image: "wandb/launch-agent-dev:kubesuperslam"
   resource: "kubernetes"
   resource_args: { kubernetes: {}}
+  num_workers: 4
