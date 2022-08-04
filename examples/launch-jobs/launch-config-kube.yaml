@@ -1,0 +1,7 @@
+queue: "default"
+job: "hupo/wandb-launch-sweeps/job-source-wandb-launch-sweeps-examples_launch-jobs_train-launch-jobs.py:v0"
+resource: "kubernetes"
+scheduler:
+  docker_image: "wandb/launch-agent-dev:kubesuperslam"
+  resource: "kubernetes"
+  resource_args: { kubernetes: {}}
