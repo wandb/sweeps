@@ -6,7 +6,9 @@ import time
 import wandb
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--project", type=str, default="sweep-examples", help="project")
+parser.add_argument(
+    "--project", type=str, default="wandb-launch-sweeps", help="project"
+)
 parser.add_argument(
     "--epochs", type=int, default=2, help="total number of epochs to run."
 )
@@ -23,7 +25,7 @@ parser.add_argument(
     "--direction", type=float, default=1, help="direction of increment for mock metric."
 )
 parser.add_argument(
-    "--sleep", type=int, default=1, help="time to wait between each epoch."
+    "--sleep", type=float, default=1, help="time to wait between each epoch."
 )
 args = parser.parse_args()
 

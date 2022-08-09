@@ -1,0 +1,6 @@
+queue: "default"
+job: "launch-test/wandb-launch-sweeps/job-source-wandb-launch-sweeps-examples_launch-jobs_train-launch-jobs.py:v0"
+resource: "local-process"
+scheduler:
+  resource: "local-process"
+  num_workers: 4
