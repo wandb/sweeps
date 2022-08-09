@@ -1,4 +1,4 @@
-# Sweeps on Launch 🚀 
+# Sweeps on Launch 🚀
 
 _Using Launch to run a sweep._
 
