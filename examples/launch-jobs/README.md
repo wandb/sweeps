@@ -2,6 +2,8 @@
 
 _Using Launch to run a sweep._
 
+These examples use the entity `launch-test` and project `wandb-launch-sweeps`. Replace with your wandb entity and project.
+
 ### Local Process
 
 For this example, make sure you are in this folder:
@@ -16,13 +18,11 @@ Launch requires a Job Artifact to run jobs. Create one by running the example:
 python train-launch-jobs.py
 ```
 
-Now that you have that Job Artifact, you can create a sweep that uses it. You will also need to specify a Queue and the Resource.
+Now that you have that Job Artifact, you can create a sweep that uses it:
 
 ```
 wandb sweep \
-    --queue default \
-    --resource local-process \
-    --job="job-source-sweep-examples-examples_launch-jobs_train-launch-jobs.py:v0" \
+    --launch_config launch-config-local.yaml \
     sweep-launch-jobs.yaml
 ```
 
@@ -31,7 +31,7 @@ Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/l
 ```
 wandb launch-agent \
     --queue default \
-    --project sweeps-examples \
+    --project="wandb-launch-sweeps" \
     -j -1
 ```
 
@@ -52,14 +52,12 @@ WANDB_ENTITY="launch-test" \
 python train-launch-jobs.py
 ```
 
-Now that you have that Job Artifact, you can create a sweep that uses it. You will also need to specify a Queue and the Resource.
+Now that you have that Job Artifact, you can create a sweep that uses it.
 
 ```
 WANDB_ENTITY="launch-test" \
 wandb sweep \
-    --queue default \
-    --resource kubernetes \
-    --job="job-source-sweep-examples-examples_launch-jobs_train-launch-jobs.py:v0" \
+    --launch_config launch-config-kube.yaml \
     sweep-launch-jobs.yaml
 ```
 
@@ -68,7 +66,7 @@ Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/l
 ```
 wandb launch-agent \
     --queue default \
-    --project sweeps-examples \
+    --project="wandb-launch-sweeps" \
     -j -1
 ```
 
