@@ -8,7 +8,7 @@ with open("README.md") as readme_file:
 
 setup(
     name="sweeps",
-    version="0.1.1.dev1",
+    version="0.2.0",
     description="Weights and Biases Hyperparameter Sweeps Engine.",
     long_description=readme,
     long_description_content_type="text/markdown",
