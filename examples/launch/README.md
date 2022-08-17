@@ -110,7 +110,7 @@ Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/l
 
 ```
 wandb launch-agent \
-    --queue default \
+    --queues default \
     --project="wandb-launch-sweeps" \
     -j -1
 ```
