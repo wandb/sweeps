@@ -744,6 +744,10 @@
       "type": "string",
       "description": "Training script to run"
     },
+    "job": {
+      "type": "string",
+      "description": "Launch Job to run"
+    },
     "entity": {
       "type": "string",
       "description": "The entity for this sweep"
