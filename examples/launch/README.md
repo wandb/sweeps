@@ -7,7 +7,7 @@ These examples use the entity `launch-test` and project `wandb-launch-sweeps`. R
 For these examples, you will want to set the `WANDB_ENTITY` environment variable:
 
 ```
-export WANDB_ENTITY="my-wandb-username" 
+export WANDB_ENTITY="my-wandb-username"
 ```
 
 ### Local Process
