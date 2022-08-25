@@ -1,16 +1,19 @@
 # Sweeps on Launch 🚀
 
-_Using Launch to run a sweep._
+There are currently three ways to run a Sweep that uses Launch Jobs:
 
-These examples use the entity `launch-test` and project `wandb-launch-sweeps`. Replace with your wandb entity and project.
+- [Local Process](#local-process) - Run Jobs as local processes in your local machine
+- [Local Container](#local-container) - Run Jobs as local (docker) containers in your local machine
+- [Kubernetes](#kubernetes) - Run Jobs inside a K8s cluster previously configured through Launch.
 
-For these examples, you will want to set the `WANDB_ENTITY` environment variable:
+These examples use the entity `launch-test` and project `wandb-launch-sweeps`. Replace with your wandb entity and project. These environment variables below are used for easy copy-pasting of the commands in the sections below.
 
 ```
-export WANDB_ENTITY="my-wandb-username"
+export WANDB_ENTITY="launch-test"
+export WANDB_PROJECT="wandb-launch-sweeps"
 ```
 
-### Local Process
+## Local Process
 
 For this example, make sure you are in this folder:
 
@@ -30,7 +33,7 @@ Now that you have that Job Artifact, you can create a sweep that uses it:
 wandb sweep \
     --launch_config launch-config-local-process.yaml \
     --entity="${WANDB_ENTITY}" \
-    --project="wandb-launch-sweeps" \
+    --project="${WANDB_PROJECT}" \
     sweep-launch-jobs.yaml
 ```
 
@@ -40,13 +43,13 @@ Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/l
 wandb launch-agent \
     --queues default \
     --entity="${WANDB_ENTITY}" \
-    --project="wandb-launch-sweeps" \
+    --project="${WANDB_PROJECT}" \
     -j -1
 ```
 
 Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/launch) you should now see sweeps jobs on the launch queue, these are being added there by the Scheduler. The launch agent will now work through these jobs.
 
-### Local Container
+## Local Container
 
 For this example, make sure you are in this folder:
 
@@ -66,7 +69,7 @@ Now that you have that Job Artifact, you can create a sweep that uses it:
 wandb sweep \
     --launch_config launch-config-local-container.yaml \
     --entity="${WANDB_ENTITY}" \
-    --project="wandb-launch-sweeps" \
+    --project="${WANDB_PROJECT}" \
     sweep-launch-jobs.yaml
 ```
 
@@ -76,13 +79,13 @@ Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/l
 wandb launch-agent \
     --queues default \
     --entity="${WANDB_ENTITY}" \
-    --project="wandb-launch-sweeps" \
+    --project="${WANDB_PROJECT}" \
     -j -1
 ```
 
 Within the [Launch UI in your workspace](https://wandb.ai/wandb/launch-welcome/launch) you should now see sweeps jobs on the launch queue, these are being added there by the Scheduler. The launch agent will now work through these jobs.
 
-### Kubernetes
+## Kubernetes
 
 For this example, make sure you are in this folder:
 

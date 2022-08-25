@@ -40,16 +40,22 @@ run.log_code()
 
 # The wandb config object holds the latest hyperparameter values
 print(f"wandb.config: {wandb.config}")
+_base = wandb.config.get("base", args.base)
+_increment = wandb.config.get("increment", args.increment)
+_direction = wandb.config.get("direction", args.direction)
+_variance = wandb.config.get("variance", args.variance)
+_epochs = wandb.config.get("epochs", args.epochs)
+_sleep = wandb.config.get("sleep", args.sleep)
 
 # Mock model training
-metric = args.base + random.random() * args.variance
-for e, x in enumerate(range(args.epochs)):
-    metric += args.increment * args.direction
+metric = _base + random.random() * _variance
+for e, x in enumerate(range(_epochs)):
+    metric += _increment * _direction
     if metric < 0:
         metric = 0
     wandb.log({"loss_metric": metric})
     print("INFO: epoch %3d = loss %f" % (e, metric))
-    time.sleep(args.sleep)
+    time.sleep(_sleep)
 
 # Launch jobs require a call to wandb.finish()
 wandb.finish()
