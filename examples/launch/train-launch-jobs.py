@@ -40,7 +40,7 @@ run.log_code()
 
 # The wandb config object holds the latest hyperparameter values
 print(f"wandb.config: {wandb.config}")
-_base = wandb.config.get("base", args.base) 
+_base = wandb.config.get("base", args.base)
 _increment = wandb.config.get("increment", args.increment)
 _direction = wandb.config.get("direction", args.direction)
 _variance = wandb.config.get("variance", args.variance)
