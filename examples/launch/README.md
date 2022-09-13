@@ -18,7 +18,7 @@ export WANDB_PROJECT="wandb-launch-sweeps"
 For this example, make sure you are in this folder:
 
 ```
-cd sweeps/examples/launch-jobs
+cd sweeps/examples/launch
 ```
 
 Launch requires a Job Artifact to run jobs. Create one by running the example:
