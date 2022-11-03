@@ -775,7 +775,8 @@
     },
     "run_cap": {
       "type": "number",
-      "description": "Sweep will run no more than this number of runs, across any number of agents"
+      "description": "Sweep will run no more than this number of runs, across any number of agents",
+      "exclusiveMinimum": 0
     },
     "metric": {
       "type": "object",

@@ -237,3 +237,22 @@ def test_that_minmax_validation_fails_on_loguniform_values_types(parameter_type)
 
     with pytest.raises(ValueError):
         fill_parameter("a", schema["parameters"]["a"])
+
+
+@pytest.mark.parametrize(
+    "run_cap",
+    [-1, 0, 1, 300],
+)
+def test_that_run_cap_validation_works_for_min_value(run_cap):
+    schema = {
+        "method": "random",
+        "parameters": {"a": {"values": [1, 2, 3, 4]}},
+        "run_cap": run_cap,
+    }
+
+    violations = schema_violations_from_proposed_config(schema)
+
+    if run_cap <= 0:
+        assert len(violations) == 1
+    else:
+        assert len(violations) == 0
