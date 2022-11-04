@@ -12,7 +12,7 @@ repos:
       - id: black
         pass_filenames: true
   - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.4
+    rev: 5.0.4
     hooks:
       - id: flake8
         pass_filenames: true
