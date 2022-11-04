@@ -1,5 +1,5 @@
 -r requirements.dev.txt
-pytest==6.2.3
+pytest==7.2.0
 pytest-cov==2.11.1
 pytest-randomly==3.8.0
 matplotlib>=3

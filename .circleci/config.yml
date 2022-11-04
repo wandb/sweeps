@@ -72,7 +72,7 @@ jobs:
           command: pyenv global 3.10.5
       - run:
           name: Run tests
-          command: pip install tox==3.24.0 && tox -e py310
+          command: pip install tox==3.27.0 && tox -e py310
   linters37:
     executor:
       name: python/default
