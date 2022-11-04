@@ -5,27 +5,6 @@ orbs:
   codecov: codecov/codecov@1.1.0
 
 jobs:
-  linux36:
-    machine:
-      image:  ubuntu-2004:202010-01
-    steps:
-      - checkout
-      - run:
-          name: Install python
-          command:   cd /opt/circleci/.pyenv/plugins/python-build/../.. && git pull && cd - && pyenv install 3.6.14
-      - run:
-          name: Load python
-          command: pyenv global 3.6.14
-      - run:
-          name: Run tests
-          command: pip install tox==3.24.0 && tox -e py36
-      - codecov/upload:
-          file: coverage.xml
-      - store_artifacts:
-          path: prof/
-      - store_test_results:
-          path: .
-    resource_class: large
   linux37:
     machine:
       image:  ubuntu-2004:202010-01
@@ -47,7 +26,6 @@ jobs:
       - store_test_results:
           path: .
     resource_class: large
-
   linux38:
     machine:
       image:  ubuntu-2004:202010-01
@@ -81,19 +59,20 @@ jobs:
           name: Run tests
           command: pip install tox==3.24.0 && tox -e py39
     resource_class: large
-  linters36:
-    executor:
-      name: python/default
-      tag: "3.6"
+  linux310:
+    machine:
+      image:  ubuntu-2004:202010-01
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: pip install -r requirements.dev.txt
+          name: Install python
+          command:   cd /opt/circleci/.pyenv/plugins/python-build/../.. && git pull && cd - && pyenv install 3.10.5
       - run:
-          pre-commit run --all-files
+          name: Load python
+          command: pyenv global 3.10.5
       - run:
-          mypy --ignore-missing-imports --scripts-are-modules .
+          name: Run tests
+          command: pip install tox==3.24.0 && tox -e py310
   linters37:
     executor:
       name: python/default
@@ -133,15 +112,28 @@ jobs:
           pre-commit run --all-files
       - run:
           mypy --ignore-missing-imports --scripts-are-modules .
+  linters310:
+    executor:
+      name: python/default
+      tag: "3.10"
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: pip install -r requirements.dev.txt
+      - run:
+          pre-commit run --all-files
+      - run:
+          mypy --ignore-missing-imports --scripts-are-modules .
 
 workflows:
   main:
     jobs:
-      - linux36
       - linux37
       - linux38
       - linux39
-      - linters36
+      - linux310
       - linters37
       - linters38
       - linters39
+      - linters310
