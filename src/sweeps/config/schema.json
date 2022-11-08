@@ -773,6 +773,11 @@
       "type": "string",
       "description": "The name of the sweep, displayed in the W&B UI"
     },
+    "run_cap": {
+      "type": "integer",
+      "description": "Sweep will run no more than this number of runs, across any number of agents",
+      "exclusiveMinimum": 0
+    },
     "metric": {
       "type": "object",
       "description": "Metric to optimize",
