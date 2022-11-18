@@ -808,6 +808,11 @@
           "description": "Metric value to use in bayes search for runs that fail, crash, or are killed",
           "enum": ["latest", "best", "worst"],
           "default": "worst"
+        },
+        "impute_while_running": {
+          "type": "boolean",
+          "description": "Appends a calculated metric even when epochs are in a running state",
+          "default": "false"
         }
       }
     },
