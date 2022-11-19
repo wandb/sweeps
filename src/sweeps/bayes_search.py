@@ -422,7 +422,7 @@ def _construct_gp_data(
                 return worst_metric
 
     for run, X_norm in zip(runs, X_norms):
-        if run.state == RunState.finished or run.state == RunState.running:
+        if run.state == RunState.finished:
             metric = get_metric()
             y.append(metric)
             sample_X.append(X_norm)
@@ -438,6 +438,7 @@ def _construct_gp_data(
             if config["metric"].get("impute_while_running"):
                 metric = get_metric()
                 y.append(metric)
+                sample_X.append(X_norm)
             else:
                 current_X.append(X_norm)
         elif run.state in [

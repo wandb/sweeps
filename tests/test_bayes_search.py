@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from sweeps import RunState, SweepConfig, SweepRun
 from sweeps import bayes_search as bayes
-from sweeps import next_run
+from sweeps import next_run, stop_runs
 from sweeps._types import ArrayLike, floating, integer
 
 from .test_random_search import check_that_samples_are_from_the_same_distribution
@@ -1126,3 +1126,34 @@ def test_bayes_impute_latest():
             num_iterations=5,
             atol=0.01,
         )
+
+
+def test_runs_bayes_impute_while_running():
+
+    sweep_config = {
+        "method": "bayes",
+        "metric": {
+            "name": "loss",
+            "goal": "minimize",
+            "impute": "worst",
+            "impute_while_running": True,
+        },
+        "early_terminate": {
+            "type": "hyperband",
+            "max_iter": 18,
+            "eta": 3,
+            "s": 2,
+        },
+        "parameters": {"a": {"values": [1, 2, 3]}},
+    }
+
+    run = next_run(sweep_config, [])
+    run.state = RunState.running
+    run.history = [{"loss": 10} for _ in range(4)]
+    run2 = next_run(sweep_config, [run])
+    run2.state = RunState.running
+    run2.history = [{"loss": 10 - i} for i in range(10)]
+    to_stop = stop_runs(sweep_config, [run, run2])
+
+    assert to_stop[0] is run
+    assert to_stop[0].early_terminate_info["bands"] == [2, 6]
