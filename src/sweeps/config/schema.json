@@ -812,7 +812,8 @@
         "impute_while_running": {
           "type": "boolean",
           "description": "Appends a calculated metric even when epochs are in a running state",
-          "default": "false"
+          "enum": ["latest", "best", "worst", false],
+          "default": false
         }
       }
     },

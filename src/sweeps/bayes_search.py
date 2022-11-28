@@ -408,22 +408,22 @@ def _construct_gp_data(
     X_norms = params.normalize_runs_as_array(runs)
     worst_metric = impute(goal, metric_name, ImputeStrategy.worst, runs=runs)
 
-    def get_metric():
+    def get_metric(strategy: str):
         try:
             return run.metric_extremum(
                 metric_name, kind="maximum" if goal == "maximize" else "minimum"
             )
         except ValueError:
-            if impute_strategy != "worst":
+            if strategy != "worst":
                 return impute(
-                    goal, metric_name, impute_strategy, run=run, runs=runs
+                    goal, metric_name, strategy, run=run, runs=runs
                 )  # default
             else:
                 return worst_metric
 
     for run, X_norm in zip(runs, X_norms):
         if run.state == RunState.finished:
-            metric = get_metric()
+            metric = get_metric(impute_strategy)
             y.append(metric)
             sample_X.append(X_norm)
         elif run.state in [RunState.failed, RunState.crashed, RunState.killed]:
@@ -436,7 +436,7 @@ def _construct_gp_data(
         elif run.state in [RunState.running]:
             # Use metric for gaussian training while running, NOT default functionality
             if config["metric"].get("impute_while_running"):
-                metric = get_metric()
+                metric = get_metric(config["metric"].get("impute_while_running"))
                 y.append(metric)
                 sample_X.append(X_norm)
             else:
