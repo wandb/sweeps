@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from sweeps import RunState, SweepConfig, SweepRun
 from sweeps import bayes_search as bayes
-from sweeps import next_run, stop_runs
+from sweeps import next_run
 from sweeps._types import ArrayLike, floating, integer
 
 from .test_random_search import check_that_samples_are_from_the_same_distribution
@@ -1133,7 +1133,12 @@ def test_runs_bayes_impute_while_running():
     # compare `impute_while_running` w/ finished runs to running runs
     sweep_config = {
         "method": "bayes",
-        "metric": {"name": "loss", "goal": "minimize", "impute": "best", "impute_while_running": "best"},
+        "metric": {
+            "name": "loss",
+            "goal": "minimize",
+            "impute": "best",
+            "impute_while_running": "best",
+        },
         "parameters": {"a": {"min": 0.0, "max": 1.0}},
     }
 
@@ -1220,7 +1225,7 @@ def test_runs_bayes_impute_while_running():
         )
 
     # Now define the same sweep but let the runs stay in running state
-    
+
     # reset config
     sweep_config["metric"]["impute"] = "best"
 
