@@ -61,6 +61,7 @@ def run_bayes_search(
             right_comp = (
                 optimium if isinstance(optimium, float) else optimium[param_name]
             )
+            print(left_comp, right_comp, atol)
             np.testing.assert_allclose(left_comp, right_comp, atol=atol)
 
 
@@ -1201,6 +1202,7 @@ def test_runs_bayes_impute_while_running():
     def opt_func(run):
         return 10 - run.config["a"]["value"] * 10
 
+    print("run normal bayes")
     # check that best finds the answer
     run_bayes_search(
         opt_func,
@@ -1214,6 +1216,7 @@ def test_runs_bayes_impute_while_running():
     # check that latest doesn't
     sweep_config["metric"]["impute"] = "latest"
 
+    print("run failing bayes")
     with pytest.raises(AssertionError):
         run_bayes_search(
             opt_func,
@@ -1274,7 +1277,7 @@ def test_runs_bayes_impute_while_running():
         ),
         SweepRun(
             name="e",
-            state=RunState.running,
+            state=RunState.failed,
             history=[
                 {"loss": 10},
                 {"loss": 1},
@@ -1285,6 +1288,7 @@ def test_runs_bayes_impute_while_running():
         ),
     ]
 
+    print("run bayes impute while running")
     run_bayes_search(
         opt_func,
         sweep_config,
@@ -1297,6 +1301,7 @@ def test_runs_bayes_impute_while_running():
     # check that latest doesn't
     sweep_config["metric"]["impute"] = "latest"
 
+    print("run failing bayes impute while running")
     with pytest.raises(AssertionError):
         run_bayes_search(
             opt_func,
