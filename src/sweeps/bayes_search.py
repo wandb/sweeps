@@ -435,7 +435,7 @@ def _construct_gp_data(
             sample_X.append(X_norm)
         elif run.state in [RunState.running]:
             # Use metric for gaussian training while running, NOT default functionality
-            if config["metric"].get("impute_while_running"):
+            if config["metric"].get("impute_while_running") not in ["false", None]:
                 metric = get_metric(config["metric"].get("impute_while_running"))
                 y.append(metric)
                 sample_X.append(X_norm)
