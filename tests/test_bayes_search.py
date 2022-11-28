@@ -61,7 +61,6 @@ def run_bayes_search(
             right_comp = (
                 optimium if isinstance(optimium, float) else optimium[param_name]
             )
-            print(left_comp, right_comp, atol)
             np.testing.assert_allclose(left_comp, right_comp, atol=atol)
 
 
