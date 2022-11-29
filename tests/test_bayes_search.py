@@ -31,7 +31,8 @@ def run_bayes_search(
     num_iterations: integer = 20,
     optimium: Optional[Dict[str, floating]] = None,
     atol: float = 0.2,
-):
+    run_state: RunState = RunState.finished,
+) -> Optional[SweepRun]:
 
     metric_name = config["metric"]["name"]
     opt_goal = config["metric"]["goal"]
@@ -41,7 +42,7 @@ def run_bayes_search(
         suggested_run = bayes.bayes_search_next_run(
             runs, config, minimum_improvement=improvement
         )
-        suggested_run.state = RunState.finished
+        suggested_run.state = run_state
         metric = f(suggested_run)
         if suggested_run.summary_metrics is None:
             suggested_run.summary_metrics = {}  # pragma: no cover
@@ -53,7 +54,7 @@ def run_bayes_search(
 
     if optimium is not None:
         best_run = (min if opt_goal == "minimize" else max)(
-            [r for r in runs if r.state == RunState.finished],
+            [r for r in runs if r.state == run_state],
             key=lambda run: run.metric_extremum(metric_name, opt_goal),
         )
         for param_name in config["parameters"]:
@@ -62,6 +63,8 @@ def run_bayes_search(
                 optimium if isinstance(optimium, float) else optimium[param_name]
             )
             np.testing.assert_allclose(left_comp, right_comp, atol=atol)
+
+        return best_run
 
 
 @pytest.mark.parametrize(
@@ -1037,276 +1040,53 @@ def test_bayes_impute_best():
         )
 
 
-def test_bayes_impute_latest():
+@pytest.mark.parametrize(
+    "x",
+    [
+        {"distribution": "normal", "mu": 2, "sigma": 4},
+        {"distribution": "log_uniform_values", "min": np.exp(-2), "max": np.exp(3)},
+        {"min": 0.0, "max": 5.0},
+        {"min": 0, "max": 5},
+        {"distribution": "q_uniform", "min": 0.0, "max": 10.0, "q": 0.25},
+    ],
+)
+def test_bayes_impute_latest(x):
+    def y(x: SweepRun) -> floating:
+        return squiggle(x.config["x"]["value"])
 
-    sweep_config = {
-        "method": "bayes",
-        "metric": {"name": "loss", "goal": "minimize", "impute": "best"},
-        "parameters": {"a": {"min": 0.0, "max": 1.0}},
-    }
+    run = SweepRun(
+        config={"x": {"value": np.random.uniform(0, 5)}}, state=RunState.finished
+    )
+    run.summary_metrics["y"] = y(run)
 
-    runs = [
-        SweepRun(
-            name="a",
-            state=RunState.failed,  # This wont be stopped because already stopped
-            history=[
-                {"loss": 10},
-                {"loss": 8},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.2}},
-        ),
-        SweepRun(
-            name="b",
-            state=RunState.failed,  # This should be stopped
-            history=[
-                {"loss": 10},
-                {"loss": 6},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.4}},
-        ),
-        SweepRun(
-            name="c",
-            state=RunState.failed,  # This passes band 1 but not band 2
-            history=[
-                {"loss": 10},
-                {"loss": 4},
-                {"loss": 4},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.6}},
-        ),
-        SweepRun(
-            name="d",
-            state=RunState.failed,
-            history=[
-                {"loss": 10},
-                {"loss": 2},
-                {"loss": 2},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.8}},
-        ),
-        SweepRun(
-            name="e",
-            state=RunState.failed,
-            history=[
-                {"loss": 10},
-                {"loss": 1},
-                {"loss": 1},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.9}},
-        ),
-    ]
+    runs = [run]
 
-    def opt_func(run):
-        return 10 - run.config["a"]["value"] * 10
-
-    # check that best finds the answer
-    run_bayes_search(
-        opt_func,
-        sweep_config,
-        init_runs=runs,
-        optimium={"a": 1.0},
-        num_iterations=5,
-        atol=0.01,
+    config = SweepConfig(
+        {
+            "method": "bayes",
+            "metric": {
+                "name": "y",
+                "goal": "maximize",
+                "impute": "best",
+            },
+            "parameters": {"x": x},
+        }
     )
 
-    # check that latest doesn't
-    sweep_config["metric"]["impute"] = "latest"
+    out = run_bayes_search(y, config, runs, num_iterations=256, optimium={"x": 2.0}, run_state=RunState.finished)
 
-    with pytest.raises(AssertionError):
-        run_bayes_search(
-            opt_func,
-            sweep_config,
-            init_runs=runs,
-            optimium={"a": 1.0},
-            num_iterations=5,
-            atol=0.01,
-        )
-
-
-def test_runs_bayes_impute_while_running():
-
-    # compare `impute_while_running` w/ finished runs to running runs
-    sweep_config = {
-        "method": "bayes",
-        "metric": {
-            "name": "loss",
-            "goal": "minimize",
-            "impute": "best",
-            "impute_while_running": "best",
-        },
-        "parameters": {"a": {"min": 0.0, "max": 1.0}},
-    }
-
-    runs = [
-        SweepRun(
-            name="a",
-            state=RunState.failed,  # This wont be stopped because already stopped
-            history=[
-                {"loss": 10},
-                {"loss": 8},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.2}},
-        ),
-        SweepRun(
-            name="b",
-            state=RunState.finished,  # This should be stopped
-            history=[
-                {"loss": 10},
-                {"loss": 6},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.4}},
-        ),
-        SweepRun(
-            name="c",
-            state=RunState.finished,  # This passes band 1 but not band 2
-            history=[
-                {"loss": 10},
-                {"loss": 4},
-                {"loss": 4},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.6}},
-        ),
-        SweepRun(
-            name="d",
-            state=RunState.finished,
-            history=[
-                {"loss": 10},
-                {"loss": 2},
-                {"loss": 2},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.8}},
-        ),
-        SweepRun(
-            name="e",
-            state=RunState.failed,
-            history=[
-                {"loss": 10},
-                {"loss": 1},
-                {"loss": 1},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.9}},
-        ),
-    ]
-
-    def opt_func(run):
-        return 10 - run.config["a"]["value"] * 10
-
-    print("run normal bayes")
-    # check that best finds the answer
-    run_bayes_search(
-        opt_func,
-        sweep_config,
-        init_runs=runs,
-        optimium={"a": 1.0},
-        num_iterations=5,
-        atol=0.001,
+    running_config = SweepConfig(
+        {
+            "method": "bayes",
+            "metric": {
+                "name": "y",
+                "goal": "maximize",
+                "impute_while_running": "best",
+            },
+            "parameters": {"x": x},
+        }
     )
 
-    # check that latest doesn't
-    sweep_config["metric"]["impute"] = "latest"
+    running_out = run_bayes_search(y, running_config, runs, num_iterations=256, optimium={"x": 2.0}, run_state=RunState.running)
 
-    print("run failing bayes")
-    with pytest.raises(AssertionError):
-        run_bayes_search(
-            opt_func,
-            sweep_config,
-            init_runs=runs,
-            optimium={"a": 1.0},
-            num_iterations=5,
-            atol=0.01,
-        )
-
-    # Now define the same sweep but let the runs stay in running state
-
-    # reset config
-    sweep_config["metric"]["impute"] = "best"
-
-    runs = [
-        SweepRun(
-            name="a",
-            state=RunState.running,  # This wont be stopped because already stopped
-            history=[
-                {"loss": 10},
-                {"loss": 8},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.2}},
-        ),
-        SweepRun(
-            name="b",
-            state=RunState.running,  # This should be stopped
-            history=[
-                {"loss": 10},
-                {"loss": 6},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.4}},
-        ),
-        SweepRun(
-            name="c",
-            state=RunState.running,  # This passes band 1 but not band 2
-            history=[
-                {"loss": 10},
-                {"loss": 4},
-                {"loss": 4},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.6}},
-        ),
-        SweepRun(
-            name="d",
-            state=RunState.running,
-            history=[
-                {"loss": 10},
-                {"loss": 2},
-                {"loss": 2},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.8}},
-        ),
-        SweepRun(
-            name="e",
-            state=RunState.failed,
-            history=[
-                {"loss": 10},
-                {"loss": 1},
-                {"loss": 1},
-                {"loss": 10},
-            ],
-            config={"a": {"value": 0.9}},
-        ),
-    ]
-
-    print("run bayes impute while running")
-    run_bayes_search(
-        opt_func,
-        sweep_config,
-        init_runs=runs,
-        optimium={"a": 1.0},
-        num_iterations=5,
-        atol=0.001,
-    )
-
-    # check that latest doesn't
-    sweep_config["metric"]["impute"] = "latest"
-
-    print("run failing bayes impute while running")
-    with pytest.raises(AssertionError):
-        run_bayes_search(
-            opt_func,
-            sweep_config,
-            init_runs=runs,
-            optimium={"a": 1.0},
-            num_iterations=5,
-            atol=0.01,
-        )
+    np.testing.assert_allclose(out.summary_metrics['y'], running_out.summary_metrics['y'], 0.001)
