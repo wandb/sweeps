@@ -65,6 +65,7 @@ def run_bayes_search(
             np.testing.assert_allclose(left_comp, right_comp, atol=atol)
 
         return best_run
+    return None
 
 
 @pytest.mark.parametrize(
@@ -1073,7 +1074,14 @@ def test_bayes_impute_latest(x):
         }
     )
 
-    out = run_bayes_search(y, config, runs, num_iterations=256, optimium={"x": 2.0}, run_state=RunState.finished)
+    out = run_bayes_search(
+        y,
+        config,
+        runs,
+        num_iterations=256,
+        optimium={"x": 2.0},
+        run_state=RunState.finished,
+    )
 
     running_config = SweepConfig(
         {
@@ -1087,6 +1095,15 @@ def test_bayes_impute_latest(x):
         }
     )
 
-    running_out = run_bayes_search(y, running_config, runs, num_iterations=256, optimium={"x": 2.0}, run_state=RunState.running)
+    running_out = run_bayes_search(
+        y,
+        running_config,
+        runs,
+        num_iterations=256,
+        optimium={"x": 2.0},
+        run_state=RunState.running,
+    )
 
-    np.testing.assert_allclose(out.summary_metrics['y'], running_out.summary_metrics['y'], 0.001)
+    np.testing.assert_allclose(
+        out.summary_metrics["y"], running_out.summary_metrics["y"], 0.001
+    )
