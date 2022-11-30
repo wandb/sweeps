@@ -410,9 +410,9 @@ def _construct_gp_data(
     # precalculate worst metric, same for all runs
     worst_metric = impute(goal, metric_name, ImputeStrategy.worst, runs=runs)
 
-    # tries to return the real min/max metric for a run, else returns
-    #       an imputed value based on the input strategy
     def get_metric(strategy: ImputeStrategy):
+        # try to return the real min/max metric for a run, else return
+        #     an imputed value based on the input strategy
         try:
             return run.metric_extremum(
                 metric_name, kind="maximum" if goal == "maximize" else "minimum"

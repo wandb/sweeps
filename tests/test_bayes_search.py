@@ -32,7 +32,7 @@ def run_bayes_search(
     optimium: Optional[Dict[str, floating]] = None,
     atol: float = 0.2,
     run_state: RunState = RunState.finished,
-) -> Optional[SweepRun]:
+):
 
     metric_name = config["metric"]["name"]
     opt_goal = config["metric"]["goal"]
@@ -63,9 +63,6 @@ def run_bayes_search(
                 optimium if isinstance(optimium, float) else optimium[param_name]
             )
             np.testing.assert_allclose(left_comp, right_comp, atol=atol)
-
-        return best_run
-    return None
 
 
 @pytest.mark.parametrize(
@@ -1041,17 +1038,7 @@ def test_bayes_impute_best():
         )
 
 
-@pytest.mark.parametrize(
-    "x",
-    [
-        {"distribution": "normal", "mu": 2, "sigma": 4},
-        {"distribution": "log_uniform_values", "min": np.exp(-2), "max": np.exp(3)},
-        {"min": 0.0, "max": 5.0},
-        {"min": 0, "max": 5},
-        {"distribution": "q_uniform", "min": 0.0, "max": 10.0, "q": 0.25},
-    ],
-)
-def test_bayes_impute_latest(x):
+def test_bayes_impute_latest():
     def y(x: SweepRun) -> floating:
         return squiggle(x.config["x"]["value"])
 
@@ -1060,30 +1047,7 @@ def test_bayes_impute_latest(x):
     )
     run.summary_metrics["y"] = y(run)
 
-    runs = [run]
-
     config = SweepConfig(
-        {
-            "method": "bayes",
-            "metric": {
-                "name": "y",
-                "goal": "maximize",
-                "impute": "best",
-            },
-            "parameters": {"x": x},
-        }
-    )
-
-    out = run_bayes_search(
-        y,
-        config,
-        runs,
-        num_iterations=256,
-        optimium={"x": 2.0},
-        run_state=RunState.finished,
-    )
-
-    running_config = SweepConfig(
         {
             "method": "bayes",
             "metric": {
@@ -1091,19 +1055,21 @@ def test_bayes_impute_latest(x):
                 "goal": "maximize",
                 "impute_while_running": "best",
             },
-            "parameters": {"x": x},
+            "parameters": {
+                "x": {
+                    "distribution": "log_uniform_values",
+                    "min": np.exp(-2),
+                    "max": np.exp(3),
+                }
+            },
         }
     )
 
-    running_out = run_bayes_search(
+    run_bayes_search(
         y,
-        running_config,
-        runs,
+        config,
+        [run],
         num_iterations=256,
         optimium={"x": 2.0},
         run_state=RunState.running,
-    )
-
-    np.testing.assert_allclose(
-        out.summary_metrics["y"], running_out.summary_metrics["y"], 0.001
     )
