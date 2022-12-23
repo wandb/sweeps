@@ -1,7 +1,7 @@
 import typing
 
 
-def get_nested_value(obj: dict, key: list[str]) -> typing.Any:
+def get_nested_value(obj: dict, key: typing.List[str]) -> typing.Any:
     """Get a nested value from a dictionary.
 
     Args:
@@ -16,7 +16,7 @@ def get_nested_value(obj: dict, key: list[str]) -> typing.Any:
     return obj
 
 
-def dict_has_nested_key(obj: dict, key: list[str]) -> bool:
+def dict_has_nested_key(obj: dict, key: typing.List[str]) -> bool:
     """Check if a dictionary has a nested key.
 
     Args:
