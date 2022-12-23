@@ -9,6 +9,7 @@ import yaml
 from .config.cfg import SweepConfig
 from .params import HyperParameter, HyperParameterSet
 from .run import SweepRun
+from . import util
 
 
 def yaml_hash(value: Any) -> str:
@@ -90,10 +91,6 @@ def grid_search_next_runs(
                 },
             )
 
-    import pdb
-
-    pdb.set_trace()
-
     # we can only deal with discrete params in a grid search
     discrete_params = HyperParameterSet(
         [p for p in params if p.type == HyperParameter.CATEGORICAL]
@@ -114,16 +111,24 @@ def grid_search_next_runs(
     if randomize_order:
         random.shuffle(all_param_hashes)
 
-    param_hashes_seen = set(
-        [
-            tuple(
-                yaml_hash(run.config[name]["value"])
-                for name in param_names
-                if name in run.config
-            )
-            for run in runs
-        ]
-    )
+    param_hashes_seen: set[tuple[str]] = set()
+    for run in runs:
+        hashes: list[str] = []
+        for name in param_names:
+            nested_key = name.split(HyperParameterSet.NESTING_DELIMITER)
+
+            correct_nested_key: list[str] = []
+
+            for i, k in enumerate(nested_key):
+                correct_nested_key.append(k)
+                if i == 0:
+                    correct_nested_key.append("value")
+
+            if util.dict_has_nested_key(run.config, correct_nested_key):
+                hashes.append(
+                    yaml_hash(util.get_nested_value(run.config, correct_nested_key))
+                )
+        param_hashes_seen.add(tuple(hashes))
 
     hash_gen = (
         hash_val for hash_val in all_param_hashes if hash_val not in param_hashes_seen
