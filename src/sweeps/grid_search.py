@@ -115,19 +115,11 @@ def grid_search_next_runs(
     for run in runs:
         hashes: list[str] = []
         for name in param_names:
-            nested_key = name.split(HyperParameterSet.NESTING_DELIMITER)
+            nested_key: list[str] = name.split(HyperParameterSet.NESTING_DELIMITER)
+            nested_key.insert(1, "value")
 
-            correct_nested_key: list[str] = []
-
-            for i, k in enumerate(nested_key):
-                correct_nested_key.append(k)
-                if i == 0:
-                    correct_nested_key.append("value")
-
-            if util.dict_has_nested_key(run.config, correct_nested_key):
-                hashes.append(
-                    yaml_hash(util.get_nested_value(run.config, correct_nested_key))
-                )
+            if util.dict_has_nested_key(run.config, nested_key):
+                hashes.append(yaml_hash(util.get_nested_value(run.config, nested_key)))
         param_hashes_seen.add(tuple(hashes))
 
     hash_gen = (
