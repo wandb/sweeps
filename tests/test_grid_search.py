@@ -411,9 +411,12 @@ def test_nested_grid_search_advances():
 
     config = request_body["config"]
     runs = [SweepRun(**run) for run in request_body["runs"]]
-    nargs = request_body["nArgs"]
-
 
     result = next_runs(config, runs, validate=False, n=1)
 
-    assert not all([result[0].config[pname]['value'] == runs[0].config[pname]['value'] for pname in result[0].config])
+    assert not all(
+        [
+            result[0].config[pname]["value"] == runs[0].config[pname]["value"]
+            for pname in result[0].config
+        ]
+    )
