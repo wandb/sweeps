@@ -1,6 +1,7 @@
 import hashlib
 import itertools
 import random
+import typing
 from typing import Any, List, Optional, Union
 
 import numpy as np
@@ -111,11 +112,13 @@ def grid_search_next_runs(
     if randomize_order:
         random.shuffle(all_param_hashes)
 
-    param_hashes_seen: set[tuple[str]] = set()
+    param_hashes_seen: typing.Set[typing.Tuple] = set()
     for run in runs:
-        hashes: list[str] = []
+        hashes: typing.List[str] = []
         for name in param_names:
-            nested_key: list[str] = name.split(HyperParameterSet.NESTING_DELIMITER)
+            nested_key: typing.List[str] = name.split(
+                HyperParameterSet.NESTING_DELIMITER
+            )
             nested_key.insert(1, "value")
 
             if util.dict_has_nested_key(run.config, nested_key):
