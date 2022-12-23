@@ -90,6 +90,10 @@ def grid_search_next_runs(
                 },
             )
 
+    import pdb
+
+    pdb.set_trace()
+
     # we can only deal with discrete params in a grid search
     discrete_params = HyperParameterSet(
         [p for p in params if p.type == HyperParameter.CATEGORICAL]
