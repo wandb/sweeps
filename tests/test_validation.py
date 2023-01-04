@@ -1,5 +1,4 @@
 import json
-import os
 
 import pytest
 from jsonschema import ValidationError
@@ -285,7 +284,7 @@ def test_config_with_nested_files():
             "b": {"filepath": f"{dir}/b.json"},
             "c": {"filepath": f"{dir}/c.json"},
             "d": {"filepath": ""},  # what should we do in this case?
-        }
+        },
     }
 
     violations = schema_violations_from_proposed_config(config)
@@ -294,10 +293,10 @@ def test_config_with_nested_files():
     sweep_config = SweepConfig(config)
 
     # update given to match filled param
-    b['distribution'] = 'int_uniform'
-    c['distribution'] = 'categorical'
-    config['parameters']['a']['distribution'] = 'int_uniform'
-    config['parameters']['b'] = b
-    config['parameters']['c'] = c
+    b["distribution"] = "int_uniform"
+    c["distribution"] = "categorical"
+    config["parameters"]["a"]["distribution"] = "int_uniform"
+    config["parameters"]["b"] = b
+    config["parameters"]["c"] = c
 
     assert sweep_config == config
