@@ -1,5 +1,9 @@
+import json
+import os
+
 import pytest
 from jsonschema import ValidationError
+
 from sweeps import SweepRun, next_run, stop_runs
 from sweeps.bayes_search import bayes_search_next_runs
 from sweeps.config import (
@@ -259,3 +263,41 @@ def test_that_run_cap_validation_works_for_min_value(run_cap):
         assert len(violations) == 1
     else:
         assert len(violations) == 0
+
+
+def test_config_with_nested_files():
+    b = {"max": 10, "min": -10}
+    # we don't fill nested params?
+    # c = {"parameters": {"nd": {"value": 1}}}
+    c = {"values": [1, 2, 3, 4, 5]}
+
+    dir = "tests/configs"
+    with open(f"{dir}/b.json", "w") as f:
+        json.dump(b, f)
+
+    with open(f"{dir}/c.json", "w") as f:
+        json.dump(c, f)
+
+    config = {
+        "method": "random",
+        "parameters": {
+            "a": {"max": 1, "min": 0},
+            "b": {"filepath": f"{dir}/b.json"},
+            "c": {"filepath": f"{dir}/c.json"},
+            "d": {"filepath": ""},  # what should we do in this case?
+        }
+    }
+
+    violations = schema_violations_from_proposed_config(config)
+    assert len(violations) == 0
+
+    sweep_config = SweepConfig(config)
+
+    # update given to match filled param
+    b['distribution'] = 'int_uniform'
+    c['distribution'] = 'categorical'
+    config['parameters']['a']['distribution'] = 'int_uniform'
+    config['parameters']['b'] = b
+    config['parameters']['c'] = c
+
+    assert sweep_config == config
