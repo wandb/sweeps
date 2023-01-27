@@ -1,4 +1,5 @@
 import pytest
+import json
 from sweeps import RunState, SweepRun, next_run, stop_runs
 
 
@@ -727,3 +728,65 @@ def test_hyperband_runs_with_nan_metrics():
         "early_terminate": {"s": 2, "eta": 3, "type": "hyperband", "max_iter": 300},
     }
     assert stop_runs(config, runs) == []
+
+def test_hyperband_extensive():
+    data = json.load('data/hyper_data.json')
+    config = {
+        'method': 'bayes',
+        'metric': {
+            'name': "metric",
+            'goal': 'maximize'
+        },
+        'early_terminate': {
+            'type': 'hyperband',
+            'min_iter': 30,
+            'eta': 1.5,
+            'strict': True
+        },
+        "parameters": {"a": {"values": [1, 2]}}
+    }
+    # Bands: [30, 45, 67]
+
+    # Make sruns with just a first band
+    sruns = []
+    for r in data:
+        sruns += [SweepRun(
+            name=f"{i}",
+            state=RunState.running,
+            history=r[:30 + 2],
+        )]
+
+    r = 1.0 / config['early_terminate']['eta']
+
+    stopped = stop_runs(config, sruns)
+    assert len(stopped) == int(len(sruns) * r)
+
+    stopped_names = set([x.name for x in stopped])
+
+    # Make sruns that weren't stopped up to two bands
+    sruns = []
+    for i, r in enumerate(data):
+        if f"{i}" not in stopped_names:
+            sruns += [SweepRun(
+                name=f"{i}",
+                state=RunState.running,
+                history=r[:45 + 2],
+            )]
+
+    stopped = stop_runs(config, sruns)
+    assert len(stopped) == int(len(sruns) * r)
+
+    stopped_names |= set([x.name for x in stopped])
+
+    # Make sruns that weren't stopped up to three bands
+    sruns = []
+    for i, r in enumerate(data):
+        if f"{i}" not in stopped_names:
+            sruns += [SweepRun(
+                name=f"{i}",
+                state=RunState.running,
+                history=r,
+            )]
+
+    stopped = stop_runs(config, sruns)
+    assert len(stopped) == int(len(sruns) * r)

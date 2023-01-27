@@ -233,7 +233,13 @@ def hyperband_stop_runs(
                     closest_band,
                     closest_threshold,
                 )
-                if history[closest_band] > closest_threshold:
+                # Conservative termination condition
+                condition_val = min(history)
+                if et_config['strict'] is True:
+                    # More aggresive, strict termination condition
+                    condition_val = history[closest_band]
+
+                if condition_val > closest_threshold:
                     terminate_runs.append(run)
                     termstr = " STOP"
 

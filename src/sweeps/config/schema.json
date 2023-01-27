@@ -698,6 +698,11 @@
           "description": "At every eta^n steps, hyperband continues running the top 1/eta runs and stops all other runs",
           "exclusiveMinimum": 1,
           "default": 3
+        },
+        "strict": {
+          "type": "boolean",
+          "description": "Use a more aggresive condition for termination, stops more runs",
+          "default": false
         }
       }
     }
