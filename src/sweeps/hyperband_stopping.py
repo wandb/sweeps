@@ -235,7 +235,7 @@ def hyperband_stop_runs(
                 )
                 # Conservative termination condition
                 condition_val = min(history)
-                if et_config['strict'] is True:
+                if et_config["strict"] is True:
                     # More aggresive, strict termination condition
                     condition_val = history[closest_band]
 

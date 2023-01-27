@@ -729,34 +729,34 @@ def test_hyperband_runs_with_nan_metrics():
     }
     assert stop_runs(config, runs) == []
 
+
 def test_hyperband_extensive():
-    data = json.load('data/hyper_data.json')
+    data = json.load("data/hyper_data.json")
     config = {
-        'method': 'bayes',
-        'metric': {
-            'name': "metric",
-            'goal': 'maximize'
+        "method": "bayes",
+        "metric": {"name": "metric", "goal": "maximize"},
+        "early_terminate": {
+            "type": "hyperband",
+            "min_iter": 30,
+            "eta": 1.5,
+            "strict": True,
         },
-        'early_terminate': {
-            'type': 'hyperband',
-            'min_iter': 30,
-            'eta': 1.5,
-            'strict': True
-        },
-        "parameters": {"a": {"values": [1, 2]}}
+        "parameters": {"a": {"values": [1, 2]}},
     }
     # Bands: [30, 45, 67]
 
     # Make sruns with just a first band
     sruns = []
-    for r in data:
-        sruns += [SweepRun(
-            name=f"{i}",
-            state=RunState.running,
-            history=r[:30 + 2],
-        )]
+    for i, r in enumerate(data):
+        sruns += [
+            SweepRun(
+                name=f"{i}",
+                state=RunState.running,
+                history=r[: 30 + 2],
+            )
+        ]
 
-    r = 1.0 / config['early_terminate']['eta']
+    r = 1.0 / config["early_terminate"]["eta"]
 
     stopped = stop_runs(config, sruns)
     assert len(stopped) == int(len(sruns) * r)
@@ -767,11 +767,13 @@ def test_hyperband_extensive():
     sruns = []
     for i, r in enumerate(data):
         if f"{i}" not in stopped_names:
-            sruns += [SweepRun(
-                name=f"{i}",
-                state=RunState.running,
-                history=r[:45 + 2],
-            )]
+            sruns += [
+                SweepRun(
+                    name=f"{i}",
+                    state=RunState.running,
+                    history=r[: 45 + 2],
+                )
+            ]
 
     stopped = stop_runs(config, sruns)
     assert len(stopped) == int(len(sruns) * r)
@@ -782,11 +784,13 @@ def test_hyperband_extensive():
     sruns = []
     for i, r in enumerate(data):
         if f"{i}" not in stopped_names:
-            sruns += [SweepRun(
-                name=f"{i}",
-                state=RunState.running,
-                history=r,
-            )]
+            sruns += [
+                SweepRun(
+                    name=f"{i}",
+                    state=RunState.running,
+                    history=r,
+                )
+            ]
 
     stopped = stop_runs(config, sruns)
     assert len(stopped) == int(len(sruns) * r)
