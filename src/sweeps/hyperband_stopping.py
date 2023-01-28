@@ -190,7 +190,7 @@ def hyperband_stop_runs(
         if len(band_values) == 0:
             threshold = np.inf
         else:
-            threshold = sorted(band_values)[int((r) * len(band_values))]
+            threshold = sorted(band_values)[int(r * len(band_values))]
         thresholds.append(threshold)
 
     info: Dict[str, Any] = {}
@@ -237,7 +237,7 @@ def hyperband_stop_runs(
                 condition_val = min(history)
                 if et_config["strict"] is True:
                     # More aggresive, strict termination condition
-                    condition_val = history[closest_band]
+                    condition_val = history[closest_band - 1]
 
                 if condition_val > closest_threshold:
                     terminate_runs.append(run)

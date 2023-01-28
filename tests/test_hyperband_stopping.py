@@ -1,3 +1,4 @@
+from typing import Dict, List
 import pytest
 import json
 from sweeps import RunState, SweepRun, next_run, stop_runs
@@ -730,8 +731,11 @@ def test_hyperband_runs_with_nan_metrics():
     assert stop_runs(config, runs) == []
 
 
-def test_hyperband_extensive():
-    data = json.load("data/hyper_data.json")
+def test_hyperband_extensive_relaxed():
+    with open("./tests/data/hyper_data.json") as f:
+        data = json.load(f)
+
+    data = data["data"]
     config = {
         "method": "bayes",
         "metric": {"name": "metric", "goal": "maximize"},
@@ -739,7 +743,7 @@ def test_hyperband_extensive():
             "type": "hyperband",
             "min_iter": 30,
             "eta": 1.5,
-            "strict": True,
+            "strict": False,  # default
         },
         "parameters": {"a": {"values": [1, 2]}},
     }
@@ -756,10 +760,8 @@ def test_hyperband_extensive():
             )
         ]
 
-    r = 1.0 / config["early_terminate"]["eta"]
-
     stopped = stop_runs(config, sruns)
-    assert len(stopped) == int(len(sruns) * r)
+    assert len(stopped) == 14
 
     stopped_names = set([x.name for x in stopped])
 
@@ -776,7 +778,7 @@ def test_hyperband_extensive():
             ]
 
     stopped = stop_runs(config, sruns)
-    assert len(stopped) == int(len(sruns) * r)
+    assert len(stopped) == 16
 
     stopped_names |= set([x.name for x in stopped])
 
@@ -793,4 +795,87 @@ def test_hyperband_extensive():
             ]
 
     stopped = stop_runs(config, sruns)
-    assert len(stopped) == int(len(sruns) * r)
+    assert len(stopped) == 4
+
+    stopped_names |= set([x.name for x in stopped])
+
+    assert len(stopped_names) == 34
+
+
+def calculate_correct_stopped(config: Dict, sruns: List[SweepRun]) -> int:
+    """
+    Use the hyperband config to determine how many runs SHOULD
+    be stopped given the number of runs.
+    """
+    assert config["early_terminate"]["strict"]
+
+    eta = config["early_terminate"]["eta"]
+    r = 1.0 / eta
+
+    return int(len(sruns) * (1 - r))
+
+
+def test_hyperband_extensive_strict():
+    with open("./tests/data/hyper_data.json") as f:
+        data = json.load(f)
+
+    data = data["data"]
+    min_iter = 30
+    eta = 1.5
+    config = {
+        "method": "bayes",
+        "metric": {"name": "metric", "goal": "maximize"},
+        "early_terminate": {
+            "type": "hyperband",
+            "min_iter": min_iter,
+            "eta": eta,
+            "strict": True,
+        },
+        "parameters": {"a": {"values": [1, 2]}},
+    }
+
+    bands = []
+    cur_band = min_iter
+    for i in range(1, 4):
+        bands += [int(cur_band)]
+        cur_band *= eta
+
+    # Bands: [30, 45, 67]
+
+    print(bands)
+
+    total_correct_stopped = 0
+    stopped_names = set()
+    for band in bands:
+        # Make sruns with just a first band
+        sruns = []
+        for i, r in enumerate(data):
+            if f"{i}" not in stopped_names:
+                sruns += [
+                    SweepRun(
+                        name=f"{i}",
+                        state=RunState.running,
+                        history=r[
+                            : band + 5
+                        ],  # add a +5 here to account for worst case
+                    )
+                ]
+
+        stopped = stop_runs(config, sruns)
+        correct_num_stopped = calculate_correct_stopped(config, sruns)
+
+        # Okay so not the most strict, integer conversion stuff means off by 1 occasionally
+        assert len(stopped) in [
+            correct_num_stopped,
+            correct_num_stopped + 1,
+            correct_num_stopped - 1,
+        ]
+
+        stopped_names |= set([x.name for x in stopped])
+        total_correct_stopped += correct_num_stopped
+
+    assert len(stopped_names) in [
+        total_correct_stopped,
+        total_correct_stopped + 1,
+        total_correct_stopped - 1,
+    ]
