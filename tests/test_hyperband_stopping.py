@@ -1,6 +1,7 @@
 from typing import Dict, List
 import pytest
 import json
+import random
 from sweeps import RunState, SweepRun, next_run, stop_runs
 
 
@@ -820,6 +821,74 @@ def test_hyperband_extensive_strict():
         data = json.load(f)
 
     data = data["data"]
+    min_iter = 30
+    eta = 1.5
+    config = {
+        "method": "bayes",
+        "metric": {"name": "metric", "goal": "maximize"},
+        "early_terminate": {
+            "type": "hyperband",
+            "min_iter": min_iter,
+            "eta": eta,
+            "strict": True,
+        },
+        "parameters": {"a": {"values": [1, 2]}},
+    }
+
+    # make bands
+    bands = []
+    cur_band = min_iter
+    for i in range(1, 4):
+        bands += [int(cur_band)]
+        cur_band *= eta
+
+    # Bands: [30, 45, 67]
+
+    total_correct_stopped = 0
+    stopped_names = set()
+    for band in bands:
+        # Make sruns with just a first band
+        sruns = []
+        for i, r in enumerate(data):
+            if f"{i}" not in stopped_names:
+                sruns += [
+                    SweepRun(
+                        name=f"{i}",
+                        state=RunState.running,
+                        history=r[
+                            : band + 5
+                        ],  # add a +5 here to account for worst case
+                    )
+                ]
+
+        stopped = stop_runs(config, sruns)
+        correct_num_stopped = calculate_correct_stopped(config, sruns)
+        total_correct_stopped += correct_num_stopped
+
+        # Not the most strict, integer conversion stuff means off by 1 occasionally (i think)
+        assert len(stopped) in [
+            correct_num_stopped,
+            correct_num_stopped + 1,
+            correct_num_stopped - 1,
+        ]
+
+        # track stopped runs manually
+        stopped_names |= set([x.name for x in stopped])
+
+    assert len(stopped_names) in [
+        total_correct_stopped,
+        total_correct_stopped + 1,
+        total_correct_stopped - 1,
+    ]
+
+
+def test_hyperband_extensive_strict_shuffled():
+    with open("./tests/data/hyper_data.json") as f:
+        data = json.load(f)
+
+    data = data["data"]
+    random.shuffle(data)  # Shuffle the data to prove order doesn't matter
+
     min_iter = 30
     eta = 1.5
     config = {
