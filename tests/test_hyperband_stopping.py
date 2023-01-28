@@ -834,6 +834,7 @@ def test_hyperband_extensive_strict():
         "parameters": {"a": {"values": [1, 2]}},
     }
 
+    # make bands
     bands = []
     cur_band = min_iter
     for i in range(1, 4):
@@ -841,8 +842,6 @@ def test_hyperband_extensive_strict():
         cur_band *= eta
 
     # Bands: [30, 45, 67]
-
-    print(bands)
 
     total_correct_stopped = 0
     stopped_names = set()
@@ -863,16 +862,17 @@ def test_hyperband_extensive_strict():
 
         stopped = stop_runs(config, sruns)
         correct_num_stopped = calculate_correct_stopped(config, sruns)
+        total_correct_stopped += correct_num_stopped
 
-        # Okay so not the most strict, integer conversion stuff means off by 1 occasionally
+        # Not the most strict, integer conversion stuff means off by 1 occasionally (i think)
         assert len(stopped) in [
             correct_num_stopped,
             correct_num_stopped + 1,
             correct_num_stopped - 1,
         ]
 
+        # track stopped runs manually
         stopped_names |= set([x.name for x in stopped])
-        total_correct_stopped += correct_num_stopped
 
     assert len(stopped_names) in [
         total_correct_stopped,
