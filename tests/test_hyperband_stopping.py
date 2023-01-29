@@ -1,7 +1,8 @@
-from typing import Dict, List
-import pytest
 import json
 import random
+from typing import Dict, List
+
+import pytest
 from sweeps import RunState, SweepRun, next_run, stop_runs
 
 
@@ -816,11 +817,7 @@ def calculate_correct_stopped(config: Dict, sruns: List[SweepRun]) -> int:
     return int(len(sruns) * (1 - r))
 
 
-@pytest.mark.parametrize(
-    "rand",
-    [(False), (True)],
-    ids=["forward", "randomized"]
-)
+@pytest.mark.parametrize("rand", [(False), (True)], ids=["forward", "randomized"])
 def test_hyperband_extensive_strict(rand):
     with open("./tests/data/hyper_data.json") as f:
         data = json.load(f)
@@ -872,7 +869,7 @@ def test_hyperband_extensive_strict(rand):
         stopped = stop_runs(config, sruns)
         correct_num_stopped = calculate_correct_stopped(config, sruns)
         total_correct_stopped += correct_num_stopped
-        
+
         # Not the most strict, integer conversion stuff means off by 1 occasionally (i think)
         len(stopped) in [
             correct_num_stopped,
