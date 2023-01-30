@@ -186,7 +186,7 @@ def hyperband_stop_runs(
     # iterate over the histories at every band and find the threshold for a run to be in the top r percentile
     for band in bands:
         # values of metric at iteration number "band"
-        band_values = [h[band - 1] for h in all_run_histories if len(h) >= band]
+        band_values = [h[band] for h in all_run_histories if len(h) > band]
         if len(band_values) == 0:
             threshold = np.inf
         else:
@@ -221,7 +221,7 @@ def hyperband_stop_runs(
             bandstr = ""
             termstr = ""
             for band, threshold in zip(bands, thresholds):
-                if band <= len(history):
+                if band < len(history):
                     closest_band = band
                     closest_threshold = threshold
                 else:
