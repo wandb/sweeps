@@ -1,8 +1,8 @@
-import yaml
 import random
 from typing import Dict, List
 
 import pytest
+import yaml
 from sweeps import RunState, SweepRun, next_run, stop_runs
 
 
@@ -820,7 +820,9 @@ def calculate_correct_stopped(config: Dict, sruns: List[SweepRun]) -> int:
 @pytest.mark.parametrize("rand", [(False), (True)], ids=["forward", "randomized"])
 def test_hyperband_extensive_strict(rand):
     with open("./tests/data/hyper-data.yaml") as f:
-        data = yaml.safe_load(f, )
+        data = yaml.safe_load(
+            f,
+        )
 
     data = data["data"]
     if rand:
