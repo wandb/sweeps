@@ -1,4 +1,4 @@
-import json
+import yaml
 import random
 from typing import Dict, List
 
@@ -734,8 +734,8 @@ def test_hyperband_runs_with_nan_metrics():
 
 
 def test_hyperband_extensive_relaxed():
-    with open("./tests/data/hyper_data.json") as f:
-        data = json.load(f)
+    with open("./tests/data/hyper-data.yaml") as f:
+        data = yaml.safe_load(f)
 
     data = data["data"]
     config = {
@@ -819,8 +819,8 @@ def calculate_correct_stopped(config: Dict, sruns: List[SweepRun]) -> int:
 
 @pytest.mark.parametrize("rand", [(False), (True)], ids=["forward", "randomized"])
 def test_hyperband_extensive_strict(rand):
-    with open("./tests/data/hyper_data.json") as f:
-        data = json.load(f)
+    with open("./tests/data/hyper-data.yaml") as f:
+        data = yaml.safe_load(f, )
 
     data = data["data"]
     if rand:
