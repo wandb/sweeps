@@ -813,8 +813,6 @@ def calculate_correct_stopped(config: Dict, sruns: List[SweepRun]) -> int:
     Use the hyperband config to determine how many runs SHOULD
     be stopped given the number of runs.
     """
-    assert config["early_terminate"]["strict"]
-
     eta = config["early_terminate"]["eta"]
     r = 1.0 / eta
 
