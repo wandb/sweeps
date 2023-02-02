@@ -288,7 +288,7 @@ def test_eta_3():
             "max_iter": 9,
             "eta": 3,
             "s": 2,
-            "strict": False
+            "strict": False,
         },
         "parameters": {"a": {"values": [1, 2, 3]}},
     }
@@ -357,7 +357,7 @@ def test_eta_3_max():
             "max_iter": 9,
             "eta": 3,
             "s": 2,
-            "strict": False
+            "strict": False,
         },
         "parameters": {"a": {"values": [1, 2, 3]}},
     }
