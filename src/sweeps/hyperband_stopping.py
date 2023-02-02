@@ -187,7 +187,7 @@ def hyperband_stop_runs(
     for band in bands:
         # values of metric at iteration number "band"
         # TODO: off by 1 error
-        band_values = [h[band] for h in all_run_histories if len(h) > band]
+        band_values = [h[band - 1] for h in all_run_histories if len(h) >= band]
         if len(band_values) == 0:
             threshold = np.inf
         else:
@@ -222,21 +222,16 @@ def hyperband_stop_runs(
             bandstr = ""
             termstr = ""
             for band, threshold in zip(bands, thresholds):
-                if band < len(history):
+                if band <= len(history):
                     closest_band = band
                     closest_threshold = threshold
                 else:
                     break
 
             if closest_band != -1:  # no bands apply yet
-                bandstr = " (Metric: %f Band: %d Threshold %f)" % (
-                    min(history),
-                    closest_band,
-                    closest_threshold,
-                )
                 # Conservative termination condition
                 condition_val = min(history)
-                if et_config["strict"] is True:
+                if et_config.get("strict") is True:
                     # More aggresive, strict termination condition
                     condition_val = history[closest_band - 1]
 
@@ -244,9 +239,11 @@ def hyperband_stop_runs(
                     terminate_runs.append(run)
                     termstr = " STOP"
 
+                bandstr = f" (Band: {closest_band} Metric: {condition_val} Threshold: {closest_threshold})"
+
             run_info = info.copy()
             run_info["lines"].append(
-                "Run: %s Step: %d%s%s" % (run.name, len(history), bandstr, termstr)
+                f"Run: {run.name} Step: {len(history)} {bandstr} {termstr=}"
             )
             run.early_terminate_info = run_info
 

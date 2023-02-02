@@ -184,7 +184,7 @@ def test_5runs_band1_stop_2():
         ),
         SweepRun(
             name="c",
-            state=RunState.running,  # This passes band 1 but not band 2
+            state=RunState.running,
             history=[
                 {"loss": 10},
                 {"loss": 8},
@@ -212,7 +212,7 @@ def test_5runs_band1_stop_2():
     ]
 
     to_stop = stop_runs(sweep_config, runs)
-    assert to_stop == runs[1:3]
+    assert to_stop == [runs[1]]
 
 
 def test_5runs_band1_stop_2_1stnoband():
@@ -241,8 +241,7 @@ def test_5runs_band1_stop_2_1stnoband():
             name="b",
             state=RunState.running,  # This should be stopped
             history=[
-                {"loss": 10},
-                {"loss": 10},
+                {"loss": 11},
             ],
         ),
         SweepRun(
@@ -275,7 +274,7 @@ def test_5runs_band1_stop_2_1stnoband():
     ]
 
     to_stop = stop_runs(sweep_config, runs)
-    assert to_stop == runs[1:3]
+    assert to_stop == [runs[1], runs[2]]
 
 
 def test_eta_3():
@@ -298,16 +297,16 @@ def test_eta_3():
             name="a",
             state=RunState.finished,  # This wont be stopped because already stopped
             history=[
-                {"loss": 10},
                 {"loss": 9},
+                {"loss": 8},
             ],
         ),
         SweepRun(
             name="b",
             state=RunState.running,  # This should be stopped
             history=[
-                {"loss": 10},
-                {"loss": 10},
+                {"loss": 11},
+                {"loss": 11},
             ],
         ),
         SweepRun(
@@ -315,7 +314,6 @@ def test_eta_3():
             state=RunState.running,  # This fails the first threeshold but snuck in so we wont kill
             history=[
                 {"loss": 10},
-                {"loss": 8},
                 {"loss": 8},
                 {"loss": 3},
             ],
@@ -325,7 +323,6 @@ def test_eta_3():
             state=RunState.running,
             history=[
                 {"loss": 10},
-                {"loss": 7},
                 {"loss": 7},
                 {"loss": 4},
             ],
@@ -337,13 +334,15 @@ def test_eta_3():
                 {"loss": 10},
                 {"loss": 6},
                 {"loss": 6},
-                {"loss": 6},
             ],
         ),
     ]
 
     # bands are at 1 and 3, thresholds are 7 and 4
     to_stop = stop_runs(sweep_config, runs)
+    for run in runs:
+        print(run)
+
     assert to_stop == [runs[1], runs[-1]]
 
 
@@ -375,8 +374,8 @@ def test_eta_3_max():
             name="b",
             state=RunState.running,  # This should be stopped
             history=[
-                {"loss": -10},
-                {"loss": -10},
+                {"loss": -11},
+                {"loss": -11},
             ],
         ),
         SweepRun(
@@ -385,7 +384,7 @@ def test_eta_3_max():
             history=[
                 {"loss": -10},
                 {"loss": -8},
-                {"loss": -8},
+                {"loss": -5},
                 {"loss": -3},
             ],
         ),
@@ -394,9 +393,8 @@ def test_eta_3_max():
             state=RunState.running,
             history=[
                 {"loss": -10},
-                {"loss": -7},
-                {"loss": -7},
-                {"loss": -4},
+                {"loss": -6},
+                {"loss": -2},
             ],
         ),
         SweepRun(
@@ -411,8 +409,10 @@ def test_eta_3_max():
         ),
     ]
 
-    # bands are at 1 and 3, thresholds are 7 and 4
+    # bands are at 1 and 3, thresholds are 10 and 8
     to_stop = stop_runs(sweep_config, runs)
+
+    print(to_stop)
     assert to_stop == [runs[1], runs[-1]]
 
 
@@ -839,6 +839,7 @@ def test_hyperband_extensive_strict(rand):
             "type": "hyperband",
             "min_iter": min_iter,
             "eta": eta,
+            "strict": True,
         },
         "parameters": {"a": {"values": [1, 2]}},
     }
