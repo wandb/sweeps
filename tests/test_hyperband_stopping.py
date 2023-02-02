@@ -749,7 +749,7 @@ def test_hyperband_extensive_relaxed():
             "type": "hyperband",
             "min_iter": 30,
             "eta": 1.5,
-            "strict": False,  # default
+            "strict": False,
         },
         "parameters": {"a": {"values": [1, 2]}},
     }
@@ -841,7 +841,6 @@ def test_hyperband_extensive_strict(rand):
             "type": "hyperband",
             "min_iter": min_iter,
             "eta": eta,
-            "strict": True,
         },
         "parameters": {"a": {"values": [1, 2]}},
     }
