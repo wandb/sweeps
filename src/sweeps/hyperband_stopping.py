@@ -242,7 +242,7 @@ def hyperband_stop_runs(
 
             run_info = info.copy()
             run_info["lines"].append(
-                f"Run: {run.name} Step: {len(history)} {bandstr} {termstr=}"
+                f"Run: {run.name} Step: {len(history)} {bandstr} {termstr}"
             )
             run.early_terminate_info = run_info
 
