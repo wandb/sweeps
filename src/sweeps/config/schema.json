@@ -757,12 +757,13 @@
       "description": "The project for this sweep"
     },
     "method": {
-      "description": "Possible values: bayes, random, grid",
+      "description": "Possible values: bayes, random, grid, custom, optuna",
       "enum": [
         "bayes",
         "random",
         "grid",
-        "custom"
+        "custom",
+        "optuna"
       ]
     },
     "command": {
@@ -777,6 +778,17 @@
       "type": "integer",
       "description": "Sweep will run no more than this number of runs, across any number of agents",
       "exclusiveMinimum": 0
+    },
+    "pruner": {
+      "type": "string",
+      "enum": [ 
+        "HyperbandPruner" 
+      ],
+      "description": "Optuna pruner type"
+    },
+    "objective_func": {
+      "type": "string",
+      "description": "Name of an artifact containing an objective.py file with an objective function compatible with optuna"
     },
     "metric": {
       "type": "object",
