@@ -753,6 +753,10 @@
       "type": "string",
       "description": "Launch Job to run"
     },
+    "docker_image_uri": {
+      "type": "string",
+      "description": "Sweep will launch jobs with this uri instead of a job"
+    },
     "entity": {
       "type": "string",
       "description": "The entity for this sweep"
