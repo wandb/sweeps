@@ -753,9 +753,20 @@
       "type": "string",
       "description": "Launch Job to run"
     },
-    "docker_image_uri": {
-      "type": "string",
-      "description": "Sweep will launch jobs with this uri instead of a job"
+    "launch": {
+      "type": "object",
+      "description": "Launch sweep-specific params",
+      "additionalProperties": false,
+      "properties": {
+        "image_uri": {
+          "type": "string",
+          "description": "Sweep will launch jobs with this uri instead of a job"
+        },
+        "num_workers": {
+          "type": "integer",
+          "description": "Number of concurrent jobs handled in the scheduler"
+        }
+      }
     },
     "entity": {
       "type": "string",
