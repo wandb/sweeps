@@ -753,15 +753,15 @@
       "type": "string",
       "description": "Launch Job to run"
     },
-    "launch": {
+    "image_uri": {
+      "type": "string",
+      "description": "Sweeps on Launch will use this uri instead of a job"
+    },
+    "scheduler": {
       "type": "object",
       "description": "Launch sweep-specific params",
       "additionalProperties": false,
       "properties": {
-        "image_uri": {
-          "type": "string",
-          "description": "Sweep will launch jobs with this uri instead of a job"
-        },
         "num_workers": {
           "type": "integer",
           "description": "Number of concurrent jobs handled in the scheduler"
