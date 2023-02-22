@@ -762,7 +762,7 @@
       "description": "Launch sweep-specific params",
       "additionalProperties": false,
       "properties": {
-        "num_workers": {
+        "max_jobs": {
           "type": "integer",
           "description": "Number of concurrent jobs handled in the scheduler"
         }
