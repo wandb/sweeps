@@ -759,7 +759,7 @@
     },
     "scheduler": {
       "type": "object",
-      "description": "Launch sweep-specific params",
+      "description": "Sweep scheduler specific parameters for launch",
       "additionalProperties": false,
       "properties": {
         "num_workers": {
