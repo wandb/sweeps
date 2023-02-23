@@ -757,17 +757,6 @@
       "type": "string",
       "description": "Sweeps on Launch will use this uri instead of a job"
     },
-    "scheduler": {
-      "type": "object",
-      "description": "Sweep scheduler specific parameters for launch",
-      "additionalProperties": false,
-      "properties": {
-        "num_workers": {
-          "type": "integer",
-          "description": "Number of concurrent jobs handled in the scheduler"
-        }
-      }
-    },
     "entity": {
       "type": "string",
       "description": "The entity for this sweep"
