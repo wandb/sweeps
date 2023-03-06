@@ -9,7 +9,7 @@ from .config import SweepConfig, fill_validate_early_terminate
 from .config.schema import dereferenced_sweep_config_jsonschema, fill_validate_metric
 from .run import RunState, SweepRun
 
-_logger = logging.Logger()
+_logger = logging.Logger('dev')
 
 
 def hyperband_baseline_validate_and_fill(config: Dict) -> Dict:
