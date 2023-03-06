@@ -207,10 +207,10 @@ def hyperband_stop_runs(
     for band in bands:
         # values of metric at iteration number "band"
         band_values = [h[band - 1] for h in all_run_histories if len(h) >= band]
-        _logger.debug(f"(band: {band}) values: {band_values}")
         if len(band_values) == 0:
             threshold = np.inf
         else:
+            _logger.debug(f"(band: {band}) values: {band_values}")
             threshold = sorted(band_values)[int(r * len(band_values))]
         thresholds.append(threshold)
 
@@ -251,7 +251,7 @@ def hyperband_stop_runs(
                     break
 
             _logger.debug(
-                f"closest_band: {closest_band}, closest_threshold: {closest_threshold}, len-history: {len(history)}"
+                f"({run.name}) closest_band: {closest_band}, closest_threshold: {closest_threshold}, len-history: {len(history)}"
             )
 
             if closest_band != -1:  # no bands apply yet
@@ -266,7 +266,7 @@ def hyperband_stop_runs(
                     termstr = " STOP"
 
                 _logger.debug(
-                    f"metric_val: {condition_val}, use_strict?: {et_config.get('strict')}, terminated?: {condition_val > closest_threshold}"
+                    f"({run.name}) metric_val: {condition_val}, use_strict?: {et_config.get('strict')}, terminated?: {condition_val > closest_threshold}"
                 )
 
                 bandstr = f" (Band: {closest_band} Metric: {condition_val} Threshold: {closest_threshold})"
@@ -276,5 +276,7 @@ def hyperband_stop_runs(
                 f"Run: {run.name} Step: {len(history)} {bandstr} {termstr}"
             )
             run.early_terminate_info = run_info
+
+    _logger.debug(f"runstates: {[f'{r.name}:{r.state}' for r in runs]}")
 
     return terminate_runs
