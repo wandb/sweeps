@@ -36,7 +36,9 @@ def hyperband_baseline_validate_and_fill(config: Dict) -> Dict:
         ].keys()
     )
 
-    _logger.debug(f"[hyperband_baseline_validate_and_fill]: allowed_keys={allowed_keys}")
+    _logger.debug(
+        f"[hyperband_baseline_validate_and_fill]: allowed_keys={allowed_keys}"
+    )
 
     to_delete = []
     for key in et_config:
@@ -138,7 +140,7 @@ def hyperband_stop_runs(
     if validate:
         # this fully validates the entire config
         config = SweepConfig(config)
-    
+
     _logger.debug(f"Config after validation: {pprint.pformat(config)}")
 
     # this manually validates the parts of the config that are absolutely
@@ -248,7 +250,9 @@ def hyperband_stop_runs(
                 else:
                     break
 
-            _logger.debug(f"closest_band: {closest_band}, closest_threshold: {closest_threshold}, len-history: {len(history)}")
+            _logger.debug(
+                f"closest_band: {closest_band}, closest_threshold: {closest_threshold}, len-history: {len(history)}"
+            )
 
             if closest_band != -1:  # no bands apply yet
                 # Conservative termination condition
@@ -261,7 +265,9 @@ def hyperband_stop_runs(
                     terminate_runs.append(run)
                     termstr = " STOP"
 
-                _logger.debug(f"metric_val: {condition_val}, use_strict?: {et_config.get('strict')}, terminated?: {condition_val > closest_threshold}")
+                _logger.debug(
+                    f"metric_val: {condition_val}, use_strict?: {et_config.get('strict')}, terminated?: {condition_val > closest_threshold}"
+                )
 
                 bandstr = f" (Band: {closest_band} Metric: {condition_val} Threshold: {closest_threshold})"
 
