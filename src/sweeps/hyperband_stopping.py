@@ -1,11 +1,15 @@
 from copy import deepcopy
+import pprint
 from typing import Any, Dict, List, Union
+import logging
 
 import numpy as np
 
 from .config import SweepConfig, fill_validate_early_terminate
 from .config.schema import dereferenced_sweep_config_jsonschema, fill_validate_metric
 from .run import RunState, SweepRun
+
+_logger = logging.Logger()
 
 
 def hyperband_baseline_validate_and_fill(config: Dict) -> Dict:
@@ -31,6 +35,8 @@ def hyperband_baseline_validate_and_fill(config: Dict) -> Dict:
             "properties"
         ].keys()
     )
+
+    _logger.debug(f"[hyperband_baseline_validate_and_fill]: allowed_keys={allowed_keys}")
 
     to_delete = []
     for key in et_config:
@@ -123,14 +129,24 @@ def hyperband_stop_runs(
         List of runs to stop early.
     """
 
+    _logger.debug(f"[hyperband_stop_runs] len-runs: {len(runs)}, validate: {validate}")
+    _logger.debug(f"Passed config: {pprint.pformat(config)}")
+    if len(runs) > 0:
+        _logger.debug(f"last run full history: {runs[-1].history}")
+
     # validate config and fill in defaults
     if validate:
         # this fully validates the entire config
         config = SweepConfig(config)
+    
+    _logger.debug(f"Config after validation: {pprint.pformat(config)}")
 
     # this manually validates the parts of the config that are absolutely
     # required to do hyperband stopping, and fills in any associated defaults
     config = hyperband_baseline_validate_and_fill(config)
+
+    _logger.debug(f"Config after val_and_fill: {pprint.pformat(config)}")
+
     et_config = config["early_terminate"]
 
     if "max_iter" in et_config:
@@ -171,6 +187,8 @@ def hyperband_stop_runs(
     if r < 0 or r > 1:
         raise ValueError("r must be a float between 0 and 1")
 
+    _logger.debug(f"bands: {bands}, r: {r}")
+
     terminate_runs: List[SweepRun] = []
     metric_name = config["metric"]["name"]
 
@@ -187,11 +205,14 @@ def hyperband_stop_runs(
     for band in bands:
         # values of metric at iteration number "band"
         band_values = [h[band - 1] for h in all_run_histories if len(h) >= band]
+        _logger.debug(f"(band: {band}) values: {band_values}")
         if len(band_values) == 0:
             threshold = np.inf
         else:
             threshold = sorted(band_values)[int(r * len(band_values))]
         thresholds.append(threshold)
+
+    _logger.debug(f"thresholds: {thresholds}")
 
     info: Dict[str, Any] = {}
     info["lines"] = []
@@ -227,6 +248,8 @@ def hyperband_stop_runs(
                 else:
                     break
 
+            _logger.debug(f"closest_band: {closest_band}, closest_threshold: {closest_threshold}, len-history: {len(history)}")
+
             if closest_band != -1:  # no bands apply yet
                 # Conservative termination condition
                 condition_val = min(history)
@@ -237,6 +260,8 @@ def hyperband_stop_runs(
                 if condition_val > closest_threshold:
                     terminate_runs.append(run)
                     termstr = " STOP"
+
+                _logger.debug(f"metric_val: {condition_val}, use_strict?: {et_config.get('strict')}, terminated?: {condition_val > closest_threshold}")
 
                 bandstr = f" (Band: {closest_band} Metric: {condition_val} Threshold: {closest_threshold})"
 
