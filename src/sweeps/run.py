@@ -189,6 +189,11 @@ def next_runs(
     if "method" not in sweep_config:
         raise ValueError("Sweep config must contain method section")
 
+    method = sweep_config["method"]
+
+    if method == "custom":  # no validation
+        return [None]
+
     if "parameters" not in sweep_config:
         raise ValueError("Sweep config must contain parameters section")
 
