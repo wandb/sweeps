@@ -205,8 +205,6 @@ def next_runs(
             "Parameters section of sweep config must be a dict of at least length 1"
         )
 
-    method = sweep_config["method"]
-
     if method == "grid":
         return grid_search_next_runs(
             runs, sweep_config, validate=validate, n=n, **kwargs
