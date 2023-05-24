@@ -1,3 +1,4 @@
+import warnings
 from copy import deepcopy
 from enum import Enum
 from typing import Dict, List, Optional, Tuple, Union
@@ -5,12 +6,16 @@ from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 from scipy import stats as scipy_stats
 from sklearn import gaussian_process as sklearn_gaussian
+from sklearn.exceptions import ConvergenceWarning
 
 from ._types import ArrayLike, floating, integer
 from .config.cfg import SweepConfig
 from .config.schema import fill_validate_metric
 from .params import HyperParameter, HyperParameterSet
 from .run import RunState, SweepRun, is_number, run_state_is_terminal
+
+# silence very noisy and inconsequential sklearn warning
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 GAUSSIAN_PROCESS_NUGGET = 1e-7
 STD_NUMERICAL_STABILITY_EPSILON = 1e-6
