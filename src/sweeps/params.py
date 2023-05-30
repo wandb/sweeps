@@ -437,7 +437,9 @@ class HyperParameterSet(list):
             try:
                 return config[_param_name]["value"][_sub_param_name]
             except Exception:
-                raise KeyError(f"Could not find nested parameter {param_name} in config")
+                raise KeyError(
+                    f"Could not find nested parameter {param_name} in config"
+                )
         else:
             try:
                 return config[param_name]["value"]
