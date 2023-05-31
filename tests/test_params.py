@@ -53,6 +53,7 @@ def test_hyperparameterset_normalize_runs():
     normalized_runs = valid_set.normalize_runs_as_array([r1, r2])
     assert normalized_runs.shape == (2, 1)
 
+    # TODO(gst): fix test, or allow for this case. When can this happen?
     valid_set = HyperParameterSet(
         [
             HyperParameter("v1", {"value": 1}),
