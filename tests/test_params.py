@@ -71,38 +71,6 @@ def test_hyperparameterset_normalize_runs():
     normalized_runs = valid_set.normalize_runs_as_array([r1, r2])
     assert normalized_runs.shape == (2, 1)
 
-    # Prior runs w/ nested params respect params
-    _delimiter = HyperParameterSet.NESTING_DELIMITER
-    hps = HyperParameterSet(
-        [
-            HyperParameter(f"a{_delimiter}b", {"value": 1}),
-            HyperParameter(f"a{_delimiter}c{_delimiter}d", {"value": 1}),
-        ]
-    )
-    r1 = SweepRun(
-        name="b",
-        state=RunState.finished,
-        config={f"a{_delimiter}b": {"value": 1}},
-        history=[],
-    )
-    r2 = SweepRun(
-        name="b",
-        state=RunState.finished,
-        config={
-            f"a{_delimiter}c{_delimiter}d": {"value": 1},
-            f"a{_delimiter}b": {"value": np.inf},
-        },
-        history=[],
-    )
-    r3 = SweepRun(
-        name="b",
-        state=RunState.finished,
-        config={f"a{_delimiter}c{_delimiter}d": {"value": -1}},
-        history=[],
-    )
-    normalized_runs = hps.normalize_runs_as_array([r1, r2, r3])
-    assert normalized_runs.shape == (3, 1)
-
     valid_set = HyperParameterSet(
         [
             HyperParameter("v1", {"value": 1}),
@@ -123,6 +91,69 @@ def test_hyperparameterset_normalize_runs():
     )
     normalized_runs = valid_set.normalize_runs_as_array([r1, r2])
     assert normalized_runs.shape == (2, 1)
+
+    # Prior runs w/ nested params respect params
+    _delimiter = HyperParameterSet.NESTING_DELIMITER
+    sweep_config = {
+        "method": "grid",
+        "metric": {"name": "loss", "goal": "minimize"},
+        "parameters": {
+            "a": {
+                "parameters": {
+                    "b": {"values": [1, 100]},
+                    "c": {
+                        "parameters": {"d": {"value": 1}},
+                    },
+                },
+            },
+        },
+    }
+    hps = HyperParameterSet.from_config(sweep_config["parameters"])
+
+    r1 = SweepRun(
+        name="a",
+        state=RunState.finished,
+        config={"a": {"value": {"b": 100}}},
+        history=[],
+    )
+    r2 = SweepRun(
+        name="b",
+        state=RunState.finished,
+        config={
+            "a": {"value": {"b": 100, "c": {"d": {"value": 1}}}},
+        },
+        history=[],
+    )
+    # this one has no params in the param set, possibly from prior run
+    r3 = SweepRun(
+        name="c",
+        state=RunState.finished,
+        config={"a": {"value": {"f": {"value": 10}}}},
+        history=[],
+    )
+    # one in the set, one out. value that is in should be used in normalized
+    r4 = SweepRun(
+        name="d",
+        state=RunState.finished,
+        config={
+            "a": {"value": {"f": 100, "c": {"d": {"value": 1}}}},
+        },
+        history=[],
+    )
+    # param in the set, but value outside of allowed, should error
+    r5 = SweepRun(
+        name="e",
+        state=RunState.finished,
+        config={"a": {"value": {"b": -100}}},
+        history=[],
+    )
+
+    with pytest.raises(ValueError):
+        # r5 has illegal value
+        normalized_runs = hps.normalize_runs_as_array([r1, r2, r3, r4, r5])
+
+    normalized_runs = hps.normalize_runs_as_array([r1, r2, r3, r4])
+    assert normalized_runs.shape == (4, 1)
 
 
 def test_hyperparameterset_from_config():
