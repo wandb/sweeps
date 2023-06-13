@@ -7,10 +7,10 @@ from typing import Any, List, Optional, Union
 import numpy as np
 import yaml
 
+from . import util
 from .config.cfg import SweepConfig
 from .params import HyperParameter, HyperParameterSet
 from .run import SweepRun
-from . import util
 
 
 def yaml_hash(value: Any) -> str:

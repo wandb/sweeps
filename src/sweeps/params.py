@@ -1,7 +1,9 @@
 """Hyperparameter search parameters."""
 import logging
+import operator
 import random
 from copy import deepcopy
+from functools import reduce
 from typing import Any, Dict, List, Tuple, Union
 
 import jsonschema
@@ -429,6 +431,28 @@ class HyperParameterSet(list):
             config[k] = {"value": v}
         return config
 
+    def _get_val_from_config(self, config: dict, param_name: str) -> Any:
+        """Get the value of a parameter from a run config."""
+        if param_name in config and "value" in config[param_name]:
+            return config[param_name]["value"]
+
+        if self.NESTING_DELIMITER not in param_name:
+            #  Not in config, and not nested, from prior run?
+            logging.warning(f"Parameter '{param_name}' not found in config {config}")
+            return None
+
+        # iterate through nested params for configs in the nested format
+        keys: List[str] = param_name.split(self.NESTING_DELIMITER)
+        keys = [keys[0]] + ["value"] + keys[1:]  # first key has a value param
+
+        try:
+            return reduce(operator.getitem, keys, config)
+        except Exception as e:
+            logging.warning(
+                f"Nested parameter '{param_name}' not found in config {config}. First key missing: {e}"
+            )
+        return None
+
     def normalize_runs_as_array(self, runs: List[SweepRun]) -> np.ndarray:
         """Normalize a list of SweepRuns to an ndarray of parameter vectors."""
         normalized_runs: np.ndarray = np.zeros([len(self.searchable_params), len(runs)])
@@ -436,14 +460,14 @@ class HyperParameterSet(list):
             _param: HyperParameter = self.param_names_to_param[param_name]
             row: np.ndarray = np.zeros(len(runs))  # default to 0
             for i, run in enumerate(runs):
-                if param_name in run.config:
-                    _val = run.config[param_name]["value"]
-                    if _param.type == HyperParameter.CATEGORICAL:
-                        row[i] = _param.value_to_idx(_val)
-                    else:
-                        row[i] = _val
+                _val = self._get_val_from_config(run.config, param_name)
+                if not _val:
+                    continue
+
+                if _param.type == HyperParameter.CATEGORICAL:
+                    row[i] = _param.value_to_idx(_val)
                 else:
-                    logging.warning(f"Run does not contain parameter {param_name}")
+                    row[i] = _val
             if not np.all(np.isfinite(row)):
                 logging.warning(f"Found non-finite value in normalized run row {row}")
             # Convert row to CDF, filter out NaNs
