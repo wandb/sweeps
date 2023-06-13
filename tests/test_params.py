@@ -93,7 +93,6 @@ def test_hyperparameterset_normalize_runs():
     assert normalized_runs.shape == (2, 1)
 
     # Prior runs w/ nested params respect params
-    _delimiter = HyperParameterSet.NESTING_DELIMITER
     sweep_config = {
         "method": "grid",
         "metric": {"name": "loss", "goal": "minimize"},
