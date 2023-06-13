@@ -437,14 +437,15 @@ class HyperParameterSet(list):
             try:
                 return config[_param_name]["value"][_sub_param_name]
             except Exception:
-                raise KeyError(
+                logging.warning(
                     f"Could not find nested parameter {param_name} in config"
                 )
         else:
             try:
                 return config[param_name]["value"]
             except Exception:
-                raise KeyError(f"Could not find parameter {param_name} in config")
+                logging.warning(f"Could not find parameter {param_name} in config")
+        return None
 
     def normalize_runs_as_array(self, runs: List[SweepRun]) -> np.ndarray:
         """Normalize a list of SweepRuns to an ndarray of parameter vectors."""
@@ -454,7 +455,9 @@ class HyperParameterSet(list):
             row: np.ndarray = np.zeros(len(runs))  # default to 0
             for i, run in enumerate(runs):
                 _val = self._get_val_from_config(run.config, param_name)
-                if _param.type == HyperParameter.CATEGORICAL:
+                if not _val:
+                    row[i] = 0.0
+                elif _param.type == HyperParameter.CATEGORICAL:
                     row[i] = _param.value_to_idx(_val)
                 else:
                     row[i] = _val
