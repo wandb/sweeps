@@ -88,7 +88,10 @@ def test_hyperparameterset_normalize_runs():
     r2 = SweepRun(
         name="b",
         state=RunState.finished,
-        config={f"a{_delimiter}c{_delimiter}d": {"value": 1}, f"a{_delimiter}b": {"value": np.inf}},
+        config={
+            f"a{_delimiter}c{_delimiter}d": {"value": 1},
+            f"a{_delimiter}b": {"value": np.inf},
+        },
         history=[],
     )
     r3 = SweepRun(
