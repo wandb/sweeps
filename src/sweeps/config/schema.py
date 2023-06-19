@@ -207,6 +207,11 @@ def fill_validate_schema(d: Dict) -> Dict:
     # update the parameters
     filled = {}
     for k, v in validated["parameters"].items():
+        # if param is a filepath, load in actual params
+        # validation step confirms file existence/formatting
+        if v.get("filepath"):
+            with open(v["filepath"], "r") as f:
+                v = json.load(f)
         try:
             result = fill_parameter(k, v)
         except ParamValidationError:

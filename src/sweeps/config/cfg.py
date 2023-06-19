@@ -1,5 +1,6 @@
 """Base SweepConfig classes."""
 
+import json
 from copy import deepcopy
 from pathlib import Path
 from typing import Dict, List, Union
@@ -34,6 +35,17 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
                 raise ValueError(
                     f"Invalid configuration for hyperparameter '{parameter_name}'"
                 )
+            if parameter_dict.get("filepath"):
+                try:
+                    with open(parameter_dict["filepath"], "r") as f:
+                        parameter_dict = json.load(f)
+                except FileNotFoundError as e:
+                    if ".json" in parameter_dict["filepath"]:
+                        raise e
+                    else:
+                        raise ValueError(
+                            f"Invalid configuration for hyperparameter '{parameter_name}'"
+                        )
             try:
                 validate_min_max(parameter_name, parameter_dict)
             except ValueError as e:

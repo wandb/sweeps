@@ -591,6 +591,17 @@
       ],
       "additionalProperties": false
     },
+    "param_filepath": {
+      "type": "object",
+      "required": ["filepath"],
+      "properties": {
+        "filepath": {
+          "description": "path to json config containing parameters"
+        }
+      },
+      "description": "path to json config containing parameters",
+      "additionalProperties": false
+    },
     "parameter": {
       "anyOf": [
         {
@@ -649,6 +660,9 @@
         },
         {
           "$ref": "#/definitions/param_dict"
+        },
+        {
+          "$ref": "#/definitions/param_filepath"
         }
       ]
     },
