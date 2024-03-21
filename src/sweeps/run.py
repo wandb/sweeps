@@ -69,11 +69,12 @@ class SweepRun(BaseModel):
 
     name: Optional[str] = None
     summary_metrics: Optional[dict] = Field(
-        default_factory=lambda: {}, alias="summaryMetrics"
+        default_factory=lambda: {},
+        validation_alias=AliasChoices("summaryMetrics", "summary_metrics"),
     )
     history: List[dict] = Field(
         default_factory=lambda: [],
-        validation_alias=AliasChoices("history", "sampledHistory"),
+        validation_alias=AliasChoices("sampledHistory", "history"),
     )
     config: dict = Field(default_factory=lambda: {})
     state: RunState = RunState.pending
@@ -133,6 +134,10 @@ class SweepRun(BaseModel):
         except KeyError:
             summary_metric = []
         all_metrics = self.metric_history(metric_name) + summary_metric
+
+        print(
+            "all_metrics: ", all_metrics, ">>>>", summary_metric, ">>>>", summary_metric
+        )
 
         if len(all_metrics) == 0:
             raise ValueError(f"Cannot extract metric {metric_name} from run")
