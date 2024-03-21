@@ -4,7 +4,7 @@ from numbers import Number
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 from ._types import floating
 from .config import SweepConfig
@@ -71,7 +71,10 @@ class SweepRun(BaseModel):
     summary_metrics: Optional[dict] = Field(
         default_factory=lambda: {}, alias="summaryMetrics"
     )
-    history: List[dict] = Field(default_factory=lambda: [], alias="sampledHistory")
+    history: List[dict] = Field(
+        default_factory=lambda: [],
+        validation_alias=AliasChoices("history", "sampledHistory"),
+    )
     config: dict = Field(default_factory=lambda: {})
     state: RunState = RunState.pending
     search_info: Optional[Dict] = None
