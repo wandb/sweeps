@@ -4,7 +4,7 @@ from numbers import Number
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
-from pydantic import AliasChoices, BaseModel, Field
+from pydantic import BaseModel, Field
 
 from ._types import floating
 from .config import SweepConfig
@@ -69,13 +69,9 @@ class SweepRun(BaseModel):
 
     name: Optional[str] = None
     summary_metrics: Optional[dict] = Field(
-        default_factory=lambda: {},
-        validation_alias=AliasChoices("summaryMetrics", "summary_metrics"),
+        default_factory=lambda: {}, alias="summaryMetrics"
     )
-    history: List[dict] = Field(
-        default_factory=lambda: [],
-        validation_alias=AliasChoices("sampledHistory", "history"),
-    )
+    history: List[dict] = Field(default_factory=lambda: [], alias="sampledHistory")
     config: dict = Field(default_factory=lambda: {})
     state: RunState = RunState.pending
     search_info: Optional[Dict] = None
@@ -134,10 +130,6 @@ class SweepRun(BaseModel):
         except KeyError:
             summary_metric = []
         all_metrics = self.metric_history(metric_name) + summary_metric
-
-        print(
-            "all_metrics: ", all_metrics, ">>>>", summary_metric, ">>>>", summary_metric
-        )
 
         if len(all_metrics) == 0:
             raise ValueError(f"Cannot extract metric {metric_name} from run")
