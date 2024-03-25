@@ -66,13 +66,13 @@ jobs:
       - checkout
       - run:
           name: Install python
-          command:   cd /opt/circleci/.pyenv/plugins/python-build/../.. && git pull && cd - && pyenv install 3.10.5
+          command:   cd /opt/circleci/.pyenv/plugins/python-build/../.. && git pull && cd - && pyenv install 3.10.9
       - run:
           name: Load python
-          command: pyenv global 3.10.5
+          command: pyenv global 3.10.9
       - run:
           name: Run tests
-          command: pip install tox==3.27.0 && tox -e py310
+          command: pip install tox==3.24.0 && tox -e py310
   linters37:
     executor:
       name: python/default
