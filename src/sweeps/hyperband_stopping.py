@@ -229,7 +229,7 @@ def hyperband_stop_runs(
 
             if closest_band != -1:  # no bands apply yet
                 # Conservative termination condition
-                condition_val = min(history)
+                condition_val = min(history)  # type: ignore
                 if et_config.get("strict") is True:
                     # More aggresive, strict termination condition
                     condition_val = history[closest_band - 1]

@@ -139,7 +139,7 @@ class SweepRun(BaseModel):
         if len(all_metrics) == 0:
             raise ValueError("Run does not have any finite metric values")
 
-        return cmp_func(all_metrics)
+        return cmp_func(all_metrics)  # type: ignore
 
 
 def next_run(
