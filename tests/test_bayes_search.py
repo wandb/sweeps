@@ -121,14 +121,7 @@ def run_iterations(
         for cc in range(chunk_size):
             if counter >= num_iterations:
                 break
-            (
-                sample,
-                prob,
-                pred,
-                _,
-                _,
-                _,
-            ) = bayes.next_sample(
+            (sample, prob, pred, _, _, _,) = bayes.next_sample(
                 sample_X=X,
                 sample_y=y,
                 X_bounds=bounds,
@@ -165,14 +158,7 @@ def test_squiggle_explores_parameter_space():
     # we sample a ton of positive examples, ignoring the negative side
     X = np.random.uniform(0, 5, 200)[:, None]
     Y = squiggle(X.ravel())
-    (
-        sample,
-        prob,
-        pred,
-        _,
-        _,
-        _,
-    ) = bayes.next_sample(
+    (sample, prob, pred, _, _, _,) = bayes.next_sample(
         sample_X=X, sample_y=Y, X_bounds=[[-5.0, 5.0]], improvement=1.0
     )
     assert sample[0] < 0.0, "Greater than 0 {}".format(sample[0])

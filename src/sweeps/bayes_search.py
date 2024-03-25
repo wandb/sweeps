@@ -268,11 +268,7 @@ def next_sample(
         )
 
     # build the acquisition function
-    (
-        gp,
-        y_mean,
-        y_stddev,
-    ) = train_gaussian_process(
+    (gp, y_mean, y_stddev,) = train_gaussian_process(
         filtered_X, filtered_y, X_bounds, current_X, nu, max_samples_for_gp
     )
     # Look for the minimum value of our fitted-target-function + (kappa * fitted-target-std_dev)
@@ -385,6 +381,7 @@ def impute(
                 except ValueError:
                     continue  # exclude run from worst_run calculation
                 worst_metric = worst_func(worst_metric, run_extremum)  # type: ignore
+
         if not np.isfinite(worst_metric):
             return failed_val
         return worst_metric
