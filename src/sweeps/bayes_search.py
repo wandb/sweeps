@@ -1,3 +1,4 @@
+import warnings
 from copy import deepcopy
 from enum import Enum
 from typing import Dict, List, Optional, Tuple, Union
@@ -5,12 +6,16 @@ from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 from scipy import stats as scipy_stats
 from sklearn import gaussian_process as sklearn_gaussian
+from sklearn.exceptions import ConvergenceWarning
 
 from ._types import ArrayLike, floating, integer
 from .config.cfg import SweepConfig
 from .config.schema import fill_validate_metric
 from .params import HyperParameter, HyperParameterSet
 from .run import RunState, SweepRun, is_number, run_state_is_terminal
+
+# silence very noisy and inconsequential sklearn warning
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 GAUSSIAN_PROCESS_NUGGET = 1e-7
 STD_NUMERICAL_STABILITY_EPSILON = 1e-6
@@ -406,20 +411,28 @@ def _construct_gp_data(
     y: ArrayLike = []
 
     X_norms = params.normalize_runs_as_array(runs)
+
+    # precalculate worst metric, same for all runs
     worst_metric = impute(goal, metric_name, ImputeStrategy.worst, runs=runs)
+
+    def get_metric(strategy: ImputeStrategy):
+        # try to return the real min/max metric for a run, else return
+        #     an imputed value based on the input strategy
+        try:
+            return run.metric_extremum(
+                metric_name, kind="maximum" if goal == "maximize" else "minimum"
+            )
+        except ValueError:
+            if strategy != "worst":
+                return impute(
+                    goal, metric_name, strategy, run=run, runs=runs
+                )  # default
+            else:
+                return worst_metric
+
     for run, X_norm in zip(runs, X_norms):
         if run.state == RunState.finished:
-            try:
-                metric = run.metric_extremum(
-                    metric_name, kind="maximum" if goal == "maximize" else "minimum"
-                )
-            except ValueError:
-                if impute_strategy != "worst":
-                    metric = impute(
-                        goal, metric_name, impute_strategy, run=run, runs=runs
-                    )  # default
-                else:
-                    metric = worst_metric
+            metric = get_metric(impute_strategy)
             y.append(metric)
             sample_X.append(X_norm)
         elif run.state in [RunState.failed, RunState.crashed, RunState.killed]:
@@ -429,13 +442,21 @@ def _construct_gp_data(
                 metric = worst_metric
             y.append(metric)
             sample_X.append(X_norm)
+        elif run.state in [RunState.running]:
+            # Use metric for gaussian training while running, NOT default functionality
+            if config["metric"].get("impute_while_running") not in ["false", None]:
+                strategy = ImputeStrategy(config["metric"]["impute_while_running"])
+                metric = get_metric(strategy)
+                y.append(metric)
+                sample_X.append(X_norm)
+            else:
+                current_X.append(X_norm)
         elif run.state in [
-            RunState.running,
             RunState.preempting,
             RunState.preempted,
             RunState.pending,
         ]:
-            # run is in progress
+            # run hasnt started yet
             # we wont use the metric, but we should pass it into our optimizer to
             # account for the fact that it is running
             current_X.append(X_norm)

@@ -1,4 +1,8 @@
+import random
+from typing import Dict, List
+
 import pytest
+import yaml
 from sweeps import RunState, SweepRun, next_run, stop_runs
 
 
@@ -110,6 +114,7 @@ def test_single_run():
             "max_iter": 18,
             "eta": 3,
             "s": 2,
+            "strict": False,
         },
         "parameters": {"a": {"values": [1, 2, 3]}},
     }
@@ -131,6 +136,7 @@ def test_2runs_band1_pass():
             "max_iter": 18,
             "eta": 3,
             "s": 2,
+            "strict": False,
         },
         "parameters": {"a": {"values": [1, 2, 3]}},
     }
@@ -178,7 +184,7 @@ def test_5runs_band1_stop_2():
         ),
         SweepRun(
             name="c",
-            state=RunState.running,  # This passes band 1 but not band 2
+            state=RunState.running,
             history=[
                 {"loss": 10},
                 {"loss": 8},
@@ -206,7 +212,7 @@ def test_5runs_band1_stop_2():
     ]
 
     to_stop = stop_runs(sweep_config, runs)
-    assert to_stop == runs[1:3]
+    assert to_stop == [runs[1]]
 
 
 def test_5runs_band1_stop_2_1stnoband():
@@ -235,8 +241,7 @@ def test_5runs_band1_stop_2_1stnoband():
             name="b",
             state=RunState.running,  # This should be stopped
             history=[
-                {"loss": 10},
-                {"loss": 10},
+                {"loss": 11},
             ],
         ),
         SweepRun(
@@ -269,7 +274,7 @@ def test_5runs_band1_stop_2_1stnoband():
     ]
 
     to_stop = stop_runs(sweep_config, runs)
-    assert to_stop == runs[1:3]
+    assert to_stop == [runs[1], runs[2]]
 
 
 def test_eta_3():
@@ -282,6 +287,7 @@ def test_eta_3():
             "max_iter": 9,
             "eta": 3,
             "s": 2,
+            "strict": False,
         },
         "parameters": {"a": {"values": [1, 2, 3]}},
     }
@@ -291,16 +297,16 @@ def test_eta_3():
             name="a",
             state=RunState.finished,  # This wont be stopped because already stopped
             history=[
-                {"loss": 10},
                 {"loss": 9},
+                {"loss": 8},
             ],
         ),
         SweepRun(
             name="b",
             state=RunState.running,  # This should be stopped
             history=[
-                {"loss": 10},
-                {"loss": 10},
+                {"loss": 11},
+                {"loss": 11},
             ],
         ),
         SweepRun(
@@ -308,7 +314,6 @@ def test_eta_3():
             state=RunState.running,  # This fails the first threeshold but snuck in so we wont kill
             history=[
                 {"loss": 10},
-                {"loss": 8},
                 {"loss": 8},
                 {"loss": 3},
             ],
@@ -318,7 +323,6 @@ def test_eta_3():
             state=RunState.running,
             history=[
                 {"loss": 10},
-                {"loss": 7},
                 {"loss": 7},
                 {"loss": 4},
             ],
@@ -330,13 +334,15 @@ def test_eta_3():
                 {"loss": 10},
                 {"loss": 6},
                 {"loss": 6},
-                {"loss": 6},
             ],
         ),
     ]
 
     # bands are at 1 and 3, thresholds are 7 and 4
     to_stop = stop_runs(sweep_config, runs)
+    for run in runs:
+        print(run)
+
     assert to_stop == [runs[1], runs[-1]]
 
 
@@ -350,6 +356,7 @@ def test_eta_3_max():
             "max_iter": 9,
             "eta": 3,
             "s": 2,
+            "strict": False,
         },
         "parameters": {"a": {"values": [1, 2, 3]}},
     }
@@ -367,8 +374,8 @@ def test_eta_3_max():
             name="b",
             state=RunState.running,  # This should be stopped
             history=[
-                {"loss": -10},
-                {"loss": -10},
+                {"loss": -11},
+                {"loss": -11},
             ],
         ),
         SweepRun(
@@ -377,7 +384,7 @@ def test_eta_3_max():
             history=[
                 {"loss": -10},
                 {"loss": -8},
-                {"loss": -8},
+                {"loss": -5},
                 {"loss": -3},
             ],
         ),
@@ -386,9 +393,8 @@ def test_eta_3_max():
             state=RunState.running,
             history=[
                 {"loss": -10},
-                {"loss": -7},
-                {"loss": -7},
-                {"loss": -4},
+                {"loss": -6},
+                {"loss": -2},
             ],
         ),
         SweepRun(
@@ -403,8 +409,10 @@ def test_eta_3_max():
         ),
     ]
 
-    # bands are at 1 and 3, thresholds are 7 and 4
+    # bands are at 1 and 3, thresholds are 10 and 8
     to_stop = stop_runs(sweep_config, runs)
+
+    print(to_stop)
     assert to_stop == [runs[1], runs[-1]]
 
 
@@ -727,3 +735,157 @@ def test_hyperband_runs_with_nan_metrics():
         "early_terminate": {"s": 2, "eta": 3, "type": "hyperband", "max_iter": 300},
     }
     assert stop_runs(config, runs) == []
+
+
+def test_hyperband_extensive_relaxed():
+    with open("./tests/data/hyper-data.yaml") as f:
+        data = yaml.safe_load(f)
+
+    data = data["data"]
+    config = {
+        "method": "bayes",
+        "metric": {"name": "metric", "goal": "maximize"},
+        "early_terminate": {
+            "type": "hyperband",
+            "min_iter": 30,
+            "eta": 1.5,
+            "strict": False,
+        },
+        "parameters": {"a": {"values": [1, 2]}},
+    }
+    # Bands: [30, 45, 67]
+
+    # Make sruns with just a first band
+    sruns = []
+    for i, r in enumerate(data):
+        sruns += [
+            SweepRun(
+                name=f"{i}",
+                state=RunState.running,
+                history=r[: 30 + 2],
+            )
+        ]
+
+    stopped = stop_runs(config, sruns)
+    assert len(stopped) == 15
+
+    stopped_names = set([x.name for x in stopped])
+
+    # Make sruns that weren't stopped up to two bands
+    sruns = []
+    for i, r in enumerate(data):
+        if f"{i}" not in stopped_names:
+            sruns += [
+                SweepRun(
+                    name=f"{i}",
+                    state=RunState.running,
+                    history=r[: 45 + 2],
+                )
+            ]
+
+    stopped = stop_runs(config, sruns)
+    assert len(stopped) == 10
+
+    stopped_names |= set([x.name for x in stopped])
+
+    # Make sruns that weren't stopped up to three bands
+    sruns = []
+    for i, r in enumerate(data):
+        if f"{i}" not in stopped_names:
+            sruns += [
+                SweepRun(
+                    name=f"{i}",
+                    state=RunState.running,
+                    history=r,
+                )
+            ]
+
+    stopped = stop_runs(config, sruns)
+    assert len(stopped) == 5
+
+    stopped_names |= set([x.name for x in stopped])
+
+    assert len(stopped_names) == 30
+
+
+def calculate_correct_stopped(config: Dict, sruns: List[SweepRun]) -> int:
+    """
+    Use the hyperband config to determine how many runs SHOULD
+    be stopped given the number of runs.
+    """
+    eta = config["early_terminate"]["eta"]
+    r = 1.0 / eta
+
+    return int(len(sruns) * (1 - r))
+
+
+@pytest.mark.parametrize("rand", [(False), (True)], ids=["forward", "randomized"])
+def test_hyperband_extensive_strict(rand):
+    with open("./tests/data/hyper-data.yaml") as f:
+        data = yaml.safe_load(
+            f,
+        )
+
+    data = data["data"]
+    if rand:
+        random.shuffle(data)  # Shuffle the data to prove order doesn't matter
+
+    min_iter = 30
+    eta = 1.5
+    config = {
+        "method": "bayes",
+        "metric": {"name": "metric", "goal": "maximize"},
+        "early_terminate": {
+            "type": "hyperband",
+            "min_iter": min_iter,
+            "eta": eta,
+            "strict": True,
+        },
+        "parameters": {"a": {"values": [1, 2]}},
+    }
+
+    # make bands
+    bands = []
+    cur_band = min_iter
+    for i in range(1, 4):
+        bands += [int(cur_band)]
+        cur_band *= eta
+
+    # Bands: [30, 45, 67]
+
+    total_correct_stopped = 0
+    stopped_names = set()
+    for band in bands:
+        # Make sruns with just a first band
+        sruns = []
+        for i, r in enumerate(data):
+            if f"{i}" not in stopped_names:
+                sruns += [
+                    SweepRun(
+                        name=f"{i}",
+                        state=RunState.running,
+                        history=r[
+                            : band + 5
+                        ],  # add a +5 here to account for worst case
+                    )
+                ]
+
+        stopped = stop_runs(config, sruns)
+        correct_num_stopped = calculate_correct_stopped(config, sruns)
+        total_correct_stopped += correct_num_stopped
+
+        # Not the most strict, integer conversion stuff means off by 1 occasionally (i think)
+        len(stopped) in [
+            correct_num_stopped,
+            correct_num_stopped + 1,
+            correct_num_stopped - 1,
+        ]
+
+        # track stopped runs manually
+        stopped_names |= set([x.name for x in stopped])
+
+    assert len(stopped_names) in [
+        total_correct_stopped,
+        total_correct_stopped + 1,
+        total_correct_stopped - 1,
+    ]

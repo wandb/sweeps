@@ -698,6 +698,11 @@
           "description": "At every eta^n steps, hyperband continues running the top 1/eta runs and stops all other runs",
           "exclusiveMinimum": 1,
           "default": 3
+        },
+        "strict": {
+          "type": "boolean",
+          "description": "Use a more aggresive condition for termination, stops more runs",
+          "default": false
         }
       }
     }
@@ -748,6 +753,10 @@
       "type": "string",
       "description": "Launch Job to run"
     },
+    "image_uri": {
+      "type": "string",
+      "description": "Sweeps on Launch will use this uri instead of a job"
+    },
     "entity": {
       "type": "string",
       "description": "The entity for this sweep"
@@ -772,6 +781,11 @@
     "name": {
       "type": "string",
       "description": "The name of the sweep, displayed in the W&B UI"
+    },
+    "run_cap": {
+      "type": "integer",
+      "description": "Sweep will run no more than this number of runs, across any number of agents",
+      "exclusiveMinimum": 0
     },
     "metric": {
       "type": "object",
@@ -803,6 +817,12 @@
           "description": "Metric value to use in bayes search for runs that fail, crash, or are killed",
           "enum": ["latest", "best", "worst"],
           "default": "worst"
+        },
+        "impute_while_running": {
+          "type": "string",
+          "description": "Appends a calculated metric even when epochs are in a running state",
+          "enum": ["latest", "best", "worst", "false"],
+          "default": "false"
         }
       }
     },

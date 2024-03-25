@@ -1,11 +1,13 @@
 import hashlib
 import itertools
 import random
+import typing
 from typing import Any, List, Optional, Union
 
 import numpy as np
 import yaml
 
+from . import util
 from .config.cfg import SweepConfig
 from .params import HyperParameter, HyperParameterSet
 from .run import SweepRun
@@ -110,16 +112,18 @@ def grid_search_next_runs(
     if randomize_order:
         random.shuffle(all_param_hashes)
 
-    param_hashes_seen = set(
-        [
-            tuple(
-                yaml_hash(run.config[name]["value"])
-                for name in param_names
-                if name in run.config
+    param_hashes_seen: typing.Set[typing.Tuple] = set()
+    for run in runs:
+        hashes: typing.List[str] = []
+        for name in param_names:
+            nested_key: typing.List[str] = name.split(
+                HyperParameterSet.NESTING_DELIMITER
             )
-            for run in runs
-        ]
-    )
+            nested_key.insert(1, "value")
+
+            if util.dict_has_nested_key(run.config, nested_key):
+                hashes.append(yaml_hash(util.get_nested_value(run.config, nested_key)))
+        param_hashes_seen.add(tuple(hashes))
 
     hash_gen = (
         hash_val for hash_val in all_param_hashes if hash_val not in param_hashes_seen

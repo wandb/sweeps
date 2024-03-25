@@ -348,3 +348,75 @@ def test_q_uniform_bounded_grid_search(randomize, vectorize):
         vectorize=vectorize,
         answers=[(v, "test") for v in np.arange(-9.211, 23.23, 2.341)],
     )
+
+
+def test_nested_grid_search_advances():
+    request_body = {
+        "config": {
+            "method": "grid",
+            "metric": {"goal": "minimize", "name": "loss"},
+            "command": ["${env}", "python3", "-m", "hellowsweep"],
+            "project": "sweep_test",
+            "parameters": {
+                "p1": {"values": ["a", "b", "c"]},
+                "p2": {
+                    "parameters": {
+                        "n1": {"values": [0.01, 0.001]},
+                        "n2": {"value": 0.9},
+                        "n3": {"values": [1, 2, 3]},
+                    }
+                },
+            },
+            "description": "hellosweep: A sample program for getting started with wandb sweeps.",
+        },
+        "nArgs": 1,
+        "requestId": "9eff8681-25cf-4b9f-9561-a8675e2100f7",
+        "runs": [
+            {
+                "name": "6s48hvhy",
+                "config": {
+                    "p1": {"desc": None, "value": "a"},
+                    "p2": {"desc": None, "value": {"n1": 0.01, "n2": 0.9, "n3": 1}},
+                    "_wandb": {
+                        "desc": None,
+                        "value": {
+                            "t": {
+                                "1": [55],
+                                "2": [55],
+                                "3": [2, 23, 37],
+                                "4": "3.10.7",
+                                "5": "0.13.6.dev1",
+                                "8": [4, 5],
+                            },
+                            "start_time": 1671759722.030263,
+                            "cli_version": "0.13.6.dev1",
+                            "is_jupyter_run": False,
+                            "python_version": "3.10.7",
+                            "is_kaggle_kernel": False,
+                        },
+                    },
+                },
+                "state": "finished",
+                "summaryMetrics": {
+                    "loss": 0.009000000000000001,
+                    "_step": 0,
+                    "label": "a",
+                    "_wandb": {"runtime": 0},
+                    "_runtime": 0.33578920364379883,
+                    "_timestamp": 1671759722.3660522,
+                },
+            },
+        ],
+    }
+
+    config = request_body["config"]
+    runs = [SweepRun(**run) for run in request_body["runs"]]
+
+    result = next_runs(config, runs, validate=False, n=1)
+
+    assert not all(
+        [
+            result[0].config[pname]["value"] == runs[0].config[pname]["value"]
+            for pname in result[0].config
+        ]
+    )
