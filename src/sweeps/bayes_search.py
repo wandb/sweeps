@@ -381,7 +381,6 @@ def impute(
                 except ValueError:
                     continue  # exclude run from worst_run calculation
                 worst_metric = worst_func(worst_metric, run_extremum)  # type: ignore
-
         if not np.isfinite(worst_metric):
             return failed_val
         return worst_metric
