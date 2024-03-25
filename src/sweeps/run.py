@@ -4,7 +4,7 @@ from numbers import Number
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AliasChoices
 
 from ._types import floating
 from .config import SweepConfig
@@ -69,16 +69,16 @@ class SweepRun(BaseModel):
 
     name: Optional[str] = None
     summary_metrics: Optional[dict] = Field(
-        default_factory=lambda: {}, alias="summaryMetrics"
+        default_factory=lambda: {}, validation_alias=AliasChoices("summaryMetrics", "summary_metrics") 
     )
-    history: List[dict] = Field(default_factory=lambda: [], alias="sampledHistory")
+    history: List[dict] = Field(default_factory=lambda: [], validation_alias=AliasChoices("sampledHistory", "history"))
     config: dict = Field(default_factory=lambda: {})
     state: RunState = RunState.pending
     search_info: Optional[Dict] = None
     early_terminate_info: Optional[Dict] = None
     stopped: bool = False
-    should_stop: bool = Field(default=False, alias="shouldStop")
-    heartbeat_at: Optional[datetime.datetime] = Field(default=None, alias="heartbeatAt")
+    should_stop: bool = Field(default=False, validation_alias=AliasChoices("shouldStop", "should_stop"))
+    heartbeat_at: Optional[datetime.datetime] = Field(default=None,  validation_alias=AliasChoices("heartbeatAt", "heartbeat_at"))
     exitcode: Optional[int] = None
     running: Optional[bool] = None
 
