@@ -701,8 +701,8 @@
         },
         "strict": {
           "type": "boolean",
-          "description": "Use a more aggresive condition for termination, stops more runs",
-          "default": false
+          "description": "Use the stricter condition for termination outlined in the original algorithm, stops more runs",
+          "default": true
         }
       }
     }
