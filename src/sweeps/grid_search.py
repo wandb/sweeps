@@ -14,6 +14,13 @@ from .run import SweepRun
 
 
 def yaml_hash(value: Any) -> str:
+    if isinstance(value, float):
+        # Convert integer floats to ints, so that e.g. 3000000.0 == 3000000
+        # Generally this isn't a problem, but when a run config value is something like "3e6" it's interpreted as a float
+        # when creating the hyperparameter set from the sweep config, but becomes an int when it becomes part of the
+        # run config in AgentHeartbeat (this happens in the line "configStr := string(config)" in mutation.go)
+        if float(int(value)) == value:
+            value = int(value)
     return hashlib.md5(
         yaml.dump(value, default_flow_style=True, sort_keys=True).encode("ascii")
     ).hexdigest()
