@@ -18,7 +18,7 @@ jobs:
           command: pyenv global 3.7.11
       - run:
           name: Run tests
-          command: pip install tox==3.24.0 && tox -e py37
+          command: pip install pluggy==1.4.0 tox==3.24.0 && tox -e py37
       - codecov/upload:
           file: coverage.xml
       - store_artifacts:
