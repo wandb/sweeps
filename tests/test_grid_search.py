@@ -3,6 +3,7 @@ from typing import List, Sequence, Tuple
 import numpy as np
 import pytest
 from sweeps.config import SweepConfig
+from sweeps.grid_search import yaml_hash
 from sweeps.run import RunState, SweepRun, next_run, next_runs
 
 
@@ -420,3 +421,7 @@ def test_nested_grid_search_advances():
             for pname in result[0].config
         ]
     )
+
+
+def test_yaml_hash_float():
+    assert yaml_hash(3000000.0) == yaml_hash(3000000)
