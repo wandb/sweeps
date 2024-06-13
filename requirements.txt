@@ -1,6 +1,6 @@
 numpy>=1.15
 scipy>=1.5.4
-PyYAML
+PyYAML>=5.4
 scikit_learn>=0.24.2; python_version == "3.6"
 scikit_learn >= 1.0; python_version > "3.6"
 jsonschema>=3.2.0
