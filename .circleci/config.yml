@@ -11,8 +11,15 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Fix Git ownership
+          command: git config --global --add safe.directory /opt/circleci/.pyenv
+      - run:
           name: Install python
-          command:   cd /opt/circleci/.pyenv/plugins/python-build/../.. && git pull && cd - && pyenv install 3.7.11
+          command: |
+            cd /opt/circleci/.pyenv/plugins/python-build/../..
+            git pull
+            cd -
+            pyenv install 3.7.11
       - run:
           name: Load python
           command: pyenv global 3.7.11
@@ -32,6 +39,16 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Fix Git ownership
+          command: git config --global --add safe.directory /opt/circleci/.pyenv
+      - run:
+          name: Install python
+          command: |
+            cd /opt/circleci/.pyenv/plugins/python-build/../..
+            git pull
+            cd -
+            pyenv install 3.8.5
+      - run:
           name: Load python
           command: pyenv global 3.8.5
       - run:
@@ -50,8 +67,15 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Fix Git ownership
+          command: git config --global --add safe.directory /opt/circleci/.pyenv
+      - run:
           name: Install python
-          command:   cd /opt/circleci/.pyenv/plugins/python-build/../.. && git pull && cd - && pyenv install 3.9.5
+          command: |
+            cd /opt/circleci/.pyenv/plugins/python-build/../..
+            git pull
+            cd -
+            pyenv install 3.9.5
       - run:
           name: Load python
           command: pyenv global 3.9.5
@@ -64,6 +88,9 @@ jobs:
       image:  ubuntu-2004:2024.08.1
     steps:
       - checkout
+      - run:
+          name: Fix Git ownership
+          command: git config --global --add safe.directory /opt/circleci/.pyenv
       - run:
           name: Install python
           command:   cd /opt/circleci/.pyenv/plugins/python-build/../.. && git pull && cd - && pyenv install 3.10.9
