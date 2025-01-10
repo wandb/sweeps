@@ -7,7 +7,7 @@ orbs:
 jobs:
   linux37:
     machine:
-      image:  ubuntu-2004:202010-01
+      image:  ubuntu-2404:2024.08.1
     steps:
       - checkout
       - run:
@@ -28,7 +28,7 @@ jobs:
     resource_class: large
   linux38:
     machine:
-      image:  ubuntu-2004:202010-01
+      image:  ubuntu-2404:2024.08.1
     steps:
       - checkout
       - run:
@@ -46,7 +46,7 @@ jobs:
     resource_class: large
   linux39:
     machine:
-      image:  ubuntu-2004:202010-01
+      image:  ubuntu-2404:2024.08.1
     steps:
       - checkout
       - run:
@@ -61,7 +61,7 @@ jobs:
     resource_class: large
   linux310:
     machine:
-      image:  ubuntu-2004:202010-01
+      image:  ubuntu-2404:2024.08.1
     steps:
       - checkout
       - run:
