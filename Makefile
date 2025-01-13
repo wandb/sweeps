@@ -30,13 +30,13 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '__pycache__' -exec rm -fr {} +
 
 test:
-	tox -e "black,flake8,py37"
+	tox -e "black,flake8,py39"
 
 test-full:
 	tox
 
 test-short:
-	tox -e "py37"
+	tox -e "py39"
 
 format:
 	tox -e format
