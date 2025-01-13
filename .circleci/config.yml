@@ -16,6 +16,7 @@ jobs:
       - run:
           name: Run tests
           command: tox -e py39
+          no_output_timeout: 30m
       - codecov/upload
       - store_artifacts:
           path: prof/
@@ -33,6 +34,7 @@ jobs:
       - run:
           name: Run tests
           command: tox -e py310
+          no_output_timeout: 30m
       - codecov/upload
       - store_artifacts:
           path: prof/
@@ -50,6 +52,7 @@ jobs:
       - run:
           name: Run tests
           command: tox -e py311
+          no_output_timeout: 30m
       - codecov/upload
       - store_artifacts:
           path: prof/
@@ -67,6 +70,7 @@ jobs:
       - run:
           name: Run tests
           command: tox -e py312
+          no_output_timeout: 30m
       - codecov/upload
       - store_artifacts:
           path: prof/
@@ -111,7 +115,7 @@ jobs:
           name: Run linters
           command: |
             pre-commit run --all-files
-            mypy --ignore-missing-imports --scripts-are-modules . 
+            mypy --ignore-missing-imports --scripts-are-modules .
   linters312:
     docker:
       - image: cimg/python:3.12
@@ -124,7 +128,7 @@ jobs:
           name: Run linters
           command: |
             pre-commit run --all-files
-            mypy --ignore-missing-imports --scripts-are-modules . 
+            mypy --ignore-missing-imports --scripts-are-modules .
 
 workflows:
   main:
