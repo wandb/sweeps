@@ -16,7 +16,7 @@ jobs:
       - run:
           name: Run tests
           command: tox -e py39
-          no_output_timeout: 30m
+          no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
           path: prof/
@@ -34,7 +34,7 @@ jobs:
       - run:
           name: Run tests
           command: tox -e py310
-          no_output_timeout: 30m
+          no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
           path: prof/
@@ -52,7 +52,7 @@ jobs:
       - run:
           name: Run tests
           command: tox -e py311
-          no_output_timeout: 30m
+          no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
           path: prof/
@@ -70,7 +70,7 @@ jobs:
       - run:
           name: Run tests
           command: tox -e py312
-          no_output_timeout: 30m
+          no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
           path: prof/
