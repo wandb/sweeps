@@ -438,7 +438,9 @@ class HyperParameterSet(list):
 
         if self.NESTING_DELIMITER not in param_name:
             #  Not in config, and not nested, from prior run?
-            logging.warning(f"Parameter '{param_name}' not found in config {config}")
+            logging.warning(
+                f"Parameter '{param_name}' not found in config {config}"
+            )  # noqa: E713
             return None
 
         # iterate through nested params for configs in the nested format
@@ -450,7 +452,7 @@ class HyperParameterSet(list):
         except Exception as e:
             logging.warning(
                 f"Nested parameter '{param_name}' not found in config {config}. First key missing: {e}"
-            )
+            )  # noqa: E713
         return None
 
     def normalize_runs_as_array(self, runs: List[SweepRun]) -> np.ndarray:
