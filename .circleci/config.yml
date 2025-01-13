@@ -16,12 +16,12 @@ jobs:
       - run:
           name: Run tests
           command: tox -e py39
-      - codecov/upload:
-          file: coverage.xml
+      - codecov/upload
       - store_artifacts:
           path: prof/
       - store_test_results:
           path: .
+    resource_class: large
   linux310:
     docker:
       - image: cimg/python:3.10
@@ -33,12 +33,12 @@ jobs:
       - run:
           name: Run tests
           command: tox -e py310
-      - codecov/upload:
-          file: coverage.xml
+      - codecov/upload
       - store_artifacts:
           path: prof/
       - store_test_results:
           path: .
+    resource_class: large
   linux311:
     docker:
       - image: cimg/python:3.11
@@ -50,12 +50,12 @@ jobs:
       - run:
           name: Run tests
           command: tox -e py311
-      - codecov/upload:
-          file: coverage.xml
+      - codecov/upload
       - store_artifacts:
           path: prof/
       - store_test_results:
           path: .
+    resource_class: large
   linux312:
     docker:
       - image: cimg/python:3.12
@@ -67,12 +67,12 @@ jobs:
       - run:
           name: Run tests
           command: tox -e py312
-      - codecov/upload:
-          file: coverage.xml
+      - codecov/upload
       - store_artifacts:
           path: prof/
       - store_test_results:
           path: .
+    resource_class: large
   linters39:
     docker:
       - image: cimg/python:3.9
