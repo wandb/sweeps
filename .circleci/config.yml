@@ -81,7 +81,7 @@ jobs:
           command: pyenv global 3.12
       - run:
           name: Run tests
-          command: pip install tox==3.24.0 && tox -e py312
+          command: pip install tox==3.24.0 setuptools==75.8.0 && tox -e py312
           no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
