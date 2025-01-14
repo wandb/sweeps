@@ -18,7 +18,7 @@ jobs:
           command: pyenv global 3.9
       - run:
           name: Run tests
-          command: pip install tox==3.24.0 && tox -e py37
+          command: pip install tox==3.24.0 && tox -e py39
           no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
@@ -39,7 +39,7 @@ jobs:
           command: pyenv global 3.10
       - run:
           name: Run tests
-          command: pip install tox==3.24.0 && tox -e py37
+          command: pip install tox==3.24.0 && tox -e py310
           no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
@@ -60,7 +60,7 @@ jobs:
           command: pyenv global 3.11
       - run:
           name: Run tests
-          command: pip install tox==3.24.0 && tox -e py37
+          command: pip install tox==3.24.0 && tox -e py311
           no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
@@ -81,7 +81,7 @@ jobs:
           command: pyenv global 3.12
       - run:
           name: Run tests
-          command: pip install tox==3.24.0 && tox -e py37
+          command: pip install tox==3.24.0 && tox -e py312
           no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
