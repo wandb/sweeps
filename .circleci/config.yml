@@ -6,16 +6,19 @@ orbs:
 
 jobs:
   linux39:
-    docker:
-      - image: cimg/python:3.9
+    machine:
+      image: ubuntu-2204:2024.11.1
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: pip install tox==3.24.0
+          name: Install python
+          command: pyenv install 3.9
+      - run:
+          name: Load python
+          command: pyenv global 3.9
       - run:
           name: Run tests
-          command: tox -e py39
+          command: pip install tox==3.24.0 && tox -e py37
           no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
@@ -24,16 +27,19 @@ jobs:
           path: .
     resource_class: large
   linux310:
-    docker:
-      - image: cimg/python:3.10
+    machine:
+      image: ubuntu-2204:2024.11.1
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: pip install tox==3.24.0
+          name: Install python
+          command: pyenv install 3.10
+      - run:
+          name: Load python
+          command: pyenv global 3.10
       - run:
           name: Run tests
-          command: tox -e py310
+          command: pip install tox==3.24.0 && tox -e py37
           no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
@@ -42,16 +48,19 @@ jobs:
           path: .
     resource_class: large
   linux311:
-    docker:
-      - image: cimg/python:3.11
+    machine:
+      image: ubuntu-2204:2024.11.1
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: pip install tox==3.24.0
+          name: Install python
+          command: pyenv install 3.11
+      - run:
+          name: Load python
+          command: pyenv global 3.11
       - run:
           name: Run tests
-          command: tox -e py311
+          command: pip install tox==3.24.0 && tox -e py37
           no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
@@ -60,16 +69,19 @@ jobs:
           path: .
     resource_class: large
   linux312:
-    docker:
-      - image: cimg/python:3.12
+    machine:
+      image: ubuntu-2204:2024.11.1
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: pip install tox==3.24.0
+          name: Install python
+          command: pyenv install 3.12
+      - run:
+          name: Load python
+          command: pyenv global 3.12
       - run:
           name: Run tests
-          command: tox -e py312
+          command: pip install tox==3.24.0 && tox -e py37
           no_output_timeout: 60m
       - codecov/upload
       - store_artifacts:
