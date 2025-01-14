@@ -1,5 +1,5 @@
 numpy>=1.15,<2
-scipy>=1.5.4
+scipy==1.12
 PyYAML>=5.4
 scikit_learn>=0.24.2; python_version == "3.6"
 scikit_learn >= 1.0; python_version > "3.6"
