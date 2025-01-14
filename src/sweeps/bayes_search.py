@@ -200,7 +200,7 @@ def next_sample(
             maximum samples to consider (since algo is O(n^3)) for performance,
             but also adds some randomness. this number of samples will be chosen
             randomly from the sample_X and used to train the GP.
-        improvement: floating, optional, default 0.1
+        improvement: floating, optional, default 0.01
             amount of improvement to optimize for -- higher means take more exploratory risks
         num_points_to_try: integer, optional, default 1000
             number of X values to try when looking for value with highest expected probability
@@ -288,7 +288,7 @@ def next_sample(
         min_norm_y = (min_unnorm_y - y_mean) / y_stddev - improvement
     else:
     """
-    min_norm_y = (min_unnorm_y - y_mean) / y_stddev
+    min_norm_y = (min_unnorm_y - y_mean) / y_stddev - improvement
 
     Z = -(y_pred - min_norm_y) / (y_pred_std + STD_NUMERICAL_STABILITY_EPSILON)
     prob_of_improve: np.ndarray = scipy_stats.norm.cdf(Z)
