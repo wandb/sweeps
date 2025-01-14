@@ -16,4 +16,4 @@ jobs:
 workflows:
   main:
     jobs:
-      - linux39
+      - test
