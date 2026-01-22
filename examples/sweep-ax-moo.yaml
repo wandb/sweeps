@@ -1,0 +1,62 @@
+description: Multi-objective optimization sweep using ax-platform
+
+# Training script to run
+program: train.py
+
+# Project this sweep is part of
+project: sweeps-examples
+
+# Method: ax uses Meta's ax-platform for Bayesian optimization
+# Requires: pip install sweeps[ax]
+method: ax
+
+# Multiple objectives for multi-objective optimization
+# Ax will find the Pareto frontier - the set of non-dominated solutions
+metrics:
+  - name: accuracy
+    goal: maximize
+    threshold: 0.94      # Optional reference point for hypervolume calculation
+  - name: inference_latency
+    goal: minimize
+    threshold: 100
+
+# Outcome constraints (optional)
+# These are hard constraints that must be satisfied
+# Format: 'metric_name <= value' or 'metric_name >= value'
+metric_constraints:
+  - "memory_usage <= 512"
+  - "model_size <= 100"
+
+# Parameter space to search
+parameters:
+  # Log-scale continuous parameter (good for learning rates)
+  learning_rate:
+    min: 0.0001
+    max: 0.1
+    distribution: log_uniform_values
+
+  # Integer parameter
+  batch_size:
+    min: 16
+    max: 128
+
+  # Categorical parameter
+  optimizer:
+    values: ['adam', 'sgd', 'rmsprop']
+
+  # Continuous parameter
+  dropout:
+    min: 0.0
+    max: 0.5
+
+  # Integer parameter for model architecture
+  num_layers:
+    min: 1
+    max: 5
+
+# Notes on Multi-Objective Optimization:
+# - The sweep will return a Pareto frontier of optimal trade-offs
+# - Each suggestion's search_info will contain 'pareto_frontier' with optimal points
+# - Thresholds are optional but help Ax compute hypervolume metrics
+# - early_terminate is NOT supported with multi-objective optimization
+# - Ax uses sophisticated algorithms like EHVI (Expected Hypervolume Improvement)

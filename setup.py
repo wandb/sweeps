@@ -19,6 +19,14 @@ setup(
     package_dir={"sweeps": "src/sweeps"},
     include_package_data=True,
     install_requires=requirements,
+    extras_require={
+        "ax": [
+            "ax-platform>=1.1.2",
+        ],
+        "all": [
+            "ax-platform>=1.1.2",
+        ],
+    },
     license="MIT license",
     zip_safe=False,
     python_requires=">=3.6",

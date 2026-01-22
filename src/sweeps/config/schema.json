@@ -766,12 +766,13 @@
       "description": "The project for this sweep"
     },
     "method": {
-      "description": "Possible values: bayes, random, grid",
+      "description": "Possible values: bayes, random, grid, ax",
       "enum": [
         "bayes",
         "random",
         "grid",
-        "custom"
+        "custom",
+        "ax"
       ]
     },
     "command": {
@@ -832,6 +833,39 @@
           "$ref": "#/definitions/hyperband_stopping"
         }
       ]
+    },
+    "metrics": {
+      "type": "array",
+      "description": "Multiple metrics for multi-objective optimization (Ax only)",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["name", "goal"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of metric"
+          },
+          "goal": {
+            "type": "string",
+            "description": "Possible values: minimize, maximize",
+            "enum": ["minimize", "maximize"]
+          },
+          "threshold": {
+            "type": "number",
+            "description": "Reference point for hypervolume calculation (optional)"
+          }
+        }
+      }
+    },
+    "metric_constraints": {
+      "type": "array",
+      "description": "Outcome constraints for optimization (Ax only). Format: 'metric_name <= value' or 'metric_name >= value'",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*\\s*(<=|>=)\\s*-?[0-9]+(\\.[0-9]+)?$"
+      }
     },
     "parameters": {
       "$ref": "#/definitions/parameters"

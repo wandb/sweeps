@@ -1,0 +1,67 @@
+description: Sweep example using ax-platform Bayesian optimization
+
+# Training script to run
+program: train.py
+
+# Project this sweep is part of
+project: sweeps-examples
+
+# Method: ax uses Meta's ax-platform for Bayesian optimization
+# Requires: pip install sweeps[ax]
+method: ax
+
+# Metric to optimize
+metric:
+  name: val_loss
+  goal: minimize
+
+# Parameter space to search
+# ax-platform supports: continuous, integer, categorical, and log-scale parameters
+parameters:
+  # Log-scale continuous parameter (good for learning rates)
+  learning_rate:
+    min: 0.0001
+    max: 0.1
+    distribution: log_uniform_values
+
+  # Integer parameter
+  batch_size:
+    min: 16
+    max: 128
+
+  # Categorical parameter
+  optimizer:
+    values: ['adam', 'sgd', 'rmsprop']
+
+  # Continuous parameter
+  dropout:
+    min: 0.0
+    max: 0.5
+
+  # Integer parameter for model architecture
+  num_layers:
+    min: 1
+    max: 5
+
+  # Constant parameter (not optimized)
+  epochs:
+    value: 10
+
+  # Another continuous parameter
+  weight_decay:
+    min: 0.0
+    max: 0.01
+
+# Notes:
+# - Ax learns from failed trials (avoids bad parameter regions)
+# - Running trials contribute as pending observations
+# - No manual imputation needed - Ax handles incomplete data natively
+# - Supports sophisticated Bayesian optimization strategies
+#
+# For multi-objective optimization with multiple goals, see sweep-ax-moo.yaml
+# MOO uses 'metrics' (plural) instead of 'metric' (singular)
+#
+# Outcome constraints can be added with metric_constraints:
+# metric_constraints:
+#   - "latency <= 100"
+#   - "memory_usage <= 512"

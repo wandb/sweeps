@@ -1,0 +1,33 @@
+# WeldedBeam 4D Constrained Multi-Objective Optimization Sweep Config
+# 2 objectives (cost, deflection), 4 constraints (g1, g2, g3, g4)
+
+method: ax
+name: WeldedBeam_4D
+
+metrics:
+  - name: cost
+    goal: minimize
+    threshold: 40.0
+  - name: deflection
+    goal: minimize
+    threshold: 0.015
+
+metric_constraints:
+  - "g1 <= 0"
+  - "g2 <= 0"
+  - "g3 <= 0"
+  - "g4 <= 0"
+
+parameters:
+  x0:
+    min: 0.125
+    max: 5.0
+  x1:
+    min: 0.1
+    max: 10.0
+  x2:
+    min: 0.1
+    max: 10.0
+  x3:
+    min: 0.125
+    max: 5.0

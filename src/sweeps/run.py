@@ -4,7 +4,7 @@ from numbers import Number
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
-from pydantic import BaseModel, Field, AliasChoices
+from pydantic import AliasChoices, BaseModel, Field
 
 from ._types import floating
 from .config import SweepConfig
@@ -92,7 +92,7 @@ class SweepRun(BaseModel):
 
     class Config:
         use_enum_values = True
-        allow_population_by_field_name = True
+        populate_by_name = True
 
     def metric_history(
         self, metric_name: str, filter_invalid: bool = False
@@ -186,9 +186,9 @@ def next_runs(
         The suggested runs.
     """
 
+    from .bayes_search import bayes_search_next_runs
     from .grid_search import grid_search_next_runs
     from .random_search import random_search_next_runs
-    from .bayes_search import bayes_search_next_runs
 
     # validate the sweep config
     if validate:
@@ -220,9 +220,18 @@ def next_runs(
         return bayes_search_next_runs(
             runs, sweep_config, validate=validate, n=n, **kwargs
         )
+    elif method == "ax":
+        try:
+            from .ax_search import ax_search_next_runs
+        except ImportError as e:
+            raise ImportError(
+                f"The '{method}' search method requires optional dependencies. "
+                "Install them with: pip install sweeps[ax]"
+            ) from e
+        return ax_search_next_runs(runs, sweep_config, validate=validate, n=n, **kwargs)
     else:
         raise ValueError(
-            f'Invalid search type {method}, must be one of ["grid", "random", "bayes"]'
+            f'Invalid search type {method}, must be one of ["grid", "random", "bayes", "ax"]'
         )
 
 
