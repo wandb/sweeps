@@ -1,139 +1,155 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@1.4.0
-  codecov: codecov/codecov@1.1.0
+  python: circleci/python@3.0.0
+  codecov: codecov/codecov@5.0.3
 
 jobs:
-  linux37:
-    machine:
-      image:  ubuntu-2004:202010-01
-    steps:
-      - checkout
-      - run:
-          name: Install python
-          command:   cd /opt/circleci/.pyenv/plugins/python-build/../.. && git pull && cd - && pyenv install 3.7.11
-      - run:
-          name: Load python
-          command: pyenv global 3.7.11
-      - run:
-          name: Run tests
-          command: pip install tox==3.24.0 && tox -e py37
-      - codecov/upload:
-          file: coverage.xml
-      - store_artifacts:
-          path: prof/
-      - store_test_results:
-          path: .
-    resource_class: large
-  linux38:
-    machine:
-      image:  ubuntu-2004:202010-01
-    steps:
-      - checkout
-      - run:
-          name: Load python
-          command: pyenv global 3.8.5
-      - run:
-          name: Run Tests
-          command: pip install pluggy==1.4.0 tox==3.24.0 && tox -e py38
-      - codecov/upload:
-          file: coverage.xml
-      - store_artifacts:
-          path: prof/
-      - store_test_results:
-          path: .
-    resource_class: large
   linux39:
     machine:
-      image:  ubuntu-2004:202010-01
+      image: ubuntu-2204:2024.11.1
     steps:
       - checkout
       - run:
           name: Install python
-          command:   cd /opt/circleci/.pyenv/plugins/python-build/../.. && git pull && cd - && pyenv install 3.9.5
+          command: pyenv install 3.9
       - run:
           name: Load python
-          command: pyenv global 3.9.5
+          command: pyenv global 3.9
       - run:
           name: Run tests
           command: pip install tox==3.24.0 && tox -e py39
+          no_output_timeout: 60m
+      - codecov/upload
+      - store_artifacts:
+          path: prof/
+      - store_test_results:
+          path: .
     resource_class: large
   linux310:
     machine:
-      image:  ubuntu-2004:202010-01
+      image: ubuntu-2204:2024.11.1
     steps:
       - checkout
       - run:
           name: Install python
-          command:   cd /opt/circleci/.pyenv/plugins/python-build/../.. && git pull && cd - && pyenv install 3.10.9
+          command: pyenv install 3.10
       - run:
           name: Load python
-          command: pyenv global 3.10.9
+          command: pyenv global 3.10
       - run:
           name: Run tests
           command: pip install tox==3.24.0 && tox -e py310
-  linters37:
-    executor:
-      name: python/default
-      tag: "3.7"
+          no_output_timeout: 60m
+      - codecov/upload
+      - store_artifacts:
+          path: prof/
+      - store_test_results:
+          path: .
+    resource_class: large
+  linux311:
+    machine:
+      image: ubuntu-2204:2024.11.1
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: pip install -r requirements.dev.txt
+          name: Install python
+          command: pyenv install 3.11
       - run:
-          pre-commit run --all-files
+          name: Load python
+          command: pyenv global 3.11
       - run:
-          mypy --ignore-missing-imports --scripts-are-modules .
-  linters38:
-    executor:
-      name: python/default
-      tag: "3.8"
+          name: Run tests
+          command: pip install tox==3.24.0 && tox -e py311
+          no_output_timeout: 60m
+      - codecov/upload
+      - store_artifacts:
+          path: prof/
+      - store_test_results:
+          path: .
+    resource_class: large
+  linux312:
+    machine:
+      image: ubuntu-2204:2024.11.1
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: pip install -r requirements.dev.txt
+          name: Install python
+          command: pyenv install 3.12
       - run:
-          pre-commit run --all-files
+          name: Load python
+          command: pyenv global 3.12
       - run:
-          mypy --ignore-missing-imports --scripts-are-modules .
+          name: Run tests
+          command: pip install tox==3.24.0 setuptools==75.8.0 && tox -e py312
+          no_output_timeout: 60m
+      - codecov/upload
+      - store_artifacts:
+          path: prof/
+      - store_test_results:
+          path: .
+    resource_class: large
   linters39:
-    executor:
-      name: python/default
-      tag: "3.9"
+    docker:
+      - image: cimg/python:3.9
     steps:
       - checkout
       - run:
           name: Install dependencies
           command: pip install -r requirements.dev.txt
       - run:
-          pre-commit run --all-files
-      - run:
-          mypy --ignore-missing-imports --scripts-are-modules .
+          name: Run linters
+          command: |
+            pre-commit run --all-files
+            mypy --ignore-missing-imports --scripts-are-modules .
   linters310:
-    executor:
-      name: python/default
-      tag: "3.10"
+    docker:
+      - image: cimg/python:3.10
     steps:
       - checkout
       - run:
           name: Install dependencies
           command: pip install -r requirements.dev.txt
       - run:
-          pre-commit run --all-files
+          name: Run linters
+          command: |
+            pre-commit run --all-files
+            mypy --ignore-missing-imports --scripts-are-modules .
+  linters311:
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
       - run:
-          mypy --ignore-missing-imports --scripts-are-modules .
+          name: Install dependencies
+          command: pip install -r requirements.dev.txt
+      - run:
+          name: Run linters
+          command: |
+            pre-commit run --all-files
+            mypy --ignore-missing-imports --scripts-are-modules .
+  linters312:
+    docker:
+      - image: cimg/python:3.12
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: pip install -r requirements.dev.txt
+      - run:
+          name: Run linters
+          command: |
+            pre-commit run --all-files
+            mypy --ignore-missing-imports --scripts-are-modules .
 
 workflows:
   main:
     jobs:
-      - linux37
-      - linux38
       - linux39
       - linux310
-      - linters37
-      - linters38
+      - linux311
+      - linux312
       - linters39
       - linters310
+      - linters311
+      - linters312
