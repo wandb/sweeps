@@ -1,5 +1,6 @@
 import hashlib
 import itertools
+import logging
 import random
 import typing
 from typing import Any, List, Optional, Union
@@ -11,6 +12,8 @@ from . import util
 from .config.cfg import SweepConfig
 from .params import HyperParameter, HyperParameterSet
 from .run import SweepRun
+
+logger = logging.getLogger(__name__)
 
 
 def yaml_hash(value: Any) -> str:
@@ -120,8 +123,10 @@ def grid_search_next_runs(
         random.shuffle(all_param_hashes)
 
     param_hashes_seen: typing.Set[typing.Tuple] = set()
+    expected_tuple_len = len(param_names)
     for run in runs:
         hashes: typing.List[str] = []
+        missing_params: typing.List[str] = []
         for name in param_names:
             nested_key: typing.List[str] = name.split(
                 HyperParameterSet.NESTING_DELIMITER
@@ -130,6 +135,23 @@ def grid_search_next_runs(
 
             if util.dict_has_nested_key(run.config, nested_key):
                 hashes.append(yaml_hash(util.get_nested_value(run.config, nested_key)))
+            else:
+                missing_params.append(name)
+
+        if len(hashes) != expected_tuple_len:
+            logger.warning(
+                "grid_search_dedupe_incomplete_hash_tuple",
+                extra={
+                    "run_name": run.name,
+                    "expected_params": expected_tuple_len,
+                    "found_params": len(hashes),
+                    "missing_params": missing_params,
+                    "config_top_level_keys": sorted(run.config.keys())
+                    if run.config
+                    else [],
+                },
+            )
+
         param_hashes_seen.add(tuple(hashes))
 
     hash_gen = (
@@ -138,7 +160,6 @@ def grid_search_next_runs(
 
     retval: List[Optional[SweepRun]] = []
     for _ in range(n):
-
         # this is O(1)
         next_hash = next(hash_gen, None)
 
