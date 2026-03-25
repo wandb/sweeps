@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install tox==3.24.0
+          # Python 3.12 needs setuptools explicitly
+          if [[ "${{ matrix.python-version }}" == "3.12" ]]; then
+            pip install setuptools==75.8.0
+          fi
+
+      - name: Run tests
+        run: tox -e py$(echo "${{ matrix.python-version }}" | tr -d '.')
+        timeout-minutes: 60
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Test Results (Python ${{ matrix.python-version }})
+          path: "*.xml"
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: prof-${{ matrix.python-version }}
+          path: prof/
+          if-no-files-found: ignore
+
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.dev.txt
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files
+
+      - name: Run mypy
+        run: mypy --ignore-missing-imports --scripts-are-modules .
