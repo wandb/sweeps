@@ -1,9 +1,9 @@
-from typing import List, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pytest
 from sweeps.config import SweepConfig
-from sweeps.grid_search import yaml_hash
+from sweeps.grid_search import yaml_hash, grid_search_next_runs
 from sweeps.run import RunState, SweepRun, next_run, next_runs
 
 
@@ -425,3 +425,299 @@ def test_nested_grid_search_advances():
 
 def test_yaml_hash_float():
     assert yaml_hash(3000000.0) == yaml_hash(3000000)
+
+
+# Tests for grid_search_next_runs, focused on dict-valued parameter deduplication.
+
+
+def _make_grid_config(
+    param_name: str,
+    values: List,
+    extra_params: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    parameters: Dict[str, Any] = {
+        param_name: {"values": values},
+    }
+    if extra_params:
+        parameters.update(extra_params)
+    return {
+        "method": "grid",
+        "parameters": parameters,
+    }
+
+
+def _make_run(config: dict, name: str = "run") -> SweepRun:
+    return SweepRun(name=name, state=RunState.finished, config=config)
+
+
+# --- Dict-valued parameter tests ---
+
+
+def test_dict_valued_param_with_injected_key():
+    """A run whose dict-valued param has an extra runtime key should still
+    be recognized as covering its grid point.
+
+    This is the core config pollution bug: sinergym injects env_name into
+    env_params.value, changing yaml_hash so anaconda re-suggests the point.
+    """
+    grid_values = [
+        {"env_id": "Env-v0", "max_steps": 1000},
+        {"env_id": "Env-v1", "max_steps": 2000},
+    ]
+    sweep_config = _make_grid_config("env_params", grid_values)
+
+    runs = [
+        _make_run(
+            {
+                "env_params": {
+                    "value": {
+                        "env_id": "Env-v0",
+                        "max_steps": 1000,
+                        "env_name": "SAC_abc123",
+                    }
+                }
+            },
+            name="run-0",
+        ),
+        _make_run(
+            {
+                "env_params": {
+                    "value": {
+                        "env_id": "Env-v1",
+                        "max_steps": 2000,
+                        "env_name": "SAC_def456",
+                    }
+                }
+            },
+            name="run-1",
+        ),
+    ]
+
+    result = grid_search_next_runs(runs, sweep_config)
+    assert result == [
+        None
+    ], f"Expected no more suggestions (all grid points covered), got {result}"
+
+
+def test_dict_valued_param_without_injection():
+    """Baseline: runs with clean configs (no injected keys) should be
+    recognized as covering their grid points."""
+    grid_values = [
+        {"env_id": "Env-v0", "max_steps": 1000},
+        {"env_id": "Env-v1", "max_steps": 2000},
+    ]
+    sweep_config = _make_grid_config("env_params", grid_values)
+
+    runs = [
+        _make_run(
+            {"env_params": {"value": {"env_id": "Env-v0", "max_steps": 1000}}},
+            name="run-0",
+        ),
+        _make_run(
+            {"env_params": {"value": {"env_id": "Env-v1", "max_steps": 2000}}},
+            name="run-1",
+        ),
+    ]
+
+    result = grid_search_next_runs(runs, sweep_config)
+    assert result == [None]
+
+
+def test_dict_valued_param_missing_run_still_suggested():
+    """When only some grid points are covered (even with injected keys),
+    the uncovered point should still be suggested."""
+    grid_values = [
+        {"env_id": "Env-v0", "max_steps": 1000},
+        {"env_id": "Env-v1", "max_steps": 2000},
+        {"env_id": "Env-v2", "max_steps": 3000},
+    ]
+    sweep_config = _make_grid_config("env_params", grid_values)
+
+    runs = [
+        _make_run(
+            {
+                "env_params": {
+                    "value": {
+                        "env_id": "Env-v0",
+                        "max_steps": 1000,
+                        "env_name": "SAC_abc",
+                    }
+                }
+            },
+            name="run-0",
+        ),
+        _make_run(
+            {
+                "env_params": {
+                    "value": {
+                        "env_id": "Env-v2",
+                        "max_steps": 3000,
+                        "env_name": "SAC_def",
+                    }
+                }
+            },
+            name="run-2",
+        ),
+    ]
+
+    result = grid_search_next_runs(runs, sweep_config)
+    assert len(result) == 1
+    assert result[0] is not None
+    assert result[0].config["env_params"]["value"] == {
+        "env_id": "Env-v1",
+        "max_steps": 2000,
+    }
+
+
+def test_dict_valued_param_multiple_injected_keys():
+    """Multiple extra keys injected should all be stripped."""
+    grid_values = [
+        {"env_id": "Env-v0", "reward_scale": 0.5},
+    ]
+    sweep_config = _make_grid_config("env_params", grid_values)
+
+    runs = [
+        _make_run(
+            {
+                "env_params": {
+                    "value": {
+                        "env_id": "Env-v0",
+                        "reward_scale": 0.5,
+                        "env_name": "SAC_run1",
+                        "created_at": "2026-03-27",
+                        "internal_id": 42,
+                    }
+                }
+            },
+            name="run-0",
+        ),
+    ]
+
+    result = grid_search_next_runs(runs, sweep_config)
+    assert result == [None]
+
+
+# --- Scalar-valued parameter tests ---
+
+
+def test_scalar_param_unaffected():
+    """Scalar-valued parameters should work exactly as before."""
+    sweep_config = _make_grid_config("learning_rate", [0.001, 0.01, 0.1])
+
+    runs = [
+        _make_run({"learning_rate": {"value": 0.001}}, name="run-0"),
+        _make_run({"learning_rate": {"value": 0.01}}, name="run-1"),
+    ]
+
+    result = grid_search_next_runs(runs, sweep_config)
+    assert len(result) == 1
+    assert result[0] is not None
+    assert result[0].config["learning_rate"]["value"] == 0.1
+
+
+def test_scalar_param_all_covered():
+    """All scalar grid points covered -> no suggestions."""
+    sweep_config = _make_grid_config("batch_size", [16, 32, 64])
+
+    runs = [
+        _make_run({"batch_size": {"value": 16}}, name="run-0"),
+        _make_run({"batch_size": {"value": 32}}, name="run-1"),
+        _make_run({"batch_size": {"value": 64}}, name="run-2"),
+    ]
+
+    result = grid_search_next_runs(runs, sweep_config)
+    assert result == [None]
+
+
+# --- Mixed parameter tests ---
+
+
+def test_mixed_scalar_and_dict_params():
+    """Grid with both scalar and dict-valued params, dict has injected keys."""
+    sweep_config = {
+        "method": "grid",
+        "parameters": {
+            "algorithm": {"value": "SAC"},
+            "env_params": {
+                "values": [
+                    {"env_id": "Env-v0", "max_steps": 1000},
+                    {"env_id": "Env-v1", "max_steps": 2000},
+                ],
+            },
+        },
+    }
+
+    runs = [
+        _make_run(
+            {
+                "algorithm": {"value": "SAC"},
+                "env_params": {
+                    "value": {
+                        "env_id": "Env-v0",
+                        "max_steps": 1000,
+                        "env_name": "SAC_abc",
+                    }
+                },
+            },
+            name="run-0",
+        ),
+        _make_run(
+            {
+                "algorithm": {"value": "SAC"},
+                "env_params": {
+                    "value": {
+                        "env_id": "Env-v1",
+                        "max_steps": 2000,
+                        "env_name": "SAC_def",
+                    }
+                },
+            },
+            name="run-1",
+        ),
+    ]
+
+    result = grid_search_next_runs(runs, sweep_config)
+    assert result == [None]
+
+
+def test_nested_dict_value_with_injected_key():
+    """Dict values with nested dicts should also be handled correctly."""
+    grid_values = [
+        {"env_id": "Env-v0", "reward_kwargs": {"lambda_energy": 0.001}},
+    ]
+    sweep_config = _make_grid_config("env_params", grid_values)
+
+    runs = [
+        _make_run(
+            {
+                "env_params": {
+                    "value": {
+                        "env_id": "Env-v0",
+                        "reward_kwargs": {"lambda_energy": 0.001},
+                        "env_name": "SAC_injected",
+                    }
+                }
+            },
+            name="run-0",
+        ),
+    ]
+
+    result = grid_search_next_runs(runs, sweep_config)
+    assert result == [None]
+
+
+def test_empty_runs_suggests_first_grid_point():
+    """No runs -> suggest the first grid point (regression guard)."""
+    grid_values = [
+        {"env_id": "Env-v0", "max_steps": 1000},
+        {"env_id": "Env-v1", "max_steps": 2000},
+    ]
+    sweep_config = _make_grid_config("env_params", grid_values)
+
+    result = grid_search_next_runs([], sweep_config)
+    assert len(result) == 1
+    assert result[0] is not None
+    assert result[0].config["env_params"]["value"] == {
+        "env_id": "Env-v0",
+        "max_steps": 1000,
+    }

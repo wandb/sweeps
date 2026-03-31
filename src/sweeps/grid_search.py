@@ -113,6 +113,19 @@ def grid_search_next_runs(
     param_hashes = [
         [yaml_hash(value) for value in p.config["values"]] for p in discrete_params
     ]
+
+    # for dict-valued params, collect the union of keys across all grid point
+    # values. this is used to strip runtime injected keys before hashing, so
+    # that extra keys don't cause yaml_hash mismatches and duplicate suggestions.
+    param_known_keys: typing.Dict[str, typing.Set[str]] = {}
+    for name, values in zip(param_names, param_values):
+        keys: typing.Set[str] = set()
+        for val in values:
+            if isinstance(val, dict):
+                keys.update(val.keys())
+        if keys:
+            param_known_keys[name] = keys
+
     value_hash_lookup = {
         name: dict(zip(hashes, vals))
         for name, vals, hashes in zip(param_names, param_values, param_hashes)
@@ -134,7 +147,14 @@ def grid_search_next_runs(
             nested_key.insert(1, "value")
 
             if util.dict_has_nested_key(run.config, nested_key):
-                hashes.append(yaml_hash(util.get_nested_value(run.config, nested_key)))
+                run_value = util.get_nested_value(run.config, nested_key)
+                if name in param_known_keys and isinstance(run_value, dict):
+                    run_value = {
+                        k: v
+                        for k, v in run_value.items()
+                        if k in param_known_keys[name]
+                    }
+                hashes.append(yaml_hash(run_value))
             else:
                 missing_params.append(name)
 
@@ -146,9 +166,9 @@ def grid_search_next_runs(
                     "expected_params": expected_tuple_len,
                     "found_params": len(hashes),
                     "missing_params": missing_params,
-                    "config_top_level_keys": sorted(run.config.keys())
-                    if run.config
-                    else [],
+                    "config_top_level_keys": (
+                        sorted(run.config.keys()) if run.config else []
+                    ),
                 },
             )
 
