@@ -37,6 +37,27 @@
       },
       "additionalProperties": false
     },
+    "param_categorical_ordered": {
+      "type": "object",
+      "description": "A categorical parameter with allowed values that have a meaningful ordering.",
+      "required": [
+        "values",
+        "distribution"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "description": "Discrete ordered values",
+          "minItems": 1
+        },
+        "distribution": {
+          "enum": [
+            "categorical_ordered"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "param_dict": {
       "type": "object",
       "description": "A parameter dictionary containing other parameters.",
@@ -603,6 +624,9 @@
           "$ref": "#/definitions/param_categorical"
         },
         {
+          "$ref": "#/definitions/param_categorical_ordered"
+        },
+        {
           "$ref": "#/definitions/param_categorical_w_probabilities"
         },
         {
@@ -651,6 +675,80 @@
           "$ref": "#/definitions/param_dict"
         }
       ]
+    },
+    "ax_early_terminate": {
+      "type": "object",
+      "description": "Use Ax for early termination. Configuration lives in the top-level `ax.early_stopping` block.",
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "ax"
+          ]
+        }
+      }
+    },
+    "ax_config": {
+      "type": "object",
+      "description": "Ax-specific sweep configuration. Used when method=ax.",
+      "additionalProperties": false,
+      "properties": {
+        "constraints": {
+          "type": "object",
+          "description": "Parameter and outcome constraints for Ax.",
+          "additionalProperties": false,
+          "properties": {
+            "parameters": {
+              "type": "array",
+              "description": "Parameter constraints expressed as strings (e.g., 'a * b > c').",
+              "items": {
+                "type": "string"
+              }
+            },
+            "metrics": {
+              "type": "array",
+              "description": "Outcome (metric) constraints expressed as strings (e.g., 'loss < 100').",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "generation_strategy": {
+          "type": "object",
+          "description": "Ax generation strategy configuration.",
+          "additionalProperties": false,
+          "properties": {
+            "initialization": {
+              "type": "object",
+              "description": "Initialization (Sobol/quasi-random) phase configuration.",
+              "additionalProperties": false,
+              "properties": {
+                "budget": {
+                  "type": "integer",
+                  "description": "Number of initialization trials."
+                },
+                "seed": {
+                  "type": "integer",
+                  "description": "Random seed for the initialization phase."
+                },
+                "with_center": {
+                  "type": "boolean",
+                  "description": "Whether to include the center point of the search space."
+                },
+                "use_bonsai": {
+                  "type": "boolean",
+                  "description": "Whether to use the Bonsai initializer."
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "hyperband_stopping": {
       "type": "object",
@@ -766,12 +864,13 @@
       "description": "The project for this sweep"
     },
     "method": {
-      "description": "Possible values: bayes, random, grid",
+      "description": "Possible values: bayes, random, grid, custom, ax",
       "enum": [
         "bayes",
         "random",
         "grid",
-        "custom"
+        "custom",
+        "ax"
       ]
     },
     "command": {
@@ -830,8 +929,45 @@
       "oneOf": [
         {
           "$ref": "#/definitions/hyperband_stopping"
+        },
+        {
+          "$ref": "#/definitions/ax_early_terminate"
         }
       ]
+    },
+    "metrics": {
+      "type": "array",
+      "description": "Metrics to optimize. Used when more than one metric is being tracked (e.g., multi-objective Ax sweeps).",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of metric"
+          },
+          "goal": {
+            "type": "string",
+            "description": "Possible values: minimize, maximize",
+            "enum": [
+              "minimize",
+              "maximize"
+            ],
+            "default": "minimize"
+          },
+          "target": {
+            "type": "number",
+            "description": "The sweep will finish once any run achieves this value"
+          }
+        }
+      }
+    },
+    "ax": {
+      "$ref": "#/definitions/ax_config"
     },
     "parameters": {
       "$ref": "#/definitions/parameters"

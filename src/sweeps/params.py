@@ -42,6 +42,7 @@ class HyperParameter:
 
     CONSTANT = "param_single_value"
     CATEGORICAL = "param_categorical"
+    CATEGORICAL_ORDERED = "param_categorical_ordered"
     CATEGORICAL_PROB = "param_categorical_w_probabilities"
     INT_UNIFORM = "param_int_uniform"
     UNIFORM = "param_uniform"
@@ -109,7 +110,10 @@ class HyperParameter:
             The index of the value.
         """
 
-        if self.type != HyperParameter.CATEGORICAL:
+        if self.type not in (
+            HyperParameter.CATEGORICAL,
+            HyperParameter.CATEGORICAL_ORDERED,
+        ):
             raise ValueError("Can only call value_to_idx on categorical variable")
 
         for ii, test_value in enumerate(self.config["values"]):
@@ -136,7 +140,10 @@ class HyperParameter:
         """
         if self.type == HyperParameter.CONSTANT:
             return np.zeros_like(x)
-        elif self.type == HyperParameter.CATEGORICAL:
+        elif self.type in (
+            HyperParameter.CATEGORICAL,
+            HyperParameter.CATEGORICAL_ORDERED,
+        ):
             # NOTE: Indices expected for categorical parameters, not values.
             return stats.randint.cdf(x, 0, len(self.config["values"]))
         elif self.type == HyperParameter.CATEGORICAL_PROB:
@@ -207,7 +214,10 @@ class HyperParameter:
             raise ValueError("Can't call ppf on value outside of [0,1]")
         elif self.type == HyperParameter.CONSTANT:
             return self.config["value"]
-        elif self.type == HyperParameter.CATEGORICAL:
+        elif self.type in (
+            HyperParameter.CATEGORICAL,
+            HyperParameter.CATEGORICAL_ORDERED,
+        ):
             # Samples uniformly over the values
             retval = [
                 self.config["values"][i]
@@ -466,7 +476,10 @@ class HyperParameterSet(list):
                 if not _val:
                     continue
 
-                if _param.type == HyperParameter.CATEGORICAL:
+                if _param.type in (
+                    HyperParameter.CATEGORICAL,
+                    HyperParameter.CATEGORICAL_ORDERED,
+                ):
                     row[i] = _param.value_to_idx(_val)
                 else:
                     row[i] = _val

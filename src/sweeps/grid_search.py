@@ -69,6 +69,7 @@ def grid_search_next_runs(
     for p in params:
         if p.type not in [
             HyperParameter.CATEGORICAL,
+            HyperParameter.CATEGORICAL_ORDERED,
             HyperParameter.CONSTANT,
             HyperParameter.INT_UNIFORM,
             HyperParameter.Q_UNIFORM,
@@ -104,7 +105,12 @@ def grid_search_next_runs(
 
     # we can only deal with discrete params in a grid search
     discrete_params = HyperParameterSet(
-        [p for p in params if p.type == HyperParameter.CATEGORICAL]
+        [
+            p
+            for p in params
+            if p.type
+            in (HyperParameter.CATEGORICAL, HyperParameter.CATEGORICAL_ORDERED)
+        ]
     )
 
     # build an iterator over all combinations of param values
