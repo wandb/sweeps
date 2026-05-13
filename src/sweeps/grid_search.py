@@ -135,6 +135,20 @@ def grid_search_next_runs(
     if randomize_order:
         random.shuffle(all_param_hashes)
 
+    # Memoize yaml_hash within this call: many runs share the same value for
+    # any given param (especially single-value categorical params holding
+    # large list or dict values), so caching collapses thousands of
+    # redundant yaml.dump invocations into one.
+    run_value_hash_cache: typing.Dict[typing.Tuple[str, str], str] = {}
+
+    def cached_yaml_hash(value: typing.Any) -> str:
+        key = (type(value).__name__, repr(value))
+        cached = run_value_hash_cache.get(key)
+        if cached is None:
+            cached = yaml_hash(value)
+            run_value_hash_cache[key] = cached
+        return cached
+
     param_hashes_seen: typing.Set[typing.Tuple] = set()
     expected_tuple_len = len(param_names)
     for run in runs:
@@ -154,7 +168,7 @@ def grid_search_next_runs(
                         for k, v in run_value.items()
                         if k in param_known_keys[name]
                     }
-                hashes.append(yaml_hash(run_value))
+                hashes.append(cached_yaml_hash(run_value))
             else:
                 missing_params.append(name)
 
