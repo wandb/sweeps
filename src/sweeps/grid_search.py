@@ -1,6 +1,7 @@
 import hashlib
 import itertools
 import logging
+import math
 import random
 import typing
 from typing import Any, List, Optional, Union
@@ -27,6 +28,47 @@ def yaml_hash(value: Any) -> str:
     return hashlib.md5(
         yaml.dump(value, default_flow_style=True, sort_keys=True).encode("ascii")
     ).hexdigest()
+
+
+def _freeze_value(value: Any) -> typing.Hashable:
+    if isinstance(value, float):
+        if math.isnan(value):
+            return ("float", "nan")
+        if value.is_integer():
+            value = int(value)
+
+    if isinstance(value, dict):
+        return (
+            "dict",
+            tuple(
+                sorted(
+                    (
+                        (_freeze_value(key), _freeze_value(item_value))
+                        for key, item_value in value.items()
+                    ),
+                    key=lambda item: repr(item[0]),
+                )
+            ),
+        )
+
+    if isinstance(value, list):
+        return ("list", tuple(_freeze_value(item) for item in value))
+
+    if isinstance(value, tuple):
+        return ("tuple", tuple(_freeze_value(item) for item in value))
+
+    if isinstance(value, (set, frozenset)):
+        return (
+            type(value).__name__,
+            tuple(sorted((_freeze_value(item) for item in value), key=repr)),
+        )
+
+    try:
+        hash(value)
+    except TypeError:
+        return ("repr", type(value).__name__, repr(value))
+
+    return ("scalar", type(value).__name__, value)
 
 
 def grid_search_next_runs(
@@ -110,13 +152,13 @@ def grid_search_next_runs(
     # build an iterator over all combinations of param values
     param_names = [p.name for p in discrete_params]
     param_values = [p.config["values"] for p in discrete_params]
-    param_hashes = [
-        [yaml_hash(value) for value in p.config["values"]] for p in discrete_params
+    param_value_keys = [
+        [_freeze_value(value) for value in values] for values in param_values
     ]
 
     # for dict-valued params, collect the union of keys across all grid point
-    # values. this is used to strip runtime injected keys before hashing, so
-    # that extra keys don't cause yaml_hash mismatches and duplicate suggestions.
+    # values. this is used to strip runtime injected keys before freezing, so
+    # that extra keys don't cause key mismatches and duplicate suggestions.
     param_known_keys: typing.Dict[str, typing.Set[str]] = {}
     for name, values in zip(param_names, param_values):
         keys: typing.Set[str] = set()
@@ -126,19 +168,19 @@ def grid_search_next_runs(
         if keys:
             param_known_keys[name] = keys
 
-    value_hash_lookup = {
-        name: dict(zip(hashes, vals))
-        for name, vals, hashes in zip(param_names, param_values, param_hashes)
+    value_key_lookup = {
+        name: dict(zip(value_keys, vals))
+        for name, vals, value_keys in zip(param_names, param_values, param_value_keys)
     }
 
-    all_param_hashes = list(itertools.product(*param_hashes))
+    all_param_keys = list(itertools.product(*param_value_keys))
     if randomize_order:
-        random.shuffle(all_param_hashes)
+        random.shuffle(all_param_keys)
 
-    param_hashes_seen: typing.Set[typing.Tuple] = set()
+    param_keys_seen: typing.Set[typing.Tuple[typing.Hashable, ...]] = set()
     expected_tuple_len = len(param_names)
     for run in runs:
-        hashes: typing.List[str] = []
+        keys: typing.List[typing.Hashable] = []
         missing_params: typing.List[str] = []
         for name in param_names:
             nested_key: typing.List[str] = name.split(
@@ -154,17 +196,17 @@ def grid_search_next_runs(
                         for k, v in run_value.items()
                         if k in param_known_keys[name]
                     }
-                hashes.append(yaml_hash(run_value))
+                keys.append(_freeze_value(run_value))
             else:
                 missing_params.append(name)
 
-        if len(hashes) != expected_tuple_len:
+        if len(keys) != expected_tuple_len:
             logger.warning(
                 "grid_search_dedupe_incomplete_hash_tuple",
                 extra={
                     "run_name": run.name,
                     "expected_params": expected_tuple_len,
-                    "found_params": len(hashes),
+                    "found_params": len(keys),
                     "missing_params": missing_params,
                     "config_top_level_keys": (
                         sorted(run.config.keys()) if run.config else []
@@ -172,28 +214,26 @@ def grid_search_next_runs(
                 },
             )
 
-        param_hashes_seen.add(tuple(hashes))
+        param_keys_seen.add(tuple(keys))
 
-    hash_gen = (
-        hash_val for hash_val in all_param_hashes if hash_val not in param_hashes_seen
-    )
+    key_gen = (key for key in all_param_keys if key not in param_keys_seen)
 
     retval: List[Optional[SweepRun]] = []
     for _ in range(n):
-        # this is O(1)
-        next_hash = next(hash_gen, None)
+        # Advance to the first grid point not already covered by a prior run.
+        next_key = next(key_gen, None)
 
         # we have searched over the entire parameter space
-        if next_hash is None:
+        if next_key is None:
             retval.append(None)
             return retval
 
-        for param, hash_val in zip(discrete_params, next_hash):
-            param.value = value_hash_lookup[param.name][hash_val]
+        for param, value_key in zip(discrete_params, next_key):
+            param.value = value_key_lookup[param.name][value_key]
 
         run = SweepRun(config=params.to_config())
         retval.append(run)
 
-        param_hashes_seen.add(next_hash)
+        param_keys_seen.add(next_key)
 
     return retval
