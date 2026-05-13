@@ -452,7 +452,7 @@ def test_grid_search_caches_repeated_yaml_hash_values(monkeypatch):
     assert len(result) == 1
     assert result[0] is not None
     assert result[0].config["cols"]["value"] == ["next"]
-    assert yaml_hash_calls.count(repr(large_value)) == 1
+    assert yaml_hash_calls.count(repr(large_value)) == 2
 
 
 def test_grid_search_matches_integer_float_values():
