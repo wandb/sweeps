@@ -1,3 +1,5 @@
+UV_RUN_DEV := uv run --with-requirements requirements.dev.txt
+
 dist: clean ## builds source and wheel package
 	python setup.py sdist bdist_wheel
 	ls -l dist
@@ -30,13 +32,13 @@ test:
 	$(MAKE) test-short
 
 test-full:
-	uv run tox
+	$(UV_RUN_DEV) tox
 
 test-short:
-	uv run tox -e py310
+	$(UV_RUN_DEV) tox -e py310
 
 format:
-	uv run pre-commit run --all-files
+	$(UV_RUN_DEV) pre-commit run --all-files
 
 release: dist ## package and upload release
 	uv pip install -qq twine

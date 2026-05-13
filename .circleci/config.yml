@@ -1,109 +1,97 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@3.0.0
   codecov: codecov/codecov@5.0.3
+
+commands:
+  install-uv:
+    steps:
+      - run:
+          name: Install uv
+          command: pip install uv==0.11.9
+  uv-run-dev:
+    parameters:
+      name:
+        type: string
+        default: Run command
+      command:
+        type: string
+    steps:
+      - run:
+          name: << parameters.name >>
+          command: uv run --with-requirements requirements.dev.txt << parameters.command >>
+          no_output_timeout: 60m
 
 jobs:
   linux310:
-    machine:
-      image: ubuntu-2204:2024.11.1
+    docker:
+      - image: cimg/python:3.10
     steps:
       - checkout
-      - run:
-          name: Install python
-          command: pyenv install 3.10
-      - run:
-          name: Load python
-          command: pyenv global 3.10
-      - run:
+      - install-uv
+      - uv-run-dev:
           name: Run tests
-          command: pip install tox==4.54.0 && tox -e py310
-          no_output_timeout: 60m
+          command: tox -e py310
       - codecov/upload
       - store_artifacts:
           path: prof/
       - store_test_results:
           path: .
-    resource_class: large
   linux311:
-    machine:
-      image: ubuntu-2204:2024.11.1
+    docker:
+      - image: cimg/python:3.11
     steps:
       - checkout
-      - run:
-          name: Install python
-          command: pyenv install 3.11
-      - run:
-          name: Load python
-          command: pyenv global 3.11
-      - run:
+      - install-uv
+      - uv-run-dev:
           name: Run tests
-          command: pip install tox==4.54.0 && tox -e py311
-          no_output_timeout: 60m
+          command: tox -e py311
       - codecov/upload
       - store_artifacts:
           path: prof/
       - store_test_results:
           path: .
-    resource_class: large
   linux312:
-    machine:
-      image: ubuntu-2204:2024.11.1
+    docker:
+      - image: cimg/python:3.12
     steps:
       - checkout
-      - run:
-          name: Install python
-          command: pyenv install 3.12
-      - run:
-          name: Load python
-          command: pyenv global 3.12
-      - run:
+      - install-uv
+      - uv-run-dev:
           name: Run tests
-          command: pip install tox==4.54.0 setuptools==75.8.0 && tox -e py312
-          no_output_timeout: 60m
+          command: --with setuptools==75.8.0 tox -e py312
       - codecov/upload
       - store_artifacts:
           path: prof/
       - store_test_results:
           path: .
-    resource_class: large
   linters310:
     docker:
       - image: cimg/python:3.10
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: pip install -r requirements.dev.txt
-      - run:
+      - install-uv
+      - uv-run-dev:
           name: Run linters
-          command: |
-            pre-commit run --all-files
+          command: pre-commit run --all-files
   linters311:
     docker:
       - image: cimg/python:3.11
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: pip install -r requirements.dev.txt
-      - run:
+      - install-uv
+      - uv-run-dev:
           name: Run linters
-          command: |
-            pre-commit run --all-files
+          command: pre-commit run --all-files
   linters312:
     docker:
       - image: cimg/python:3.12
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: pip install -r requirements.dev.txt
-      - run:
+      - install-uv
+      - uv-run-dev:
           name: Run linters
-          command: |
-            pre-commit run --all-files
+          command: pre-commit run --all-files
 
 workflows:
   main:

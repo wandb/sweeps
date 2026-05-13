@@ -163,16 +163,18 @@ make test-full
 
 __Review the [Contributing Instructions](https://github.com/wandb/client/blob/master/CONTRIBUTING.md)__
 
-Create venv:
+Create and activate a uv-managed virtual environment:
 
 ```
+uv python install 3.10
 uv venv --python 3.10
+source .venv/bin/activate
 ```
 
-Install the development requirements:
+Install the package in editable mode with development and test dependencies:
 
 ```
-uv pip install -r requirements.dev.txt
+uv pip install -r requirements.dev.txt -e .
 ```
 
 Install the pre-commit hooks:

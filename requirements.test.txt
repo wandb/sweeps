@@ -1,8 +1,0 @@
--r requirements.dev.txt
-pytest==7.4.0
-pytest-cov==2.11.1
-pytest-randomly==3.8.0
-matplotlib>=3
-pytest-xdist>=2.2.1
-pytest-profiling>=1.7.0
-isort==4.3.21
