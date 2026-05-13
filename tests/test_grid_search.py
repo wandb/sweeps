@@ -436,10 +436,7 @@ def test_grid_search_caches_repeated_yaml_hash_values(monkeypatch):
             "cols": {"values": [large_value, ["next"]]},
         },
     }
-    runs = [
-        SweepRun(config={"cols": {"value": list(large_value)}})
-        for _ in range(5)
-    ]
+    runs = [SweepRun(config={"cols": {"value": list(large_value)}}) for _ in range(5)]
 
     yaml_hash_calls: List[str] = []
     original_yaml_hash = grid_search_module.yaml_hash
