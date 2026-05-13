@@ -161,12 +161,12 @@ def grid_search_next_runs(
     # that extra keys don't cause key mismatches and duplicate suggestions.
     param_known_keys: typing.Dict[str, typing.Set[str]] = {}
     for name, values in zip(param_names, param_values):
-        keys: typing.Set[str] = set()
+        known_keys: typing.Set[str] = set()
         for val in values:
             if isinstance(val, dict):
-                keys.update(val.keys())
-        if keys:
-            param_known_keys[name] = keys
+                known_keys.update(val.keys())
+        if known_keys:
+            param_known_keys[name] = known_keys
 
     value_key_lookup = {
         name: dict(zip(value_keys, vals))
@@ -180,7 +180,7 @@ def grid_search_next_runs(
     param_keys_seen: typing.Set[typing.Tuple[typing.Hashable, ...]] = set()
     expected_tuple_len = len(param_names)
     for run in runs:
-        keys: typing.List[typing.Hashable] = []
+        run_value_keys: typing.List[typing.Hashable] = []
         missing_params: typing.List[str] = []
         for name in param_names:
             nested_key: typing.List[str] = name.split(
@@ -196,17 +196,17 @@ def grid_search_next_runs(
                         for k, v in run_value.items()
                         if k in param_known_keys[name]
                     }
-                keys.append(_freeze_value(run_value))
+                run_value_keys.append(_freeze_value(run_value))
             else:
                 missing_params.append(name)
 
-        if len(keys) != expected_tuple_len:
+        if len(run_value_keys) != expected_tuple_len:
             logger.warning(
                 "grid_search_dedupe_incomplete_hash_tuple",
                 extra={
                     "run_name": run.name,
                     "expected_params": expected_tuple_len,
-                    "found_params": len(keys),
+                    "found_params": len(run_value_keys),
                     "missing_params": missing_params,
                     "config_top_level_keys": (
                         sorted(run.config.keys()) if run.config else []
@@ -214,7 +214,7 @@ def grid_search_next_runs(
                 },
             )
 
-        param_keys_seen.add(tuple(keys))
+        param_keys_seen.add(tuple(run_value_keys))
 
     key_gen = (key for key in all_param_keys if key not in param_keys_seen)
 
