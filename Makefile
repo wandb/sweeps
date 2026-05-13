@@ -26,29 +26,30 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '__pycache__' -exec rm -fr {} +
 
 test:
-	tox -e "black,flake8,py310"
+	$(MAKE) format
+	$(MAKE) test-short
 
 test-full:
-	tox
+	uv run tox
 
 test-short:
-	tox -e "py310"
+	uv run tox -e py310
 
 format:
-	pre-commit run --all-files
+	uv run pre-commit run --all-files
 
 release: dist ## package and upload release
-	pip install -qq twine
+	uv pip install -qq twine
 	twine upload dist/*
 
 release-test: dist ## package and upload test release
-	pip install -qq twine
+	uv pip install -qq twine
 	twine upload --repository testpypi dist/*
 
 bumpversion-to-dev:
-	pip install -qq bumpversion==0.5.3
-	python ./tools/bumpversion-tool.py --to-dev
+	uv pip install -qq bumpversion==0.5.3
+	uv run python ./tools/bumpversion-tool.py --to-dev
 
 bumpversion-from-dev:
-	pip install -qq bumpversion==0.5.3
-	python ./tools/bumpversion-tool.py --from-dev
+	uv pip install -qq bumpversion==0.5.3
+	uv run python ./tools/bumpversion-tool.py --from-dev

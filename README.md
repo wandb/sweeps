@@ -163,10 +163,16 @@ make test-full
 
 __Review the [Contributing Instructions](https://github.com/wandb/client/blob/master/CONTRIBUTING.md)__
 
+Create venv:
+
+```
+uv venv --python 3.10
+```
+
 Install the development requirements:
 
 ```
-pip install -r requirements.dev.txt
+uv pip install -r requirements.dev.txt
 ```
 
 Install the pre-commit hooks:
@@ -181,3 +187,8 @@ Run formatting and tests:
 make format
 make test
 ```
+
+### Releasing
+
+```
+make
