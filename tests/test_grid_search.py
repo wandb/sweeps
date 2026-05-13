@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pytest
+import sweeps.grid_search as grid_search_module
 from sweeps.config import SweepConfig
 from sweeps.grid_search import yaml_hash, grid_search_next_runs
 from sweeps.run import RunState, SweepRun, next_run, next_runs
@@ -425,6 +426,133 @@ def test_nested_grid_search_advances():
 
 def test_yaml_hash_float():
     assert yaml_hash(3000000.0) == yaml_hash(3000000)
+
+
+def test_grid_search_caches_repeated_yaml_hash_values(monkeypatch):
+    large_value = [f"col_{i}" for i in range(100)]
+    sweep_config = {
+        "method": "grid",
+        "parameters": {
+            "cols": {"values": [large_value, ["next"]]},
+        },
+    }
+    runs = [
+        SweepRun(config={"cols": {"value": list(large_value)}})
+        for _ in range(5)
+    ]
+
+    yaml_hash_calls: List[str] = []
+    original_yaml_hash = grid_search_module.yaml_hash
+
+    def counting_yaml_hash(value: Any) -> str:
+        yaml_hash_calls.append(repr(value))
+        return original_yaml_hash(value)
+
+    monkeypatch.setattr(grid_search_module, "yaml_hash", counting_yaml_hash)
+
+    result = next_runs(sweep_config, runs)
+
+    assert len(result) == 1
+    assert result[0] is not None
+    assert result[0].config["cols"]["value"] == ["next"]
+    assert yaml_hash_calls.count(repr(large_value)) == 1
+
+
+def test_grid_search_matches_integer_float_values():
+    config = SweepConfig(
+        {
+            "method": "grid",
+            "parameters": {
+                "v1": {"values": [3000000, "next"]},
+                "v2": {"value": "test"},
+            },
+        }
+    )
+
+    runs = [SweepRun(config={"v1": {"value": 3000000.0}, "v2": {"value": "test"}})]
+
+    suggestion = next_runs(config, runs)[0]
+
+    assert suggestion is not None
+    assert suggestion.config["v1"]["value"] == "next"
+
+
+def test_grid_search_keeps_bool_and_int_values_distinct():
+    config = SweepConfig(
+        {
+            "method": "grid",
+            "parameters": {
+                "v1": {"values": [True, 1]},
+                "v2": {"value": "test"},
+            },
+        }
+    )
+
+    runs = [SweepRun(config={"v1": {"value": True}, "v2": {"value": "test"}})]
+
+    suggestion = next_runs(config, runs)[0]
+
+    assert suggestion is not None
+    assert suggestion.config["v1"]["value"] == 1
+
+
+def test_grid_search_matches_nan_values():
+    config = SweepConfig(
+        {
+            "method": "grid",
+            "parameters": {
+                "v1": {"values": [float("nan"), 1]},
+                "v2": {"value": "test"},
+            },
+        }
+    )
+
+    runs = [SweepRun(config={"v1": {"value": float("nan")}, "v2": {"value": "test"}})]
+
+    suggestion = next_runs(config, runs)[0]
+
+    assert suggestion is not None
+    assert suggestion.config["v1"]["value"] == 1
+
+
+def test_grid_search_keeps_list_and_tuple_values_distinct():
+    config = SweepConfig(
+        {
+            "method": "grid",
+            "parameters": {
+                "v1": {"values": [[2, 3], (2, 3)]},
+                "v2": {"value": "test"},
+            },
+        }
+    )
+
+    runs = [SweepRun(config={"v1": {"value": [2, 3]}, "v2": {"value": "test"}})]
+
+    suggestion = next_runs(config, runs)[0]
+
+    assert suggestion is not None
+    assert suggestion.config["v1"]["value"] == (2, 3)
+
+
+def test_grid_search_matches_dict_values_regardless_of_key_order():
+    config = SweepConfig(
+        {
+            "method": "grid",
+            "parameters": {
+                "v1": {"values": [{"a": 1, "b": 2}, {"a": 3, "b": 4}]},
+                "v2": {"value": "test"},
+            },
+        }
+    )
+
+    runs = [
+        SweepRun(config={"v1": {"value": {"b": 2, "a": 1}}, "v2": {"value": "test"}})
+    ]
+
+    suggestion = next_runs(config, runs)[0]
+
+    assert suggestion is not None
+    assert suggestion.config["v1"]["value"] == {"a": 3, "b": 4}
 
 
 # Tests for grid_search_next_runs, focused on dict-valued parameter deduplication.

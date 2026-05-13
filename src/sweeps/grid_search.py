@@ -110,8 +110,23 @@ def grid_search_next_runs(
     # build an iterator over all combinations of param values
     param_names = [p.name for p in discrete_params]
     param_values = [p.config["values"] for p in discrete_params]
+
+    # Memoize yaml_hash within this call: many runs share the same value for
+    # any given param, especially single-value categorical params holding large
+    # list or dict values.
+    yaml_hash_cache: typing.Dict[typing.Tuple[typing.Type[Any], str], str] = {}
+
+    def cached_yaml_hash(value: Any) -> str:
+        key = (type(value), repr(value))
+        try:
+            return yaml_hash_cache[key]
+        except KeyError:
+            cached = yaml_hash(value)
+            yaml_hash_cache[key] = cached
+            return cached
+
     param_hashes = [
-        [yaml_hash(value) for value in p.config["values"]] for p in discrete_params
+        [cached_yaml_hash(value) for value in values] for values in param_values
     ]
 
     # for dict-valued params, collect the union of keys across all grid point
@@ -134,20 +149,6 @@ def grid_search_next_runs(
     all_param_hashes = list(itertools.product(*param_hashes))
     if randomize_order:
         random.shuffle(all_param_hashes)
-
-    # Memoize yaml_hash within this call: many runs share the same value for
-    # any given param (especially single-value categorical params holding
-    # large list or dict values), so caching collapses thousands of
-    # redundant yaml.dump invocations into one.
-    run_value_hash_cache: typing.Dict[typing.Tuple[str, str], str] = {}
-
-    def cached_yaml_hash(value: typing.Any) -> str:
-        key = (type(value).__name__, repr(value))
-        cached = run_value_hash_cache.get(key)
-        if cached is None:
-            cached = yaml_hash(value)
-            run_value_hash_cache[key] = cached
-        return cached
 
     param_hashes_seen: typing.Set[typing.Tuple] = set()
     expected_tuple_len = len(param_names)
