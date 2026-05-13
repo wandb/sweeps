@@ -33,7 +33,6 @@ jobs:
           step_name: Run tests
           command: tox -e py310
       - codecov/upload:
-          file: coverage.xml
           flags: unit
       - store_artifacts:
           path: coverage.xml
