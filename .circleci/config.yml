@@ -32,11 +32,16 @@ jobs:
       - uv-run-dev:
           step_name: Run tests
           command: tox -e py310
-      - codecov/upload
+      - codecov/upload:
+          file: coverage.xml
+          flags: unit
+      - store_artifacts:
+          path: coverage.xml
+          destination: coverage/coverage.xml
       - store_artifacts:
           path: prof/
       - store_test_results:
-          path: .
+          path: result.xml
   linux311:
     docker:
       - image: cimg/python:3.11
@@ -46,11 +51,13 @@ jobs:
       - uv-run-dev:
           step_name: Run tests
           command: tox -e py311
-      - codecov/upload
+      - store_artifacts:
+          path: coverage.xml
+          destination: coverage/coverage.xml
       - store_artifacts:
           path: prof/
       - store_test_results:
-          path: .
+          path: result.xml
   linux312:
     docker:
       - image: cimg/python:3.12
@@ -60,11 +67,13 @@ jobs:
       - uv-run-dev:
           step_name: Run tests
           command: --with setuptools==75.8.0 tox -e py312
-      - codecov/upload
+      - store_artifacts:
+          path: coverage.xml
+          destination: coverage/coverage.xml
       - store_artifacts:
           path: prof/
       - store_test_results:
-          path: .
+          path: result.xml
   linters310:
     docker:
       - image: cimg/python:3.10
