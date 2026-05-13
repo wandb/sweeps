@@ -1,7 +1,3 @@
-lint:
-	pre-commit run --all-files
-	mypy --scripts-are-modules --ignore-missing-imports .
-
 dist: clean ## builds source and wheel package
 	python setup.py sdist bdist_wheel
 	ls -l dist
@@ -30,16 +26,16 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '__pycache__' -exec rm -fr {} +
 
 test:
-	tox -e "black,flake8,py39"
+	tox -e "black,flake8,py310"
 
 test-full:
 	tox
 
 test-short:
-	tox -e "py39"
+	tox -e "py310"
 
 format:
-	tox -e format
+	pre-commit run --all-files
 
 release: dist ## package and upload release
 	pip install -qq twine

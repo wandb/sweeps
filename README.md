@@ -172,7 +172,7 @@ pip install -r requirements.dev.txt
 Install the pre-commit hooks:
 
 ```
-pre-commit install .
+pre-commit install
 ```
 
 Run formatting and tests:
