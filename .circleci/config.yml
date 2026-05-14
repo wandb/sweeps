@@ -26,6 +26,7 @@ jobs:
   linux310:
     docker:
       - image: cimg/python:3.10
+    resource_class: large
     steps:
       - checkout
       - install-uv
@@ -40,6 +41,7 @@ jobs:
   linux311:
     docker:
       - image: cimg/python:3.11
+    resource_class: large
     steps:
       - checkout
       - install-uv
@@ -54,6 +56,7 @@ jobs:
   linux312:
     docker:
       - image: cimg/python:3.12
+    resource_class: large
     steps:
       - checkout
       - install-uv
