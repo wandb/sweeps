@@ -89,6 +89,7 @@ def assert_best_run_matches_optimum(
     for param_name in config["parameters"]:
         left_comp = best_run.config[param_name]["value"]
         right_comp = optimum[param_name]
+        # Verify that the best observed run landed near the expected optimum.
         np.testing.assert_allclose(left_comp, right_comp, atol=atol)
 
 
@@ -586,6 +587,7 @@ def test_bayes_categorical_list_values_normalize_and_round_trip():
     v1_index = params.param_names_to_index["v1"]
     v1_param = params.param_names_to_param["v1"]
 
+    # Verify categorical values map to evenly spaced normalized GP inputs.
     np.testing.assert_allclose(sample_X[:, v1_index], [0.25, 0.5, 0.75, 1.0])
     assert v1_param.ppf(np.array([0.1, 0.4, 0.7, 0.9])) == values
 
@@ -1113,6 +1115,44 @@ def test_bayes_impute_best():
         )
 
 
+def test_bayes_impute_latest_uses_latest_valid_metric_for_failed_runs():
+    config = bayes.bayes_baseline_validate_and_fill(
+        SweepConfig(
+            {
+                "method": "bayes",
+                "metric": {"name": "loss", "goal": "minimize", "impute": "latest"},
+                "parameters": {"a": {"min": 0.0, "max": 1.0}},
+            }
+        )
+    )
+    runs = [
+        SweepRun(
+            state=RunState.failed,
+            history=[
+                {"loss": 5.0},
+                {"loss": 1.0},
+                {"loss": float("nan")},
+                {"loss": "bad"},
+                {"loss": 3.0},
+            ],
+            summary_metrics={"loss": 0.5},
+            config={"a": {"value": 0.25}},
+        ),
+        SweepRun(
+            state=RunState.finished,
+            history=[{"loss": 4.0}],
+            config={"a": {"value": 0.75}},
+        ),
+    ]
+
+    _, sample_X, current_X, sample_y, _ = bayes._construct_gp_data(runs, config)
+
+    assert sample_X.shape == (2, 1)
+    assert len(current_X) == 0
+    # Verify failed runs use the latest valid history metric, not best or summary.
+    np.testing.assert_allclose(sample_y, [3.0, 4.0])
+
+
 def test_bayes_impute_while_running_best_includes_running_run():
     def y(x: SweepRun) -> floating:
         return squiggle(x.config["x"]["value"])
@@ -1142,6 +1182,7 @@ def test_bayes_impute_while_running_best_includes_running_run():
     _, sample_X, current_X, sample_y, _ = bayes._construct_gp_data([run], config)
     assert sample_X.shape == (1, 1)
     assert len(current_X) == 0
+    # Verify a running maximizing run contributes its metric with minimizer sign flip.
     np.testing.assert_allclose(sample_y[0], -y(run))
 
 
