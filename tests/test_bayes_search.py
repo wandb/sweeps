@@ -360,7 +360,7 @@ def test_runs_bayes_runs2(sweep_config_bayes_search_2params_with_metric):
 
     runs = [r1, r2]
 
-    for _ in range(30):
+    for _ in range(100):
         suggestion = next_run(sweep_config_bayes_search_2params_with_metric, runs)
         metric = {"loss": loss_func(suggestion)}
         suggestion.history = [metric]
