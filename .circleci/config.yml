@@ -26,6 +26,7 @@ jobs:
   linux310:
     docker:
       - image: cimg/python:3.10
+    resource_class: large
     steps:
       - checkout
       - install-uv
@@ -33,7 +34,7 @@ jobs:
           step_name: Run tests
           command: tox -e py310
       # Upload coverage from one Python version to avoid duplicate Codecov reports.
-      # Move codecov/upload to another version when we deprecate this one.
+      # Move coverage to another version when we deprecate this one.
       - codecov/upload:
           flags: unit
       - store_artifacts:
@@ -46,6 +47,7 @@ jobs:
   linux311:
     docker:
       - image: cimg/python:3.11
+    resource_class: large
     steps:
       - checkout
       - install-uv
@@ -53,24 +55,19 @@ jobs:
           step_name: Run tests
           command: tox -e py311
       - store_artifacts:
-          path: coverage.xml
-          destination: coverage/coverage.xml
-      - store_artifacts:
           path: prof/
       - store_test_results:
           path: result.xml
   linux312:
     docker:
       - image: cimg/python:3.12
+    resource_class: large
     steps:
       - checkout
       - install-uv
       - uv-run-dev:
           step_name: Run tests
           command: --with setuptools==75.8.0 tox -e py312
-      - store_artifacts:
-          path: coverage.xml
-          destination: coverage/coverage.xml
       - store_artifacts:
           path: prof/
       - store_test_results:
