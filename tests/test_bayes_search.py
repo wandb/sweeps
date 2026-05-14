@@ -1,6 +1,7 @@
 import json
+import logging
 import os
-from typing import Callable, Dict, Iterable, Optional, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 import pytest
@@ -8,6 +9,11 @@ from sweeps import RunState, SweepConfig, SweepRun
 from sweeps import bayes_search as bayes
 from sweeps import next_run
 from sweeps._types import ArrayLike, floating, integer
+
+from .test_random_search import check_that_samples_are_from_the_same_distribution
+
+logger = logging.getLogger(__name__)
+BAYES_RANDOM_FALLBACK_SAMPLES = 100
 
 
 def squiggle(x: ArrayLike) -> np.floating:
@@ -21,6 +27,10 @@ def rosenbrock(x: ArrayLike) -> np.floating:
     return np.sum((x[1:] - x[:-1] ** 2.0) ** 2.0 + (1 - x[:-1]) ** 2.0)
 
 
+# A tiny deterministic convex problem for fast Bayes convergence tests.
+# The loss is minimized when x is exactly 0.3, so tests can verify that the
+# optimizer moves toward a known best point without spending hundreds of
+# iterations on noisier objective functions.
 def quadratic_loss(run: SweepRun) -> floating:
     return (run.config["x"]["value"] - 0.3) ** 2
 
@@ -31,19 +41,16 @@ def quadratic_run(x: floating) -> SweepRun:
     return run
 
 
-def run_bayes_search(
+def simulate_bayes_search(
     f: Callable[[SweepRun], floating],
     config: SweepConfig,
     init_runs: Iterable[SweepRun] = (),
     improvement: floating = 0.1,
     num_iterations: integer = 20,
-    optimium: Optional[Dict[str, floating]] = None,
-    atol: float = 0.2,
     run_state: RunState = RunState.finished,
-):
+) -> List[SweepRun]:
 
     metric_name = config["metric"]["name"]
-    opt_goal = config["metric"]["goal"]
 
     runs = list(init_runs)
     for _ in range(num_iterations):
@@ -57,17 +64,50 @@ def run_bayes_search(
         suggested_run.summary_metrics[metric_name] = metric
         runs.append(suggested_run)
 
-    if optimium is not None:
-        best_run = (min if opt_goal == "minimize" else max)(
-            [r for r in runs if r.state == run_state],
-            key=lambda run: run.metric_extremum(metric_name, opt_goal),  # type: ignore
-        )
-        for param_name in config["parameters"]:
-            left_comp = best_run.config[param_name]["value"]
-            right_comp = (
-                optimium if isinstance(optimium, float) else optimium[param_name]
+    if logger.isEnabledFor(logging.DEBUG):
+        for run in runs:
+            logger.debug(
+                "Bayes search test run: config=%s state=%s", run.config, run.state
             )
-            np.testing.assert_allclose(left_comp, right_comp, atol=atol)
+
+    return runs
+
+
+def assert_best_run_matches_optimum(
+    runs: Iterable[SweepRun],
+    config: SweepConfig,
+    optimum: Dict[str, floating],
+    atol: float = 0.2,
+    run_state: RunState = RunState.finished,
+) -> None:
+    metric_name = config["metric"]["name"]
+    opt_goal = config["metric"]["goal"]
+    best_run = (min if opt_goal == "minimize" else max)(
+        [r for r in runs if r.state == run_state],
+        key=lambda run: run.metric_extremum(metric_name, opt_goal),  # type: ignore
+    )
+    for param_name in config["parameters"]:
+        left_comp = best_run.config[param_name]["value"]
+        right_comp = optimum[param_name]
+        # Verify that the best observed run landed near the expected optimum.
+        np.testing.assert_allclose(left_comp, right_comp, atol=atol)
+
+
+def assert_suggestions_match_uniform_distribution(
+    runs: List[SweepRun],
+    param_name: str,
+    min_value: floating,
+    max_value: floating,
+) -> None:
+    # If Bayes has no usable metric signal, all observed points have the same
+    # imputed objective value. In that case the GP cannot guide the search, so
+    # suggestions should fall back to approximately uniform random sampling.
+    samples = [run.config[param_name]["value"] for run in runs]
+    check_that_samples_are_from_the_same_distribution(
+        samples,
+        np.random.uniform(min_value, max_value, len(samples)),
+        np.linspace(min_value, max_value, 11),
+    )
 
 
 @pytest.mark.parametrize(
@@ -99,11 +139,11 @@ def test_bayes_search_handles_supported_parameter_distributions(x):
         }
     )
 
-    run_bayes_search(y, config, runs, num_iterations=3)
+    generated_runs = list(simulate_bayes_search(y, config, runs, num_iterations=3))
+    assert len(generated_runs) == 4
 
 
 def test_bayes_search_converges_on_simple_quadratic():
-    np.random.seed(0)
     config = SweepConfig(
         {
             "method": "bayes",
@@ -111,16 +151,16 @@ def test_bayes_search_converges_on_simple_quadratic():
             "parameters": {"x": {"min": 0.0, "max": 1.0}},
         }
     )
-    runs = [quadratic_run(0.0), quadratic_run(1.0)]
 
-    for _ in range(12):
-        suggestion = next_run(config, runs)
-        suggestion.state = RunState.finished
-        suggestion.summary_metrics["loss"] = quadratic_loss(suggestion)
-        runs.append(suggestion)
+    runs = simulate_bayes_search(
+        quadratic_loss,
+        config,
+        init_runs=[quadratic_run(0.0), quadratic_run(1.0)],
+        num_iterations=6,
+    )
 
-    best_run = min(runs, key=lambda r: r.metric_extremum("loss", "minimum"))
-    np.testing.assert_allclose(best_run.config["x"]["value"], 0.3, atol=0.05)
+    best_loss = min(run.metric_extremum("loss", "minimum") for run in runs)
+    assert best_loss < 0.001
 
 
 def run_iterations(
@@ -129,8 +169,6 @@ def run_iterations(
     num_iterations: integer = 20,
     x_init: Optional[ArrayLike] = None,
     improvement: floating = 0.1,
-    optimium: Optional[ArrayLike] = None,
-    atol: float = 0.2,
     chunk_size: integer = 1,
 ) -> Tuple[ArrayLike, ArrayLike]:
 
@@ -159,23 +197,27 @@ def run_iterations(
             else:
                 sample_X = np.append(sample_X, np.array([sample]), axis=0)
             counter += 1
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "Bayes next_sample test iteration: X=%s prob(I)=%s pred=%s value=%s",
+                    sample,
+                    prob,
+                    pred,
+                    f(sample),
+                )
         assert sample_X is not None
         sample_X = np.asarray(sample_X, dtype=np.float64)
 
         X = np.append(X, sample_X, axis=0)
         y = np.array([f(x) for x in X]).flatten()
 
-    if optimium is not None:
-        optimium = np.asarray(optimium)
-        representative_sample = X[np.argmin(y)]
-        np.testing.assert_array_less(np.abs(representative_sample - optimium), atol)
-
     return X, y
 
 
-def test_squiggle_explores_parameter_space():
-    # This test checks whether the bayes algorithm correctly explores the parameter space
-    # we sample a ton of positive examples, ignoring the negative side
+def test_squiggle_explores_unobserved_parameter_space():
+    # The observed samples all have x >= 0, but the search bounds also allow
+    # x < 0. A high improvement target should make expected improvement favor
+    # the unobserved side instead of only exploiting the observed region.
     X = np.random.uniform(0, 5, 200)[:, None]
     Y = squiggle(X.ravel())
     (sample, prob, pred, _, _, _,) = bayes.next_sample(
@@ -201,13 +243,27 @@ def test_squiggle_explores_parameter_space():
 
 
 def test_next_sample_converges_on_simple_quadratic():
-    np.random.seed(0)
-
     def f(x):
         return (x[0] - 0.3) ** 2
 
     x_init = np.array([[0.0], [1.0]])
-    run_iterations(f, [[0.0, 1.0]], 12, x_init, optimium=[0.3], atol=0.05)
+    _, y = run_iterations(f, [[0.0, 1.0]], 6, x_init)
+    assert np.min(y) < 0.001
+
+
+def test_next_sample_converges_to_squiggle_minimum():
+    x_init = np.array([[0.0], [5.0]])
+    _, y = run_iterations(squiggle, [[0.0, 5.0]], 8, x_init)
+    assert np.min(y) < 0.75
+
+
+def test_next_sample_converges_to_squiggle_maximum():
+    def f(x):
+        return -squiggle(x)
+
+    x_init = np.array([[0.0], [5.0]])
+    _, y = run_iterations(f, [[0.0, 5.0]], 8, x_init)
+    assert np.min(y) < -1.3
 
 
 def test_nans():
@@ -233,18 +289,19 @@ def test_squiggle_int():
     assert np.isclose(sample % 1, 0)
 
 
-def test_next_sample_handles_multidimensional_bounds():
+def test_next_sample_converges_on_rosenbrock():
     dimensions = 3
     x_init = np.zeros((1, dimensions))
     new_X, new_y = run_iterations(
         rosenbrock,
         [[0.0, 2.0]] * dimensions,
-        1,
+        30,
         x_init,
         improvement=0.1,
     )
-    assert new_X.shape == (2, dimensions)
-    assert new_y.shape == (2,)
+    assert np.min(new_y) < 0.3
+    assert new_X.shape == (31, dimensions)
+    assert new_y.shape == (31,)
 
 
 def test_iterations_squiggle_chunked():
@@ -253,11 +310,12 @@ def test_iterations_squiggle_chunked():
         [[0.0, 5.0]],
         x_init=np.array([[0.0], [5.0]]),
         chunk_size=5,
-        num_iterations=5,
+        num_iterations=8,
         improvement=0.1,
     )
-    assert new_X.shape == (7, 1)
-    assert new_y.shape == (7,)
+    assert np.min(new_y) < 0.76
+    assert new_X.shape == (10, 1)
+    assert new_y.shape == (10,)
 
 
 def test_next_sample_with_one_observation_uses_provided_candidates(monkeypatch):
@@ -337,17 +395,16 @@ def test_runs_bayes_runs2(sweep_config_bayes_search_2params_with_metric):
 
     runs = [r1, r2]
 
-    for _ in range(5):
+    for _ in range(30):
         suggestion = next_run(sweep_config_bayes_search_2params_with_metric, runs)
         metric = {"loss": loss_func(suggestion)}
         suggestion.history = [metric]
         suggestion.state = RunState.finished
         runs.append(suggestion)
 
-    for run in runs[2:]:
-        assert 1 <= run.config["v1"]["value"] <= 10
-        assert 1 <= run.config["v2"]["value"] <= 10
-        assert "expected_improvement" in run.search_info
+    best_run = min(runs, key=lambda r: r.metric_extremum("loss", "minimum"))
+    assert best_run.metric_extremum("loss", "minimum") < 2.5
+    assert all("expected_improvement" in run.search_info for run in runs[2:])
 
 
 # search with 2 finished runs - hardcoded results - missing metric
@@ -381,7 +438,7 @@ def test_runs_bayes_runs2_missingmetric():
     )
 
     runs = [r1, r2]
-    for _ in range(5):
+    for _ in range(BAYES_RANDOM_FALLBACK_SAMPLES):
         suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
@@ -390,7 +447,7 @@ def test_runs_bayes_runs2_missingmetric():
             in suggestion.search_info["warnings"]
         )
 
-    assert all(1 <= run.config["v2"]["value"] <= 10 for run in runs)
+    assert_suggestions_match_uniform_distribution(runs, "v2", 1, 10)
 
 
 def test_runs_bayes_runs2_missingmetric_acc():
@@ -424,7 +481,7 @@ def test_runs_bayes_runs2_missingmetric_acc():
     )
 
     runs = [r1, r2]
-    for _ in range(5):
+    for _ in range(BAYES_RANDOM_FALLBACK_SAMPLES):
         suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
@@ -433,9 +490,7 @@ def test_runs_bayes_runs2_missingmetric_acc():
             in suggestion.search_info["warnings"]
         )
 
-    for run in runs:
-        assert 1 <= run.config["v1"]["value"] <= 10
-        assert 1 <= run.config["v2"]["value"] <= 10
+    assert_suggestions_match_uniform_distribution(runs, "v2", 1, 10)
 
 
 def test_runs_bayes_nan(sweep_config_bayes_search_2params_with_metric):
@@ -474,7 +529,7 @@ def test_runs_bayes_nan(sweep_config_bayes_search_2params_with_metric):
     # need two (non running) runs before we get a new set of parameters
     runs = [r1, r2, r3, r4]
 
-    for _ in range(5):
+    for _ in range(BAYES_RANDOM_FALLBACK_SAMPLES):
         suggestion = next_run(sweep_config_bayes_search_2params_with_metric, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
@@ -483,13 +538,10 @@ def test_runs_bayes_nan(sweep_config_bayes_search_2params_with_metric):
             in suggestion.search_info["warnings"]
         )
 
-    for run in runs:
-        assert 1 <= run.config["v1"]["value"] <= 10
-        assert 1 <= run.config["v2"]["value"] <= 10
+    assert_suggestions_match_uniform_distribution(runs, "v2", 1, 10)
 
 
 def test_runs_bayes_categorical_list():
-
     v2_min = 1
     v2_max = 10
 
@@ -532,7 +584,7 @@ def test_runs_bayes_categorical_list():
     r2.summary_metrics = {"acc": loss_func(r2)}
 
     runs = [r1, r2]
-    for _ in range(5):
+    for _ in range(20):
         suggestion = next_run(config, runs)
         metric = {"acc": loss_func(suggestion)}
         suggestion.history = [metric]
@@ -542,6 +594,37 @@ def test_runs_bayes_categorical_list():
     for run in runs:
         assert run.config["v1"]["value"] in config["parameters"]["v1"]["values"]
         assert v2_min <= run.config["v2"]["value"] <= v2_max
+
+    best_run = max(runs, key=lambda r: r.metric_extremum("acc", "maximum"))
+    best_x = [best_run.config["v1"]["value"], best_run.config["v2"]["value"]]
+    assert best_x[0] == ["5", "6"]
+
+
+def test_bayes_categorical_list_values_normalize_and_round_trip():
+    values = [(2, 3), [3, 4], ["5", "6"], [(7, 8), ["9", [10, 11]]]]
+    config = bayes.bayes_baseline_validate_and_fill(
+        {
+            "method": "bayes",
+            "metric": {"name": "acc", "goal": "maximize"},
+            "parameters": {"v1": {"distribution": "categorical", "values": values}},
+        }
+    )
+    runs = [
+        SweepRun(
+            state=RunState.finished,
+            config={"v1": {"value": value}},
+            summary_metrics={"acc": index},
+        )
+        for index, value in enumerate(values)
+    ]
+
+    params, sample_X, _, _, _ = bayes._construct_gp_data(runs, config)
+    v1_index = params.param_names_to_index["v1"]
+    v1_param = params.param_names_to_param["v1"]
+
+    # Verify categorical values map to evenly spaced normalized GP inputs.
+    np.testing.assert_allclose(sample_X[:, v1_index], [0.25, 0.5, 0.75, 1.0])
+    assert v1_param.ppf(np.array([0.1, 0.4, 0.7, 0.9])) == values
 
 
 def test_bayes_can_handle_preemptible_or_preempting_runs():
@@ -962,7 +1045,7 @@ def test_runs_bayes_runs2_boolmetric():
     )
 
     runs = [r1, r2]
-    for _ in range(5):
+    for _ in range(BAYES_RANDOM_FALLBACK_SAMPLES):
         suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
@@ -971,7 +1054,7 @@ def test_runs_bayes_runs2_boolmetric():
             in suggestion.search_info["warnings"]
         )
 
-    assert all(1 <= run.config["v2"]["value"] <= 10 for run in runs)
+    assert_suggestions_match_uniform_distribution(runs, "v2", 1, 10)
 
 
 def test_bayes_impute_best():
@@ -1042,27 +1125,67 @@ def test_bayes_impute_best():
         return 10 - run.config["a"]["value"] * 10
 
     # check that best finds the answer
-    run_bayes_search(
+    generated_runs = simulate_bayes_search(
         opt_func,
         sweep_config,
         init_runs=runs,
-        optimium={"a": 1.0},
         num_iterations=5,
-        atol=0.001,
+    )
+    assert_best_run_matches_optimum(
+        generated_runs, sweep_config, {"a": 1.0}, atol=0.001
     )
 
     # check that worst doesn't
     sweep_config["metric"]["impute"] = "worst"
 
     with pytest.raises(AssertionError):
-        run_bayes_search(
+        generated_runs = simulate_bayes_search(
             opt_func,
             sweep_config,
             init_runs=runs,
-            optimium={"a": 1.0},
             num_iterations=5,
-            atol=0.001,
         )
+        assert_best_run_matches_optimum(
+            generated_runs, sweep_config, {"a": 1.0}, atol=0.001
+        )
+
+
+def test_bayes_impute_latest_uses_latest_valid_metric_for_failed_runs():
+    config = bayes.bayes_baseline_validate_and_fill(
+        SweepConfig(
+            {
+                "method": "bayes",
+                "metric": {"name": "loss", "goal": "minimize", "impute": "latest"},
+                "parameters": {"a": {"min": 0.0, "max": 1.0}},
+            }
+        )
+    )
+    runs = [
+        SweepRun(
+            state=RunState.failed,
+            history=[
+                {"loss": 5.0},
+                {"loss": 1.0},
+                {"loss": float("nan")},
+                {"loss": "bad"},
+                {"loss": 3.0},
+            ],
+            summary_metrics={"loss": 0.5},
+            config={"a": {"value": 0.25}},
+        ),
+        SweepRun(
+            state=RunState.finished,
+            history=[{"loss": 4.0}],
+            config={"a": {"value": 0.75}},
+        ),
+    ]
+
+    _, sample_X, current_X, sample_y, _ = bayes._construct_gp_data(runs, config)
+
+    assert sample_X.shape == (2, 1)
+    assert len(current_X) == 0
+    # Verify failed runs use the latest valid history metric, not best or summary.
+    np.testing.assert_allclose(sample_y, [3.0, 4.0])
 
 
 def test_bayes_impute_latest_uses_latest_valid_metric():
@@ -1144,4 +1267,43 @@ def test_bayes_impute_while_running_best_includes_running_run():
     _, sample_X, current_X, sample_y, _ = bayes._construct_gp_data([run], config)
     assert sample_X.shape == (1, 1)
     assert len(current_X) == 0
+    # Verify a running maximizing run contributes its metric with minimizer sign flip.
     np.testing.assert_allclose(sample_y[0], -y(run))
+
+
+def test_bayes_impute_while_running_best_guides_search(monkeypatch):
+    def fixed_random_sample(
+        x_bounds: ArrayLike, num_test_samples: integer
+    ) -> ArrayLike:
+        candidates = np.linspace(0.0, 1.0, int(num_test_samples))[:, None]
+        candidates[min(300, len(candidates) - 1), 0] = 0.3
+        return candidates
+
+    monkeypatch.setattr(bayes, "random_sample", fixed_random_sample)
+
+    config = SweepConfig(
+        {
+            "method": "bayes",
+            "metric": {
+                "name": "loss",
+                "goal": "minimize",
+                "impute_while_running": "best",
+            },
+            "parameters": {"x": {"min": 0.0, "max": 1.0}},
+        }
+    )
+
+    initial_runs = [quadratic_run(0.0), quadratic_run(1.0)]
+    for run in initial_runs:
+        run.state = RunState.running
+
+    generated_runs = simulate_bayes_search(
+        quadratic_loss,
+        config,
+        init_runs=initial_runs,
+        num_iterations=5,
+        run_state=RunState.running,
+    )
+
+    best_loss = min(run.metric_extremum("loss", "minimum") for run in generated_runs)
+    assert best_loss < 0.001
