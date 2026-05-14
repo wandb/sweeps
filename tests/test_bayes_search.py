@@ -318,6 +318,66 @@ def test_iterations_squiggle_chunked():
     assert new_y.shape == (10,)
 
 
+def test_next_sample_with_one_observation_uses_provided_candidates(monkeypatch):
+    def choose_second_candidate(num_candidates):
+        return 1
+
+    monkeypatch.setattr(bayes.np.random, "choice", choose_second_candidate)
+
+    sample, prob, pred, pred_std, expected_improvement, warnings = bayes.next_sample(
+        sample_X=np.array([[0.25]]),
+        sample_y=np.array([3.5]),
+        test_X=[[0.1], [0.9]],
+    )
+
+    # Verify the single-observation fallback chooses from test_X.
+    np.testing.assert_allclose(sample, [0.9])
+    assert prob == 1.0
+    assert pred == 3.5
+    assert np.isnan(pred_std)
+    assert np.isnan(expected_improvement)
+    assert warnings == ""
+
+
+def test_train_gaussian_process_limits_current_samples(capsys, monkeypatch):
+    class FakeGaussianProcess:
+        def predict(self, X):
+            return np.zeros(np.asarray(X).shape[0])
+
+    fit_calls = []
+
+    def fake_fit_normalized_gaussian_process(X, y, nu=1.5):
+        fit_calls.append((np.asarray(X), np.asarray(y)))
+        return FakeGaussianProcess(), 0.0, 1.0
+
+    monkeypatch.setattr(
+        bayes, "fit_normalized_gaussian_process", fake_fit_normalized_gaussian_process
+    )
+    sample_X = np.linspace(0.0, 1.0, 6)[:, None]
+    sample_y = (sample_X[:, 0] - 0.5) ** 2
+    current_X = np.linspace(0.0, 1.0, 6)[:, None]
+
+    gp, y_mean, y_stddev = bayes.train_gaussian_process(
+        sample_X,
+        sample_y,
+        current_X=current_X,
+        max_samples=10,
+    )
+
+    assert "dropping some currently running parameters" in capsys.readouterr().out
+    assert isinstance(gp, FakeGaussianProcess)
+    assert y_mean == 0.0
+    assert y_stddev == 1.0
+    assert len(fit_calls) == 2
+    assert fit_calls[0][0].shape == (6, 1)
+    assert fit_calls[0][1].shape == (6,)
+    assert fit_calls[1][0].shape == (11, 1)
+    assert fit_calls[1][1].shape == (11,)
+    # Verify current_X was trimmed to max_samples - 5 before fantasy fitting.
+    np.testing.assert_allclose(fit_calls[1][0][-5:], current_X[:5])
+    np.testing.assert_allclose(fit_calls[1][1][-5:], np.zeros(5))
+
+
 def test_bayes_search_with_zero_runs_begins_correctly(
     sweep_config_bayes_search_2params_with_metric,
 ):
@@ -1115,7 +1175,7 @@ def test_bayes_impute_best():
         )
 
 
-def test_bayes_impute_latest_uses_latest_valid_metric_for_failed_runs():
+def test_construct_gp_data_imputes_failed_run_with_latest_history_metric():
     config = bayes.bayes_baseline_validate_and_fill(
         SweepConfig(
             {
@@ -1151,6 +1211,45 @@ def test_bayes_impute_latest_uses_latest_valid_metric_for_failed_runs():
     assert len(current_X) == 0
     # Verify failed runs use the latest valid history metric, not best or summary.
     np.testing.assert_allclose(sample_y, [3.0, 4.0])
+
+
+def test_impute_latest_without_valid_metric_uses_failed_value():
+    run = SweepRun(
+        history=[
+            {"other": 1.0},
+            {"loss": None},
+            {"loss": False},
+        ]
+    )
+
+    # Verify latest falls back to the failed value when no numeric history exists.
+    assert bayes.impute("minimize", "loss", bayes.ImputeStrategy.latest, run=run) == 0.0
+
+
+def test_construct_gp_data_imputes_missing_finished_metric_with_failed_value():
+    config = bayes.bayes_baseline_validate_and_fill(
+        SweepConfig(
+            {
+                "method": "bayes",
+                "metric": {"name": "loss", "goal": "minimize", "impute": "best"},
+                "parameters": {"x": {"min": 0.0, "max": 1.0}},
+            }
+        )
+    )
+    run = SweepRun(
+        config={"x": {"value": 0.4}},
+        state=RunState.finished,
+        history=[{"other": 1.0}],
+        summary_metrics={},
+    )
+
+    _, sample_X, current_X, sample_y, warnings = bayes._construct_gp_data([run], config)
+
+    assert sample_X.shape == (1, 1)
+    assert len(current_X) == 0
+    # Verify best imputation falls back to the failed value for a missing metric.
+    np.testing.assert_allclose(sample_y, [0.0])
+    assert warnings == ""
 
 
 def test_bayes_impute_while_running_best_includes_running_run():
