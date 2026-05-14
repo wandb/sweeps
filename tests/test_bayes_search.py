@@ -13,7 +13,6 @@ from sweeps._types import ArrayLike, floating, integer
 from .test_random_search import check_that_samples_are_from_the_same_distribution
 
 logger = logging.getLogger(__name__)
-BAYES_RANDOM_FALLBACK_SAMPLES = 100
 
 
 def squiggle(x: ArrayLike) -> np.floating:
@@ -463,7 +462,7 @@ def test_runs_bayes_runs2_missingmetric():
     )
 
     runs = [r1, r2]
-    for _ in range(BAYES_RANDOM_FALLBACK_SAMPLES):
+    for _ in range(100):
         suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
@@ -506,7 +505,7 @@ def test_runs_bayes_runs2_missingmetric_acc():
     )
 
     runs = [r1, r2]
-    for _ in range(BAYES_RANDOM_FALLBACK_SAMPLES):
+    for _ in range(100):
         suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
@@ -554,7 +553,7 @@ def test_runs_bayes_nan(sweep_config_bayes_search_2params_with_metric):
     # need two (non running) runs before we get a new set of parameters
     runs = [r1, r2, r3, r4]
 
-    for _ in range(BAYES_RANDOM_FALLBACK_SAMPLES):
+    for _ in range(100):
         suggestion = next_run(sweep_config_bayes_search_2params_with_metric, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
@@ -1070,7 +1069,7 @@ def test_runs_bayes_runs2_boolmetric():
     )
 
     runs = [r1, r2]
-    for _ in range(BAYES_RANDOM_FALLBACK_SAMPLES):
+    for _ in range(100):
         suggestion = next_run(config, runs)
         suggestion.state = RunState.finished
         runs.append(suggestion)
