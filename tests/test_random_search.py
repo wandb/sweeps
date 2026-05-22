@@ -7,10 +7,14 @@ from scipy import stats
 from sweeps._types import ArrayLike
 from sweeps.config import SweepConfig
 from sweeps.params import HyperParameter
-from sweeps.run import next_run
+from sweeps.run import next_runs
 
 test_results_dir = Path(__file__).parent.parent / "test_results"
 test_results_dir.mkdir(parents=True, exist_ok=True)
+
+
+def sample_random_runs(sweep_config, n_samples):
+    return next_runs(sweep_config, [], n=n_samples)
 
 
 def check_that_samples_are_from_the_same_distribution(
@@ -96,10 +100,7 @@ def test_rand_categorical(values, probs):
             "parameters": {"v1": {"values": values, "probabilities": probs}},
         }
     )
-    runs = []
-    for i in range(n_samples):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples)
     pred_samples = [run.config["v1"]["value"] for run in runs]
     for i, v in enumerate(values):
         expected = n_samples * probs[i]
@@ -121,10 +122,7 @@ def test_rand_uniform(plot):
         }
     )
 
-    runs = []
-    for i in range(n_samples):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples)
 
     pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
     true_samples = np.random.uniform(v1_min, v1_max, size=n_samples)
@@ -150,10 +148,7 @@ def test_rand_normal(plot):
         }
     )
 
-    runs = []
-    for i in range(n_samples):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples)
 
     pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
     true_samples = np.random.normal(0, 1, size=n_samples)
@@ -179,10 +174,7 @@ def test_rand_lognormal(plot):
         }
     )
 
-    runs = []
-    for i in range(n_samples):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples)
 
     pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
     true_samples = np.random.lognormal(2, 3, size=n_samples)
@@ -213,10 +205,7 @@ def test_rand_loguniform(plot):
         },
     }
 
-    runs = []
-    for i in range(n_samples):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples)
 
     pred_samples = np.asarray([run.config["v2"]["value"] for run in runs])
     true_samples = np.random.uniform(np.log(v2_min), np.log(v2_max), size=n_samples)
@@ -254,10 +243,7 @@ def test_rand_loguniform_values(plot):
         }
     )
 
-    runs = []
-    for i in range(n_samples):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples)
 
     pred_samples = np.asarray([run.config["v2"]["value"] for run in runs])
     true_samples = np.random.uniform(np.log(v2_min), np.log(v2_max), size=n_samples)
@@ -299,10 +285,7 @@ def test_rand_inv_loguniform(plot):
         },
     }
 
-    runs = []
-    for i in range(n_samples):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples)
 
     pred_samples = np.asarray([run.config["v2"]["value"] for run in runs])
     true_samples = np.random.uniform(limit_min, limit_max, size=n_samples)
@@ -385,10 +368,7 @@ def test_rand_inv_loguniform_values(plot):
         }
     )
 
-    runs = []
-    for i in range(n_samples):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples)
 
     pred_samples = np.asarray([run.config["v2"]["value"] for run in runs])
     true_samples = np.random.uniform(
@@ -461,10 +441,7 @@ def test_rand_q_lognormal(q, plot):
         }
     )
 
-    runs = []
-    for i in range(n_samples_pred):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples_pred)
 
     pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
     true_samples = np.round(np.random.lognormal(2, 2, size=n_samples_true) / q) * q
@@ -498,10 +475,7 @@ def test_rand_q_normal(q, plot):
         }
     )
 
-    runs = []
-    for i in range(n_samples_pred):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples_pred)
 
     pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
     true_samples = np.round(np.random.normal(4, 2, size=n_samples_true) / q) * q
@@ -534,10 +508,7 @@ def test_rand_q_uniform(q, plot):
         }
     )
 
-    runs = []
-    for i in range(n_samples_pred):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples_pred)
 
     pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
     true_samples = np.round(np.random.uniform(0, 100, size=n_samples_true) / q) * q
@@ -574,10 +545,7 @@ def test_rand_q_loguniform_values(q, plot):
         }
     )
 
-    runs = []
-    for i in range(n_samples_pred):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples_pred)
 
     pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
     true_samples = np.round(stats.loguniform(0.1, 100).rvs(1000) / q) * q
@@ -612,10 +580,7 @@ def test_rand_q_loguniform(q, plot):
         },
     }
 
-    runs = []
-    for i in range(n_samples_pred):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples_pred)
 
     pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
     true_samples = np.round(stats.loguniform(0.1, 100).rvs(1000) / q) * q
@@ -647,10 +612,7 @@ def test_rand_q_beta(q, plot):
         }
     )
 
-    runs = []
-    for i in range(n_samples_pred):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples_pred)
 
     pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
     true_samples = np.round(np.random.beta(2, 5, 1000) / q) * q
@@ -681,10 +643,7 @@ def test_rand_beta(plot):
         }
     )
 
-    runs = []
-    for i in range(n_samples_pred):
-        suggestion = next_run(sweep_config_2params, runs)
-        runs.append(suggestion)
+    runs = sample_random_runs(sweep_config_2params, n_samples_pred)
 
     pred_samples = np.asarray([run.config["v1"]["value"] for run in runs])
     true_samples = np.random.beta(2, 5, 1000)
