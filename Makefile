@@ -49,9 +49,9 @@ release-test: dist ## package and upload test release
 	twine upload --repository testpypi dist/*
 
 bumpversion-to-dev:
-	uv pip install -qq bumpversion==0.5.3
+	uv pip install -qq bump2version
 	uv run python ./tools/bumpversion-tool.py --to-dev
 
 bumpversion-from-dev:
-	uv pip install -qq bumpversion==0.5.3
+	uv pip install -qq bump2version
 	uv run python ./tools/bumpversion-tool.py --from-dev
