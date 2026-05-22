@@ -4,4 +4,10 @@ black==22.8.0
 flake8==7.3.0
 types-PyYAML==5.4.3
 mypy==1.14.1
-tox>=3.24.0
+tox==4.54.0
+pytest==7.4.0
+pytest-cov==2.11.1
+pytest-randomly==3.8.0
+matplotlib>=3
+pytest-xdist>=2.2.1
+pytest-profiling>=1.7.0
