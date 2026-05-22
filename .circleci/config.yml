@@ -48,11 +48,17 @@ jobs:
           step_name: Run tests
           python_version: "3.10"
           command: tox -e py310
-      - codecov/upload
+      # Upload coverage from one Python version to avoid duplicate Codecov reports.
+      # Move coverage to another version when we deprecate this one.
+      - codecov/upload:
+          flags: unit
+      - store_artifacts:
+          path: coverage.xml
+          destination: coverage/coverage.xml
       - store_artifacts:
           path: prof/
       - store_test_results:
-          path: .
+          path: result.xml
   linux311:
     machine:
       image: ubuntu-2404:2025.09.1
@@ -66,11 +72,10 @@ jobs:
           step_name: Run tests
           python_version: "3.11"
           command: tox -e py311
-      - codecov/upload
       - store_artifacts:
           path: prof/
       - store_test_results:
-          path: .
+          path: result.xml
   linux312:
     machine:
       image: ubuntu-2404:2025.09.1
@@ -84,11 +89,10 @@ jobs:
           step_name: Run tests
           python_version: "3.12"
           command: --with setuptools==75.8.0 tox -e py312
-      - codecov/upload
       - store_artifacts:
           path: prof/
       - store_test_results:
-          path: .
+          path: result.xml
   linters310:
     docker:
       - image: cimg/python:3.10
