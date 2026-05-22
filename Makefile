@@ -18,6 +18,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -f .coverage
 	rm -fr htmlcov/
 	rm -fr test_results/
+	rm -fr test-results/
 	rm -f result.xml
 	rm -rf prof/
 
