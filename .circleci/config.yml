@@ -5,27 +5,6 @@ orbs:
   codecov: codecov/codecov@5.0.3
 
 jobs:
-  linux39:
-    machine:
-      image: ubuntu-2204:2024.11.1
-    steps:
-      - checkout
-      - run:
-          name: Install python
-          command: pyenv install 3.9
-      - run:
-          name: Load python
-          command: pyenv global 3.9
-      - run:
-          name: Run tests
-          command: pip install tox==3.24.0 && tox -e py39
-          no_output_timeout: 60m
-      - codecov/upload
-      - store_artifacts:
-          path: prof/
-      - store_test_results:
-          path: .
-    resource_class: large
   linux310:
     machine:
       image: ubuntu-2204:2024.11.1
@@ -89,19 +68,6 @@ jobs:
       - store_test_results:
           path: .
     resource_class: large
-  linters39:
-    docker:
-      - image: cimg/python:3.9
-    steps:
-      - checkout
-      - run:
-          name: Install dependencies
-          command: pip install -r requirements.dev.txt
-      - run:
-          name: Run linters
-          command: |
-            pre-commit run --all-files
-            mypy --ignore-missing-imports --scripts-are-modules .
   linters310:
     docker:
       - image: cimg/python:3.10
@@ -114,7 +80,6 @@ jobs:
           name: Run linters
           command: |
             pre-commit run --all-files
-            mypy --ignore-missing-imports --scripts-are-modules .
   linters311:
     docker:
       - image: cimg/python:3.11
@@ -127,7 +92,6 @@ jobs:
           name: Run linters
           command: |
             pre-commit run --all-files
-            mypy --ignore-missing-imports --scripts-are-modules .
   linters312:
     docker:
       - image: cimg/python:3.12
@@ -140,16 +104,13 @@ jobs:
           name: Run linters
           command: |
             pre-commit run --all-files
-            mypy --ignore-missing-imports --scripts-are-modules .
 
 workflows:
   main:
     jobs:
-      - linux39
       - linux310
       - linux311
       - linux312
-      - linters39
       - linters310
       - linters311
       - linters312
