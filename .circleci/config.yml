@@ -4,21 +4,6 @@ orbs:
   codecov: codecov/codecov@5.0.3
 
 commands:
-  install-uv:
-    steps:
-      - run:
-          name: Install uv
-          command: |
-            curl -LsSf https://astral.sh/uv/0.11.9/install.sh | sh
-            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$BASH_ENV"
-  install-python:
-    parameters:
-      python_version:
-        type: string
-    steps:
-      - run:
-          name: Install Python << parameters.python_version >>
-          command: uv python install << parameters.python_version >>
   uv-run-dev:
     parameters:
       step_name:
@@ -31,105 +16,83 @@ commands:
     steps:
       - run:
           name: << parameters.step_name >>
-          command: uv run --python << parameters.python_version >> --with-requirements requirements.dev.txt << parameters.command >>
+          command: uv run --no-python-downloads --python << parameters.python_version >> --with-requirements requirements.dev.txt << parameters.command >>
           no_output_timeout: 60m
 
 jobs:
-  linux310:
-    machine:
-      image: ubuntu-2404:2025.09.1
+  tests:
+    parameters:
+      python_version:
+        type: string
+      tox_env:
+        type: string
+      extra_uv_args:
+        type: string
+        default: ""
+      upload_coverage:
+        type: boolean
+        default: false
+    docker:
+      - image: ghcr.io/astral-sh/uv:0.11.9-python<< parameters.python_version >>-trixie
     resource_class: large
     steps:
       - checkout
-      - install-uv
-      - install-python:
-          python_version: "3.10"
       - uv-run-dev:
           step_name: Run tests
-          python_version: "3.10"
-          command: tox -e py310
-      # Upload coverage from one Python version to avoid duplicate Codecov reports.
-      # Move coverage to another version when we deprecate this one.
-      - codecov/upload:
-          flags: unit
-      - store_artifacts:
-          path: coverage.xml
-          destination: coverage/coverage.xml
+          python_version: << parameters.python_version >>
+          command: << parameters.extra_uv_args >> tox -e << parameters.tox_env >>
+      - when:
+          condition: << parameters.upload_coverage >>
+          steps:
+            # Upload coverage from one Python version to avoid duplicate Codecov reports.
+            # Move coverage to another version when we deprecate this one.
+            - codecov/upload:
+                flags: unit
+            - store_artifacts:
+                path: coverage.xml
+                destination: coverage/coverage.xml
       - store_artifacts:
           path: prof/
       - store_test_results:
-          path: result.xml
-  linux311:
-    machine:
-      image: ubuntu-2404:2025.09.1
-    resource_class: large
-    steps:
-      - checkout
-      - install-uv
-      - install-python:
-          python_version: "3.11"
-      - uv-run-dev:
-          step_name: Run tests
-          python_version: "3.11"
-          command: tox -e py311
-      - store_artifacts:
-          path: prof/
-      - store_test_results:
-          path: result.xml
-  linux312:
-    machine:
-      image: ubuntu-2404:2025.09.1
-    resource_class: large
-    steps:
-      - checkout
-      - install-uv
-      - install-python:
-          python_version: "3.12"
-      - uv-run-dev:
-          step_name: Run tests
-          python_version: "3.12"
-          command: --with setuptools==75.8.0 tox -e py312
-      - store_artifacts:
-          path: prof/
-      - store_test_results:
-          path: result.xml
-  linters310:
+          path: test-results
+
+  linters:
+    parameters:
+      python_version:
+        type: string
     docker:
-      - image: cimg/python:3.10
+      - image: ghcr.io/astral-sh/uv:0.11.9-python<< parameters.python_version >>-trixie
+    resource_class: medium
     steps:
       - checkout
-      - install-uv
       - uv-run-dev:
           step_name: Run linters
-          python_version: "3.10"
-          command: pre-commit run --all-files
-  linters311:
-    docker:
-      - image: cimg/python:3.11
-    steps:
-      - checkout
-      - install-uv
-      - uv-run-dev:
-          step_name: Run linters
-          python_version: "3.11"
-          command: pre-commit run --all-files
-  linters312:
-    docker:
-      - image: cimg/python:3.12
-    steps:
-      - checkout
-      - install-uv
-      - uv-run-dev:
-          step_name: Run linters
-          python_version: "3.12"
+          python_version: << parameters.python_version >>
           command: pre-commit run --all-files
 
 workflows:
   main:
     jobs:
-      - linux310
-      - linux311
-      - linux312
-      - linters310
-      - linters311
-      - linters312
+      - tests:
+          name: linux310
+          python_version: "3.10"
+          tox_env: py310
+          upload_coverage: true
+      - tests:
+          name: linux311
+          python_version: "3.11"
+          tox_env: py311
+      - tests:
+          name: linux312
+          python_version: "3.12"
+          tox_env: py312
+          extra_uv_args: --with setuptools==75.8.0
+      - linters:
+          name: linters310
+          python_version: "3.10"
+      - linters:
+          name: linters311
+          python_version: "3.11"
+      - linters:
+          name: linters312
+          python_version: "3.12"
