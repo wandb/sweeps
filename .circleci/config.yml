@@ -98,6 +98,8 @@ jobs:
     steps:
       - checkout
       - install-uv
+      - install-python:
+          python_version: "3.11"
       - uv-run-dev:
           step_name: Run linters
           python_version: "3.10"
@@ -118,6 +120,8 @@ jobs:
     steps:
       - checkout
       - install-uv
+      - install-python:
+          python_version: "3.11"
       - uv-run-dev:
           step_name: Run linters
           python_version: "3.12"

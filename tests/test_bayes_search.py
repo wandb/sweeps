@@ -164,7 +164,7 @@ def test_bayes_search_converges_on_simple_quadratic():
 
 def run_iterations(
     f: Callable[[ArrayLike], floating],
-    search_bounds: ArrayLike,
+    search_X_bounds: ArrayLike,
     candidate_X: Optional[ArrayLike] = None,
     num_iterations: integer = 20,
     x_init: Optional[ArrayLike] = None,
@@ -189,7 +189,7 @@ def run_iterations(
     if x_init is not None:
         X = x_init
     else:
-        X = [np.zeros(len(search_bounds))]
+        X = [np.zeros(len(search_X_bounds))]
 
     y = np.array([f(x) for x in X]).flatten()
 
@@ -203,7 +203,7 @@ def run_iterations(
                 (sample, prob, pred, _, _, _,) = bayes.next_sample(
                     sample_X=X,
                     sample_y=y,
-                    X_bounds=search_bounds,
+                    X_bounds=search_X_bounds,
                     current_X=sample_X,
                     improvement=improvement,
                 )
