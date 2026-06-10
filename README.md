@@ -166,8 +166,8 @@ __Review the [Contributing Instructions](https://github.com/wandb/client/blob/ma
 Create and activate a uv-managed virtual environment:
 
 ```
-uv python install 3.10
-uv venv --python 3.10
+uv python install 3.11
+uv venv --python 3.11
 source .venv/bin/activate
 ```
 

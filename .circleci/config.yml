@@ -48,13 +48,6 @@ jobs:
           step_name: Run tests
           python_version: "3.10"
           command: tox -e py310
-      # Upload coverage from one Python version to avoid duplicate Codecov reports.
-      # Move coverage to another version when we deprecate this one.
-      - codecov/upload:
-          flags: unit
-      - store_artifacts:
-          path: coverage.xml
-          destination: coverage/coverage.xml
       - store_artifacts:
           path: prof/
       - store_test_results:
@@ -72,6 +65,12 @@ jobs:
           step_name: Run tests
           python_version: "3.11"
           command: tox -e py311
+      # Upload coverage from one Python version to avoid duplicate Codecov reports.
+      - codecov/upload:
+          flags: unit
+      - store_artifacts:
+          path: coverage.xml
+          destination: coverage/coverage.xml
       - store_artifacts:
           path: prof/
       - store_test_results:

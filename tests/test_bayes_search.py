@@ -164,18 +164,32 @@ def test_bayes_search_converges_on_simple_quadratic():
 
 def run_iterations(
     f: Callable[[ArrayLike], floating],
-    bounds: ArrayLike,
+    search_bounds: ArrayLike,
+    candidate_X: Optional[ArrayLike] = None,
     num_iterations: integer = 20,
     x_init: Optional[ArrayLike] = None,
     improvement: floating = 0.1,
     chunk_size: integer = 1,
-    test_X: Optional[ArrayLike] = None,
 ) -> Tuple[ArrayLike, ArrayLike]:
+    """Simulate sequential suggestions from next_sample.
+
+    Args:
+        f: Objective function to evaluate at each suggested point.
+        search_bounds: Bounds used by next_sample to generate random candidates
+            when candidate_X is omitted.
+        candidate_X: Optional fixed candidates for next_sample to score instead
+            of generating random candidates from search_bounds.
+        num_iterations: Number of new suggestions to simulate.
+        x_init: Already-observed training points used to fit the first GP.
+        improvement: Minimum improvement target passed through to next_sample.
+        chunk_size: Number of suggestions to make before adding their evaluated
+            objective values back into the observed training data.
+    """
 
     if x_init is not None:
         X = x_init
     else:
-        X = [np.zeros(len(bounds))]
+        X = [np.zeros(len(search_bounds))]
 
     y = np.array([f(x) for x in X]).flatten()
 
@@ -185,11 +199,11 @@ def run_iterations(
         for cc in range(chunk_size):
             if counter >= num_iterations:
                 break
-            if test_X is None:
+            if candidate_X is None:
                 (sample, prob, pred, _, _, _,) = bayes.next_sample(
                     sample_X=X,
                     sample_y=y,
-                    X_bounds=bounds,
+                    X_bounds=search_bounds,
                     current_X=sample_X,
                     improvement=improvement,
                 )
@@ -197,7 +211,7 @@ def run_iterations(
                 (sample, prob, pred, _, _, _,) = bayes.next_sample(
                     sample_X=X,
                     sample_y=y,
-                    test_X=test_X,
+                    test_X=candidate_X,
                     current_X=sample_X,
                     improvement=improvement,
                 )
@@ -277,7 +291,11 @@ def test_next_sample_converges_on_simple_quadratic():
 
     x_init = np.array([[0.0], [1.0]])
     _, y = run_iterations(
-        f, [[0.0, 1.0]], 6, x_init, test_X=evenly_spaced_points(0.0, 1.0)
+        f,
+        [[0.0, 1.0]],
+        candidate_X=evenly_spaced_points(0.0, 1.0),
+        num_iterations=6,
+        x_init=x_init,
     )
     assert np.min(y) < 0.001
 
@@ -287,9 +305,9 @@ def test_next_sample_converges_to_squiggle_minimum():
     _, y = run_iterations(
         squiggle,
         [[0.0, 5.0]],
-        8,
-        x_init,
-        test_X=evenly_spaced_points(0.0, 5.0),
+        candidate_X=evenly_spaced_points(0.0, 5.0),
+        num_iterations=8,
+        x_init=x_init,
     )
     assert np.min(y) < 0.75
 
@@ -300,7 +318,11 @@ def test_next_sample_converges_to_squiggle_maximum():
 
     x_init = np.array([[0.0], [5.0]])
     _, y = run_iterations(
-        f, [[0.0, 5.0]], 8, x_init, test_X=evenly_spaced_points(0.0, 5.0)
+        f,
+        [[0.0, 5.0]],
+        candidate_X=evenly_spaced_points(0.0, 5.0),
+        num_iterations=8,
+        x_init=x_init,
     )
     assert np.min(y) < -1.3
 
@@ -310,11 +332,11 @@ def test_nans():
         return np.zeros_like(x) * np.nan
 
     X = np.random.uniform(0, 5, 200)[:, None]
-    new_x, new_y = run_iterations(f, [[-10, 10]], 1, X)
+    new_x, new_y = run_iterations(f, [[-10, 10]], num_iterations=1, x_init=X)
     assert new_x[-1][0] < 10.0
     assert np.isnan(new_y[-1])
     new_x += np.random.uniform(0, 5, len(new_x))[:, None]
-    new_x, new_y = run_iterations(f, [[-10, 10]], 1, X)
+    new_x, new_y = run_iterations(f, [[-10, 10]], num_iterations=1, x_init=X)
     assert new_x[-1][0] < 10.0
     assert np.isnan(new_y[-1])
 
@@ -322,7 +344,7 @@ def test_nans():
 def test_squiggle_int():
     f = squiggle
     X = np.random.uniform(0, 5, 200)[:, None]
-    new_X, new_y = run_iterations(f, [[-10, 10]], 1, X)
+    new_X, new_y = run_iterations(f, [[-10, 10]], num_iterations=1, x_init=X)
     sample = new_X[-1][0]
     assert sample < 0.0, "Greater than 0 {}".format(sample)
     assert np.isclose(sample % 1, 0)
@@ -335,10 +357,10 @@ def test_next_sample_converges_on_rosenbrock():
     new_X, new_y = run_iterations(
         rosenbrock,
         bounds,
-        20,
-        x_init,
+        candidate_X=evenly_spaced_grid(bounds),
+        num_iterations=20,
+        x_init=x_init,
         improvement=0.1,
-        test_X=evenly_spaced_grid(bounds),
     )
     assert np.min(new_y) < 0.3
     assert new_X.shape == (22, dimensions)
@@ -353,7 +375,7 @@ def test_iterations_squiggle_chunked():
         chunk_size=5,
         num_iterations=10,
         improvement=0.1,
-        test_X=evenly_spaced_points(0.0, 5.0),
+        candidate_X=evenly_spaced_points(0.0, 5.0),
     )
     # Chunking can trigger next_sample's bad-GP-fit random fallback while a
     # batch is in flight; the non-chunked tests cover tighter convergence.
