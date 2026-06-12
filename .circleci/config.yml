@@ -19,6 +19,16 @@ commands:
       - run:
           name: Install Python << parameters.python_version >>
           command: uv python install << parameters.python_version >>
+  install-datadog-ci:
+    steps:
+      - run:
+          name: Install datadog-ci
+          command: |
+            mkdir -p "$HOME/.local/bin"
+            curl -L --fail "https://github.com/DataDog/datadog-ci/releases/latest/download/datadog-ci_linux-x64" --output "$HOME/.local/bin/datadog-ci"
+            chmod +x "$HOME/.local/bin/datadog-ci"
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$BASH_ENV"
+            "$HOME/.local/bin/datadog-ci" version
   uv-run-dev:
     parameters:
       step_name:
@@ -68,6 +78,12 @@ jobs:
       # Upload coverage from one Python version to avoid duplicate Codecov reports.
       - codecov/upload:
           flags: unit
+      - install-datadog-ci
+      - run:
+          name: Upload coverage to Datadog
+          command: DD_API_KEY="$DATADOG_API_KEY" datadog-ci coverage upload --format=cobertura --flags unit coverage.xml
+          environment:
+            DD_SITE: us5.datadoghq.com
       - store_artifacts:
           path: coverage.xml
           destination: coverage/coverage.xml
