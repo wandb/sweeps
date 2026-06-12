@@ -44,7 +44,6 @@ def simulate_bayes_search(
     f: Callable[[SweepRun], floating],
     config: SweepConfig,
     init_runs: Iterable[SweepRun] = (),
-    improvement: floating = 0.1,
     num_iterations: integer = 20,
     run_state: RunState = RunState.finished,
 ) -> List[SweepRun]:
@@ -53,9 +52,7 @@ def simulate_bayes_search(
 
     runs = list(init_runs)
     for _ in range(num_iterations):
-        suggested_run = bayes.bayes_search_next_run(
-            runs, config, minimum_improvement=improvement
-        )
+        suggested_run = bayes.bayes_search_next_run(runs, config)
         suggested_run.state = run_state
         metric = f(suggested_run)
         if suggested_run.summary_metrics is None:
@@ -168,7 +165,6 @@ def run_iterations(
     candidate_X: Optional[ArrayLike] = None,
     num_iterations: integer = 20,
     x_init: Optional[ArrayLike] = None,
-    improvement: floating = 0.1,
     chunk_size: integer = 1,
 ) -> Tuple[ArrayLike, ArrayLike]:
     """Simulate sequential suggestions from next_sample.
@@ -181,7 +177,6 @@ def run_iterations(
             of generating random candidates from search_bounds.
         num_iterations: Number of new suggestions to simulate.
         x_init: Already-observed training points used to fit the first GP.
-        improvement: Minimum improvement target passed through to next_sample.
         chunk_size: Number of suggestions to make before adding their evaluated
             objective values back into the observed training data.
     """
@@ -205,7 +200,6 @@ def run_iterations(
                     sample_y=y,
                     X_bounds=search_X_bounds,
                     current_X=sample_X,
-                    improvement=improvement,
                 )
             else:
                 (sample, prob, pred, _, _, _,) = bayes.next_sample(
@@ -213,7 +207,6 @@ def run_iterations(
                     sample_y=y,
                     test_X=candidate_X,
                     current_X=sample_X,
-                    improvement=improvement,
                 )
             if sample_X is None:
                 sample_X = np.array([sample])
@@ -255,19 +248,7 @@ def evenly_spaced_grid(
 
 
 def test_squiggle_explores_unobserved_parameter_space():
-    # The observed samples all have x >= 0, but the search bounds also allow
-    # x < 0. A high improvement target should make expected improvement favor
-    # the unobserved side instead of only exploiting the observed region.
-    X = evenly_spaced_points(0.0, 5.0, 200)
-    Y = squiggle(X.ravel())
-    (sample, prob, pred, _, _, _,) = bayes.next_sample(
-        sample_X=X,
-        sample_y=Y,
-        test_X=evenly_spaced_points(-5.0, 5.0),
-        improvement=1.0,
-    )
-    assert sample[0] < 0.0, "Greater than 0 {}".format(sample[0])
-    # we sample missing a big chunk between 1 and 3
+    # We sampled missing a big chunk between 1 and 3.
     X = np.vstack(
         (
             evenly_spaced_points(0.0, 1.0, 200),
@@ -360,7 +341,6 @@ def test_next_sample_converges_on_rosenbrock():
         candidate_X=evenly_spaced_grid(bounds),
         num_iterations=20,
         x_init=x_init,
-        improvement=0.1,
     )
     assert np.min(new_y) < 0.3
     assert new_X.shape == (22, dimensions)
@@ -374,7 +354,6 @@ def test_iterations_squiggle_chunked():
         x_init=np.array([[0.0], [5.0]]),
         chunk_size=5,
         num_iterations=10,
-        improvement=0.1,
         candidate_X=evenly_spaced_points(0.0, 5.0),
     )
     # Chunking can trigger next_sample's bad-GP-fit random fallback while a
@@ -1212,12 +1191,12 @@ def test_bayes_impute_best():
         ),
     ]
 
-    def opt_func(run):
+    def objective(run):
         return 10 - run.config["a"]["value"] * 10
 
     # check that best finds the answer
     generated_runs = simulate_bayes_search(
-        opt_func,
+        objective,
         sweep_config,
         init_runs=runs,
         num_iterations=5,
@@ -1231,7 +1210,7 @@ def test_bayes_impute_best():
 
     with pytest.raises(AssertionError):
         generated_runs = simulate_bayes_search(
-            opt_func,
+            objective,
             sweep_config,
             init_runs=runs,
             num_iterations=5,

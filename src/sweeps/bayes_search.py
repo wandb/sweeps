@@ -174,9 +174,7 @@ def next_sample(
     current_X: Optional[ArrayLike] = None,
     nu: floating = 1.5,
     max_samples_for_gp: integer = 100,
-    improvement: floating = 0.01,
     num_points_to_try: integer = 1000,
-    opt_func: str = "expected_improvement",
     test_X: Optional[ArrayLike] = None,
 ) -> Tuple[ArrayLike, floating, floating, floating, floating, str]:
     """Calculates the best next sample to look at via bayesian optimization.
@@ -200,15 +198,9 @@ def next_sample(
             maximum samples to consider (since algo is O(n^3)) for performance,
             but also adds some randomness. this number of samples will be chosen
             randomly from the sample_X and used to train the GP.
-        improvement: floating, optional, default 0.1
-            amount of improvement to optimize for -- higher means take more exploratory risks
         num_points_to_try: integer, optional, default 1000
             number of X values to try when looking for value with highest expected probability
             of improvement
-        opt_func: one of {"expected_improvement", "prob_of_improvement"} - whether to optimize expected
-                improvement of probability of improvement.  Expected improvement is generally better - may want
-                to remove probability of improvement at some point.  (But I think prboability of improvement
-                is a little easier to calculate)
         test_X: X values to test when looking for the best values to try
 
     Returns:
@@ -283,11 +275,6 @@ def next_sample(
     # best value of y we've seen so far.  i.e. y*
     min_unnorm_y = np.min(filtered_y)
 
-    """
-    if opt_func == "probability_of_improvement":
-        min_norm_y = (min_unnorm_y - y_mean) / y_stddev - improvement
-    else:
-    """
     min_norm_y = (min_unnorm_y - y_mean) / y_stddev
 
     Z = -(y_pred - min_norm_y) / (y_pred_std + STD_NUMERICAL_STABILITY_EPSILON)
@@ -295,12 +282,6 @@ def next_sample(
     e_i = -(y_pred - min_norm_y) * scipy_stats.norm.cdf(
         Z
     ) + y_pred_std * scipy_stats.norm.pdf(Z)
-
-    """
-    if opt_func == "probability_of_improvement":
-        best_test_X_index = np.argmax(prob_of_improve)
-    else:
-    """
 
     best_test_X_index = np.argmax(e_i)
 
@@ -491,7 +472,6 @@ def bayes_search_next_run(
     runs: List[SweepRun],
     config: Union[dict, SweepConfig],
     validate: bool = False,
-    minimum_improvement: floating = 0.1,
 ) -> SweepRun:
     """Suggest runs using Bayesian optimization.
 
@@ -504,7 +484,6 @@ def bayes_search_next_run(
     Args:
         runs: The runs in the sweep.
         config: The sweep's config.
-        minimum_improvement: The minimium improvement to optimize for. Higher means take more exploratory risks.
         validate: Whether to validate `sweep_config` against the SweepConfig JSONschema.
            If true, will raise a Validation error if `sweep_config` does not conform to
            the schema. If false, will attempt to run the sweep with an unvalidated schema.
@@ -535,7 +514,6 @@ def bayes_search_next_run(
         sample_y=y,
         X_bounds=X_bounds,
         current_X=current_X if len(current_X) > 0 else None,
-        improvement=minimum_improvement,
     )
 
     # convert the parameters from vector of [0,1] values
@@ -562,12 +540,9 @@ def bayes_search_next_runs(
     config: Union[dict, SweepConfig],
     validate: bool = False,
     n: int = 1,
-    minimum_improvement: floating = 0.1,
 ):
     ret: List[SweepRun] = []
     for _ in range(n):
-        suggestion = bayes_search_next_run(
-            runs + ret, config, validate, minimum_improvement
-        )
+        suggestion = bayes_search_next_run(runs + ret, config, validate)
         ret.append(suggestion)
     return ret
