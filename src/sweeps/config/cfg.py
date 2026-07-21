@@ -26,6 +26,15 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
         raise ValueError("Sweep config must be parsable as a JSON object.")
 
     method = config.get("method")
+    scheduler = config.get("scheduler")
+    has_search_space = isinstance(scheduler, dict) and bool(
+        scheduler.get("search_space")
+    )
+
+    if "parameters" not in config and not has_search_space:
+        schema_violation_messages.append(
+            "`parameters` is required unless `scheduler.search_space` is set."
+        )
 
     if "metric" in config and "metrics" in config:
         schema_violation_messages.append(

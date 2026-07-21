@@ -245,18 +245,19 @@ def fill_validate_schema(d: Dict) -> Dict:
     validated = deepcopy(d)
 
     # update the parameters
-    filled = {}
-    for k, v in validated["parameters"].items():
-        try:
-            result = fill_parameter(k, v)
-        except ParamValidationError:
-            continue
-        else:
-            if result is None:
-                raise jsonschema.ValidationError(f"Parameter {k} is malformed")
-            _, config = result
-            filled[k] = config
-    validated["parameters"] = filled
+    if "parameters" in validated:
+        filled = {}
+        for k, v in validated["parameters"].items():
+            try:
+                result = fill_parameter(k, v)
+            except ParamValidationError:
+                continue
+            else:
+                if result is None:
+                    raise jsonschema.ValidationError(f"Parameter {k} is malformed")
+                _, config = result
+                filled[k] = config
+        validated["parameters"] = filled
 
     if "early_terminate" in validated:
         validated = fill_validate_early_terminate(validated)

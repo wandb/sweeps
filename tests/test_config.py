@@ -333,3 +333,56 @@ def test_metrics_requires_custom_method_error_message_is_specific():
 
     with pytest.raises(jsonschema.ValidationError, match="method: custom"):
         _ = config.SweepConfig(invalid_config)
+
+
+def test_parameters_not_required_when_scheduler_defines_search_space():
+    valid_config = {
+        "method": "custom",
+        "scheduler": {
+            "engine": "wandb",
+            "source": "scheduler.py",
+            "optimizer": "build_study",
+            "search_space": "search_space",
+        },
+    }
+
+    sweep_config = config.SweepConfig(valid_config)
+    assert "parameters" not in sweep_config
+
+
+def test_parameters_still_allowed_alongside_scheduler_search_space():
+    valid_config = {
+        "method": "custom",
+        "scheduler": {
+            "engine": "wandb",
+            "source": "scheduler.py",
+            "optimizer": "build_study",
+            "search_space": "search_space",
+        },
+        "parameters": {"v1": {"values": [1, 2, 3]}},
+    }
+
+    sweep_config = config.SweepConfig(valid_config)
+    assert sweep_config["parameters"]["v1"]["values"] == [1, 2, 3]
+
+
+def test_parameters_still_required_without_scheduler():
+    invalid_config = {"method": "bayes"}
+
+    with pytest.raises(jsonschema.ValidationError, match="`parameters` is required"):
+        _ = config.SweepConfig(invalid_config)
+
+
+def test_parameters_still_required_when_scheduler_has_no_search_space():
+    invalid_config = {
+        "method": "custom",
+        "scheduler": {
+            "engine": "wandb",
+            "source": "scheduler.py",
+            "optimizer": "build_study",
+            "search_space": "",
+        },
+    }
+
+    with pytest.raises(jsonschema.ValidationError, match="`parameters` is required"):
+        _ = config.SweepConfig(invalid_config)
