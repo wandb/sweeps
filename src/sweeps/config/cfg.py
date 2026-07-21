@@ -25,6 +25,44 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
     if not isinstance(config, dict):
         raise ValueError("Sweep config must be parsable as a JSON object.")
 
+    method = config.get("method")
+
+    if "metric" in config and "metrics" in config:
+        schema_violation_messages.append(
+            "`metric` and `metrics` cannot both be set: use `metric` for a "
+            "single objective, or `metrics` for multi-objective optimization."
+        )
+    elif "metrics" in config and method is not None and method != "custom":
+        schema_violation_messages.append(
+            f"`metrics` requires `method: custom` (got `method: {method}`): "
+            "multi-objective optimization is only supported with a custom "
+            "scheduler."
+        )
+
+    if "scheduler" in config:
+        if method is not None and method != "custom":
+            schema_violation_messages.append(
+                f"`scheduler` requires `method: custom` (got `method: {method}`)."
+            )
+
+        if "early_terminate" in config:
+            schema_violation_messages.append(
+                "`early_terminate` cannot be used together with `scheduler`: "
+                "early termination must be implemented by the custom scheduler "
+                "itself."
+            )
+
+        # only the wandb engine is implemented so far - the other engines are
+        # part of the schema so that configs can be written against the
+        # eventual API, but they cannot be used yet
+        if isinstance(config["scheduler"], dict):
+            engine = config["scheduler"].get("engine")
+            if engine in ("optuna", "ax"):
+                schema_violation_messages.append(
+                    f"scheduler.engine '{engine}' is not yet supported; "
+                    "only 'wandb' is currently available"
+                )
+
     # validate min/max - this cannot be done with jsonschema
     # because it does not support comparing values within
     # a json document. so we do it manually here:
