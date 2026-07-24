@@ -5,6 +5,7 @@ from .schema import (
     ParamValidationError,
     fill_parameter,
     fill_validate_early_terminate,
+    fill_validate_metrics,
     fill_validate_schema,
 )
 
@@ -14,5 +15,6 @@ __all__ = [
     "fill_validate_schema",
     "fill_parameter",
     "fill_validate_early_terminate",
+    "fill_validate_metrics",
     "ParamValidationError",
 ]

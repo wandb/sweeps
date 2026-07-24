@@ -181,6 +181,46 @@ def fill_validate_metric(d: Dict) -> Dict:
     return d
 
 
+def fill_validate_metrics(d: Dict) -> Dict:
+    d = deepcopy(d)
+
+    if "metrics" in d:
+        if not isinstance(d["metrics"], list):
+            raise ValueError(
+                f"invalid type for metrics: expected list, got {type(d['metrics'])}"
+            )
+
+        metric_schema = dereferenced_sweep_config_jsonschema["properties"]["metrics"][
+            "items"
+        ]
+
+        filled_metrics = []
+        for metric in d["metrics"]:
+            if not isinstance(metric, dict):
+                raise ValueError(
+                    f"invalid type for metric: expected dict, got {type(metric)}"
+                )
+            metric = deepcopy(metric)
+            if "goal" in metric:
+                if metric["goal"] not in metric_schema["properties"]["goal"]["enum"]:
+                    # let it be filled in by the schema default
+                    del metric["goal"]
+
+            if "impute" in metric:
+                if (
+                    metric["impute"]
+                    not in metric_schema["properties"]["impute"]["enum"]
+                ):
+                    # let it be filled in by the schema default
+                    del metric["impute"]
+
+            filler = DefaultFiller(schema=metric_schema, format_checker=format_checker)
+            filler.validate(metric)
+            filled_metrics.append(metric)
+        d["metrics"] = filled_metrics
+    return d
+
+
 def fill_validate_early_terminate(d: Dict) -> Dict:
     d = deepcopy(d)
     if d["early_terminate"]["type"] == "hyperband":
@@ -205,18 +245,19 @@ def fill_validate_schema(d: Dict) -> Dict:
     validated = deepcopy(d)
 
     # update the parameters
-    filled = {}
-    for k, v in validated["parameters"].items():
-        try:
-            result = fill_parameter(k, v)
-        except ParamValidationError:
-            continue
-        else:
-            if result is None:
-                raise jsonschema.ValidationError(f"Parameter {k} is malformed")
-            _, config = result
-            filled[k] = config
-    validated["parameters"] = filled
+    if "parameters" in validated:
+        filled = {}
+        for k, v in validated["parameters"].items():
+            try:
+                result = fill_parameter(k, v)
+            except ParamValidationError:
+                continue
+            else:
+                if result is None:
+                    raise jsonschema.ValidationError(f"Parameter {k} is malformed")
+                _, config = result
+                filled[k] = config
+        validated["parameters"] = filled
 
     if "early_terminate" in validated:
         validated = fill_validate_early_terminate(validated)

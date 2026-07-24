@@ -652,6 +652,79 @@
         }
       ]
     },
+    "metric": {
+      "type": "object",
+      "description": "Metric to optimize",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of metric"
+        },
+        "goal": {
+          "type": "string",
+          "description": "Possible values: minimize, maximize",
+          "enum": [
+            "minimize",
+            "maximize"
+          ],
+          "default": "minimize"
+        },
+        "target": {
+          "type": "number",
+          "description": "The sweep will finish once any run reaches the goal for this value"
+        },
+        "impute": {
+          "type": "string",
+          "description": "Metric value to use in bayes search for runs that fail, crash, or are killed",
+          "enum": ["latest", "best", "worst"],
+          "default": "worst"
+        },
+        "impute_while_running": {
+          "type": "string",
+          "description": "Appends a calculated metric even when epochs are in a running state",
+          "enum": ["latest", "best", "worst", "false"],
+          "default": "false"
+        }
+      }
+    },
+    "scheduler": {
+      "type": "object",
+      "description": "Configuration for a custom hyperparameter optimization scheduler. Requires `method: custom`, and cannot be used together with `early_terminate`.",
+      "required": [
+        "engine",
+        "source",
+        "optimizer",
+        "search_space"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "type": "string",
+          "description": "Possible values: optuna, ax, wandb",
+          "enum": [
+            "optuna",
+            "ax",
+            "wandb"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "description": "Path to the file containing the optimizer and search space functions"
+        },
+        "optimizer": {
+          "type": "string",
+          "description": "Name of the function in `source` that builds the study/optimizer"
+        },
+        "search_space": {
+          "type": "string",
+          "description": "Name of the function in `source` that defines the search space"
+        }
+      }
+    },
     "hyperband_stopping": {
       "type": "object",
       "description": "Speed up hyperparameter search by killing off runs that appear to have lower performance than successful training runs",
@@ -708,8 +781,7 @@
     }
   },
   "required": [
-    "method",
-    "parameters"
+    "method"
   ],
   "additionalProperties": false,
   "properties": {
@@ -788,43 +860,18 @@
       "exclusiveMinimum": 0
     },
     "metric": {
-      "type": "object",
-      "description": "Metric to optimize",
-      "required": [
-        "name"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Name of metric"
-        },
-        "goal": {
-          "type": "string",
-          "description": "Possible values: minimize, maximize",
-          "enum": [
-            "minimize",
-            "maximize"
-          ],
-          "default": "minimize"
-        },
-        "target": {
-          "type": "number",
-          "description": "The sweep will finish once any run achieves this value"
-        },
-        "impute": {
-          "type": "string",
-          "description": "Metric value to use in bayes search for runs that fail, crash, or are killed",
-          "enum": ["latest", "best", "worst"],
-          "default": "worst"
-        },
-        "impute_while_running": {
-          "type": "string",
-          "description": "Appends a calculated metric even when epochs are in a running state",
-          "enum": ["latest", "best", "worst", "false"],
-          "default": "false"
-        }
+      "$ref": "#/definitions/metric"
+    },
+    "metrics": {
+      "type": "array",
+      "description": "List of metrics to optimize, for multi-objective optimization. Cannot be used together with `metric`, and requires `method: custom`.",
+      "minItems": 2,
+      "items": {
+        "$ref": "#/definitions/metric"
       }
+    },
+    "scheduler": {
+      "$ref": "#/definitions/scheduler"
     },
     "early_terminate": {
       "oneOf": [
