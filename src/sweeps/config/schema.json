@@ -675,7 +675,7 @@
         },
         "target": {
           "type": "number",
-          "description": "The sweep will finish once any run achieves this value"
+          "description": "The sweep will finish once any run reaches the goal for this value"
         },
         "impute": {
           "type": "string",
