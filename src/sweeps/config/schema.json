@@ -695,10 +695,7 @@
       "type": "object",
       "description": "Configuration for a custom hyperparameter optimization scheduler. Requires `method: custom`, and cannot be used together with `early_terminate`.",
       "required": [
-        "engine",
-        "source",
-        "optimizer",
-        "search_space"
+        "engine"
       ],
       "additionalProperties": false,
       "properties": {
@@ -723,6 +720,10 @@
           "type": "string",
           "description": "Name of the function in `source` that defines the search space"
         }
+      },
+      "dependencies": {
+        "optimizer": ["source"],
+        "search_space": ["source"]
       }
     },
     "hyperband_stopping": {

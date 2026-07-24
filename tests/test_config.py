@@ -250,15 +250,59 @@ def test_scheduler_missing_required_field():
     invalid_config = {
         "method": "custom",
         "scheduler": {
-            "engine": "wandb",
             "source": "scheduler.py",
             "optimizer": "build_study",
+            "search_space": "search_space",
         },
         "parameters": {"v1": {"values": [1, 2, 3]}},
     }
 
     with pytest.raises(jsonschema.ValidationError):
         _ = config.SweepConfig(invalid_config)
+
+
+def test_scheduler_only_engine_required():
+    valid_config = {
+        "method": "custom",
+        "scheduler": {
+            "engine": "wandb",
+        },
+        "parameters": {"v1": {"values": [1, 2, 3]}},
+    }
+
+    sweep_config = config.SweepConfig(valid_config)
+    assert sweep_config["scheduler"]["engine"] == "wandb"
+
+
+@pytest.mark.parametrize("field", ["optimizer", "search_space"])
+def test_scheduler_optimizer_or_search_space_requires_source(field):
+    invalid_config = {
+        "method": "custom",
+        "scheduler": {
+            "engine": "wandb",
+            field: "build_study",
+        },
+        "parameters": {"v1": {"values": [1, 2, 3]}},
+    }
+
+    with pytest.raises(jsonschema.ValidationError):
+        _ = config.SweepConfig(invalid_config)
+
+
+def test_scheduler_optimizer_and_search_space_with_source_valid():
+    valid_config = {
+        "method": "custom",
+        "scheduler": {
+            "engine": "wandb",
+            "source": "scheduler.py",
+            "optimizer": "build_study",
+            "search_space": "search_space",
+        },
+        "parameters": {"v1": {"values": [1, 2, 3]}},
+    }
+
+    sweep_config = config.SweepConfig(valid_config)
+    assert sweep_config["scheduler"]["source"] == "scheduler.py"
 
 
 def test_scheduler_requires_custom_method():
