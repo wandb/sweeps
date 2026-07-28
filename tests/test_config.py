@@ -338,6 +338,28 @@ def test_scheduler_and_early_terminate_mutually_exclusive():
         _ = config.SweepConfig(invalid_config)
 
 
+def test_scheduler_and_controller_mutually_exclusive():
+    invalid_config = {
+        "method": "custom",
+        "scheduler": {
+            "engine": "wandb",
+            "source": "scheduler.py",
+            "optimizer": "build_study",
+            "search_space": "search_space",
+        },
+        "controller": {"type": "local"},
+        "parameters": {"v1": {"values": [1, 2, 3]}},
+    }
+
+    with pytest.raises(jsonschema.ValidationError, match="controller"):
+        _ = config.SweepConfig(invalid_config)
+
+    # cloud is acceptable
+    invalid_config["controller"]["type"] = "cloud"
+    cfg = config.SweepConfig(invalid_config)
+    assert cfg["controller"]["type"] == "cloud"
+
+
 def test_early_terminate_without_scheduler_still_works():
     valid_config = {
         "method": "bayes",

@@ -54,6 +54,12 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
                 f"`scheduler` requires `method: custom` (got `method: {method}`)."
             )
 
+        if "controller" in config and config["controller"]["type"] == "local":
+            schema_violation_messages.append(
+                "`controller: type:local` cannot be used together with `scheduler`: "
+                "use `scheduler` instead of `controller`."
+            )
+
         if "early_terminate" in config:
             schema_violation_messages.append(
                 "`early_terminate` cannot be used together with `scheduler`: "
