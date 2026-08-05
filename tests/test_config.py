@@ -199,7 +199,7 @@ def test_fill_validate_metrics_invalid_impute_replaced_with_default():
 
 def test_scheduler_wandb_engine_valid():
     valid_config = {
-        "method": "custom",
+        "method": "bayes",
         "scheduler": {
             "engine": "wandb",
             "source": "scheduler.py",
@@ -216,7 +216,7 @@ def test_scheduler_wandb_engine_valid():
 @pytest.mark.parametrize("engine", ["optuna", "ax"])
 def test_scheduler_unavailable_engine_raises(engine):
     invalid_config = {
-        "method": "custom",
+        "method": "bayes",
         "scheduler": {
             "engine": engine,
             "source": "scheduler.py",
@@ -232,7 +232,7 @@ def test_scheduler_unavailable_engine_raises(engine):
 
 def test_scheduler_invalid_engine_rejected():
     invalid_config = {
-        "method": "custom",
+        "method": "bayes",
         "scheduler": {
             "engine": "not-a-real-engine",
             "source": "scheduler.py",
@@ -248,7 +248,7 @@ def test_scheduler_invalid_engine_rejected():
 
 def test_scheduler_missing_required_field():
     invalid_config = {
-        "method": "custom",
+        "method": "bayes",
         "scheduler": {
             "source": "scheduler.py",
             "optimizer": "build_study",
@@ -263,7 +263,7 @@ def test_scheduler_missing_required_field():
 
 def test_scheduler_only_engine_required():
     valid_config = {
-        "method": "custom",
+        "method": "bayes",
         "scheduler": {
             "engine": "wandb",
         },
@@ -277,7 +277,7 @@ def test_scheduler_only_engine_required():
 @pytest.mark.parametrize("field", ["optimizer", "search_space"])
 def test_scheduler_optimizer_or_search_space_requires_source(field):
     invalid_config = {
-        "method": "custom",
+        "method": "bayes",
         "scheduler": {
             "engine": "wandb",
             field: "build_study",
@@ -291,7 +291,7 @@ def test_scheduler_optimizer_or_search_space_requires_source(field):
 
 def test_scheduler_optimizer_and_search_space_with_source_valid():
     valid_config = {
-        "method": "custom",
+        "method": "bayes",
         "scheduler": {
             "engine": "wandb",
             "source": "scheduler.py",
@@ -305,14 +305,11 @@ def test_scheduler_optimizer_and_search_space_with_source_valid():
     assert sweep_config["scheduler"]["source"] == "scheduler.py"
 
 
-def test_scheduler_requires_custom_method():
+def test_scheduler_engine_wandb_requires_method():
     invalid_config = {
-        "method": "grid",
+        "method": "custom",
         "scheduler": {
             "engine": "wandb",
-            "source": "scheduler.py",
-            "optimizer": "build_study",
-            "search_space": "search_space",
         },
         "parameters": {"v1": {"values": [1, 2, 3]}},
     }
@@ -323,12 +320,9 @@ def test_scheduler_requires_custom_method():
 
 def test_scheduler_and_early_terminate_mutually_exclusive():
     invalid_config = {
-        "method": "custom",
+        "method": "bayes",
         "scheduler": {
             "engine": "wandb",
-            "source": "scheduler.py",
-            "optimizer": "build_study",
-            "search_space": "search_space",
         },
         "early_terminate": {"type": "hyperband", "min_iter": 3},
         "parameters": {"v1": {"values": [1, 2, 3]}},
@@ -340,12 +334,9 @@ def test_scheduler_and_early_terminate_mutually_exclusive():
 
 def test_scheduler_and_controller_mutually_exclusive():
     invalid_config = {
-        "method": "custom",
+        "method": "bayes",
         "scheduler": {
             "engine": "wandb",
-            "source": "scheduler.py",
-            "optimizer": "build_study",
-            "search_space": "search_space",
         },
         "controller": {"type": "local"},
         "parameters": {"v1": {"values": [1, 2, 3]}},
@@ -403,7 +394,7 @@ def test_metrics_requires_custom_method_error_message_is_specific():
 
 def test_parameters_not_required_when_scheduler_defines_search_space():
     valid_config = {
-        "method": "custom",
+        "method": "bayes",
         "scheduler": {
             "engine": "wandb",
             "source": "scheduler.py",
@@ -418,7 +409,7 @@ def test_parameters_not_required_when_scheduler_defines_search_space():
 
 def test_parameters_still_allowed_alongside_scheduler_search_space():
     valid_config = {
-        "method": "custom",
+        "method": "bayes",
         "scheduler": {
             "engine": "wandb",
             "source": "scheduler.py",
@@ -441,7 +432,7 @@ def test_parameters_still_required_without_scheduler():
 
 def test_parameters_still_required_when_scheduler_has_no_search_space():
     invalid_config = {
-        "method": "custom",
+        "method": "bayes",
         "scheduler": {
             "engine": "wandb",
             "source": "scheduler.py",
