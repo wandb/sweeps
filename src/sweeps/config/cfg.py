@@ -15,9 +15,12 @@ from .schema import (
     validator,
 )
 
+_SUPPORTED_METHODS_BY_ENGINE = {
+    "wandb": ["grid", "bayes", "random"],
+}
+
 
 def schema_violations_from_proposed_config(config: Dict) -> List[str]:
-
     schema_violation_messages = []
     for error in validator.iter_errors(config):
         schema_violation_messages.append(f"{error.message}")
@@ -48,12 +51,7 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
             "scheduler."
         )
 
-    if "scheduler" in config:
-        if method is not None and method != "custom":
-            schema_violation_messages.append(
-                f"`scheduler` requires `method: custom` (got `method: {method}`)."
-            )
-
+    if scheduler is not None:
         if "controller" in config and config["controller"]["type"] == "local":
             schema_violation_messages.append(
                 "`controller: type:local` cannot be used together with `scheduler`: "
@@ -70,12 +68,17 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
         # only the wandb engine is implemented so far - the other engines are
         # part of the schema so that configs can be written against the
         # eventual API, but they cannot be used yet
-        if isinstance(config["scheduler"], dict):
-            engine = config["scheduler"].get("engine")
-            if engine in ("optuna", "ax"):
+        if isinstance(scheduler, dict):
+            engine = scheduler.get("engine")
+            if engine not in _SUPPORTED_METHODS_BY_ENGINE:
                 schema_violation_messages.append(
-                    f"scheduler.engine '{engine}' is not yet supported; "
-                    "only 'wandb' is currently available"
+                    f"scheduler.engine '{engine}' is not supported. "
+                    f"supported engines are: {', '.join(_SUPPORTED_METHODS_BY_ENGINE)}"
+                )
+            elif method not in _SUPPORTED_METHODS_BY_ENGINE[engine]:
+                schema_violation_messages.append(
+                    f"`scheduler.engine: {engine}` does not support `method: {method}`. "
+                    f"supported methods are: {', '.join(_SUPPORTED_METHODS_BY_ENGINE[engine])}"
                 )
 
     # validate min/max - this cannot be done with jsonschema
