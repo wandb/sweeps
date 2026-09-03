@@ -214,9 +214,9 @@ def test_scheduler_wandb_engine_valid():
 
 
 @pytest.mark.parametrize("engine", ["optuna", "ax"])
-def test_scheduler_unavailable_engine_raises(engine):
-    invalid_config = {
-        "method": "bayes",
+def test_scheduler_external_engine_requires_custom_method(engine):
+    valid_config = {
+        "method": "custom",
         "scheduler": {
             "engine": engine,
             "source": "scheduler.py",
@@ -226,7 +226,25 @@ def test_scheduler_unavailable_engine_raises(engine):
         "parameters": {"v1": {"values": [1, 2, 3]}},
     }
 
-    with pytest.raises(jsonschema.ValidationError):
+    sweep_config = config.SweepConfig(valid_config)
+    assert sweep_config["scheduler"]["engine"] == engine
+
+
+@pytest.mark.parametrize("engine", ["optuna", "ax"])
+@pytest.mark.parametrize("method", ["grid", "random", "bayes"])
+def test_scheduler_external_engine_rejects_wandb_methods(engine, method):
+    invalid_config = {
+        "method": method,
+        "scheduler": {
+            "engine": engine,
+            "source": "scheduler.py",
+            "optimizer": "build_study",
+            "search_space": "search_space",
+        },
+        "parameters": {"v1": {"values": [1, 2, 3]}},
+    }
+
+    with pytest.raises(jsonschema.ValidationError, match="method: custom"):
         _ = config.SweepConfig(invalid_config)
 
 
