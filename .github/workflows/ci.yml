@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref or SHA to test (defaults to the selected branch)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.10"
+            tox-env: py310
+          - python-version: "3.11"
+            tox-env: py311
+          - python-version: "3.12"
+            tox-env: py312
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.9"
+          enable-cache: true
+          cache-dependency-glob: requirements*.txt
+
+      - name: Install Python ${{ matrix.python-version }}
+        run: uv python install "${{ matrix.python-version }}"
+
+      - name: Run tests
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+          TOX_ENV: ${{ matrix.tox-env }}
+        run: |
+          if [[ "$PYTHON_VERSION" == "3.12" ]]; then
+            uv run --python "$PYTHON_VERSION" --with-requirements requirements.dev.txt \
+              --with setuptools==75.8.0 tox -e "$TOX_ENV"
+          else
+            uv run --python "$PYTHON_VERSION" --with-requirements requirements.dev.txt \
+              tox -e "$TOX_ENV"
+          fi
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-artifacts-python-${{ matrix.python-version }}
+          path: |
+            result.xml
+            coverage.xml
+            prof/
+          if-no-files-found: warn
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.9"
+          enable-cache: true
+          cache-dependency-glob: requirements*.txt
+
+      - name: Install Python 3.11
+        run: uv python install "3.11"
+
+      - name: Run pre-commit
+        run: >-
+          uv run --python 3.11 --with-requirements requirements.dev.txt
+          pre-commit run --all-files
