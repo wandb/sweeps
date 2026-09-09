@@ -69,6 +69,11 @@ jobs:
             coverage.xml
             prof/
           if-no-files-found: warn
+      - name: Upload coverage reports to Datadog
+        uses: DataDog/coverage-upload-github-action@v1
+        with:
+          api_key: ${{ secrets.DD_API_KEY }}
+          site: us5.datadoghq.com
 
   lint:
     name: Lint
