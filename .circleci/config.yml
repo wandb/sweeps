@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  codecov: codecov/codecov@6.0.0
-
 commands:
   install-uv:
     steps:
@@ -65,9 +62,6 @@ jobs:
           step_name: Run tests
           python_version: "3.11"
           command: tox -e py311
-      # Upload coverage from one Python version to avoid duplicate Codecov reports.
-      - codecov/upload:
-          flags: unit
       - store_artifacts:
           path: coverage.xml
           destination: coverage/coverage.xml
