@@ -17,6 +17,8 @@ from .schema import (
 
 _SUPPORTED_METHODS_BY_ENGINE = {
     "wandb": ["grid", "bayes", "random"],
+    "optuna": ["custom"],
+    "ax": ["custom"],
 }
 
 
@@ -65,9 +67,6 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
                 "itself."
             )
 
-        # only the wandb engine is implemented so far - the other engines are
-        # part of the schema so that configs can be written against the
-        # eventual API, but they cannot be used yet
         if isinstance(scheduler, dict):
             engine = scheduler.get("engine")
             if engine not in _SUPPORTED_METHODS_BY_ENGINE:
@@ -78,7 +77,10 @@ def schema_violations_from_proposed_config(config: Dict) -> List[str]:
             elif method not in _SUPPORTED_METHODS_BY_ENGINE[engine]:
                 schema_violation_messages.append(
                     f"`scheduler.engine: {engine}` does not support `method: {method}`. "
-                    f"supported methods are: {', '.join(_SUPPORTED_METHODS_BY_ENGINE[engine])}"
+                    "supported methods are: "
+                    + ", ".join(
+                        f"`method: {m}`" for m in _SUPPORTED_METHODS_BY_ENGINE[engine]
+                    )
                 )
 
     # validate min/max - this cannot be done with jsonschema
