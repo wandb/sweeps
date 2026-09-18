@@ -18,8 +18,8 @@ with open(sweep_config_jsonschema_fname, "r") as f:
     sweep_config_jsonschema = json.load(f)
 
 
-dereferenced_sweep_config_jsonschema = jsonref.JsonRef.replace_refs(
-    sweep_config_jsonschema
+dereferenced_sweep_config_jsonschema = jsonref.replace_refs(
+    sweep_config_jsonschema, proxies=False
 )
 
 format_checker = jsonschema.FormatChecker()
