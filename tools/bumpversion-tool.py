@@ -4,7 +4,7 @@ import argparse
 import configparser
 import sys
 
-import bumpversion
+from bumpversion.cli import main as bump2version_main
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--to-dev", action="store_true", help="bump the dev version")
@@ -36,7 +36,7 @@ def bump_release_to_dev(current_version):
     if args.debug:
         bump_args += ["--allow-dirty", "--dry-run", "--verbose"]
     bump_args += ["--new-version", new_version, "dev"]
-    bumpversion.main(bump_args)
+    bump2version_main(bump_args)
 
 
 def bump_release_from_dev(current_version):
@@ -51,7 +51,7 @@ def bump_release_from_dev(current_version):
     if args.debug:
         bump_args += ["--allow-dirty", "--dry-run", "--verbose"]
     bump_args += ["--new-version", new_version, "patch"]
-    bumpversion.main(bump_args)
+    bump2version_main(bump_args)
 
 
 def main():
