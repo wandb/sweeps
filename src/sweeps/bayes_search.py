@@ -51,15 +51,22 @@ def fit_normalized_gaussian_process(
         random_state=2,
     )
 
+    y = np.asarray(y, dtype=float)
     y_stddev: ArrayLike
     if len(y) == 1:
-        y = np.array(y)
         y_mean = y[0]
         y_stddev = 1.0
+        y_norm = y - y_mean
     else:
-        y_mean = np.mean(y)
-        y_stddev = np.std(y) + STD_NUMERICAL_STABILITY_EPSILON
-    y_norm = (y - y_mean) / y_stddev
+        # Large finite metrics cause np.mean to overflow to inf, so we first normalize
+        # everything by the largest metric seen.
+        scale = max(float(np.max(np.abs(y))), 1.0)
+        y_scaled = y / scale
+        scaled_mean = np.mean(y_scaled)
+        scaled_stddev = np.std(y_scaled) + STD_NUMERICAL_STABILITY_EPSILON / scale
+        y_norm = (y_scaled - scaled_mean) / scaled_stddev
+        y_mean = scaled_mean * scale
+        y_stddev = scaled_stddev * scale
     gp.fit(X, y_norm)
     return gp, y_mean, y_stddev
 
@@ -152,15 +159,18 @@ def train_gaussian_process(
     if current_X is not None:
         # if we have some hyperparameters running, we pretend that they return
         # the prediction of the function we've fit
-        X = np.append(X, current_X, axis=0)
         current_y_fantasy = (gp.predict(current_X) * y_stddev) + y_mean
-        y = np.append(y, current_y_fantasy)
+        # drop fantasies that overflowed so they can't poison the refit
+        is_fantasy_finite = np.isfinite(current_y_fantasy)
+        X = np.append(X, current_X[is_fantasy_finite], axis=0)
+        y = np.append(y, current_y_fantasy[is_fantasy_finite])
         gp, y_mean, y_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
     return gp, y_mean, y_stddev
 
 
 def filter_nans(sample_X: ArrayLike, sample_y: ArrayLike) -> ArrayLike:
-    is_row_finite = ~(np.isnan(sample_X).any(axis=1) | np.isnan(sample_y))
+    """Drop samples whose parameters or objective value are NaN or infinite."""
+    is_row_finite = np.isfinite(sample_X).all(axis=1) & np.isfinite(sample_y)
     sample_X = sample_X[is_row_finite, :]
     sample_y = sample_y[is_row_finite]
     return sample_X, sample_y
@@ -237,6 +247,13 @@ def next_sample(
 
     filtered_X, filtered_y = filter_nans(sample_X, sample_y)
 
+    if current_X is not None:
+        current_X = np.asarray(current_X, dtype=float)
+        if current_X.ndim == 2:
+            current_X = current_X[np.isfinite(current_X).all(axis=1)]
+            if current_X.shape[0] == 0:
+                current_X = None
+
     # we can't run this algothim with less than two sample points, so we'll
     # just return a random point
     if filtered_X.shape[0] < 2:
@@ -260,7 +277,11 @@ def next_sample(
         )
 
     # build the acquisition function
-    (gp, y_mean, y_stddev,) = train_gaussian_process(
+    (
+        gp,
+        y_mean,
+        y_stddev,
+    ) = train_gaussian_process(
         filtered_X, filtered_y, X_bounds, current_X, nu, max_samples_for_gp
     )
     # Look for the minimum value of our fitted-target-function + (kappa * fitted-target-std_dev)
@@ -314,9 +335,7 @@ def next_sample(
         y_pred[best_test_X_index] - min_norm_y
     ) * scipy_stats.norm.cdf(z_best) + y_pred_std[
         best_test_X_index
-    ] * scipy_stats.norm.pdf(
-        z_best
-    )
+    ] * scipy_stats.norm.pdf(z_best)
 
     return (
         suggested_X,
