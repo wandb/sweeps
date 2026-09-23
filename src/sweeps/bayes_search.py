@@ -51,15 +51,22 @@ def fit_normalized_gaussian_process(
         random_state=2,
     )
 
+    y = np.asarray(y, dtype=float)
     y_stddev: ArrayLike
     if len(y) == 1:
-        y = np.array(y)
         y_mean = y[0]
         y_stddev = 1.0
+        y_norm = y - y_mean
     else:
-        y_mean = np.mean(y)
-        y_stddev = np.std(y) + STD_NUMERICAL_STABILITY_EPSILON
-    y_norm = (y - y_mean) / y_stddev
+        # Large finite metrics cause np.mean to overflow to inf, so we first normalize
+        # everything by the largest metric seen.
+        scale = max(float(np.max(np.abs(y))), 1.0)
+        y_scaled = y / scale
+        scaled_mean = np.mean(y_scaled)
+        scaled_stddev = np.std(y_scaled) + STD_NUMERICAL_STABILITY_EPSILON / scale
+        y_norm = (y_scaled - scaled_mean) / scaled_stddev
+        y_mean = scaled_mean * scale
+        y_stddev = scaled_stddev * scale
     gp.fit(X, y_norm)
     return gp, y_mean, y_stddev
 
@@ -113,9 +120,10 @@ def train_gaussian_process(
         (gp.predict(X) * y_stddev) + y_mean
     """
     if current_X is not None:
-        current_X = np.array(current_X)
+        current_X = np.array(current_X, dtype=float)
         if len(current_X.shape) != 2:
             raise ValueError("Current X must be a 2 dimensional array")
+        current_X = current_X[np.isfinite(current_X).all(axis=1)]
 
         # we can't let the current samples be bigger than max samples
         # because we need to use some real samples to build the curve
@@ -149,18 +157,21 @@ def train_gaussian_process(
         X = sample_X
         y = sample_y
     gp, y_mean, y_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
-    if current_X is not None:
+    if current_X is not None and len(current_X):
         # if we have some hyperparameters running, we pretend that they return
         # the prediction of the function we've fit
-        X = np.append(X, current_X, axis=0)
         current_y_fantasy = (gp.predict(current_X) * y_stddev) + y_mean
-        y = np.append(y, current_y_fantasy)
+        # drop fantasies that overflowed so they can't poison the refit
+        is_fantasy_finite = np.isfinite(current_y_fantasy)
+        X = np.append(X, current_X[is_fantasy_finite], axis=0)
+        y = np.append(y, current_y_fantasy[is_fantasy_finite])
         gp, y_mean, y_stddev = fit_normalized_gaussian_process(X, y, nu=nu)
     return gp, y_mean, y_stddev
 
 
 def filter_nans(sample_X: ArrayLike, sample_y: ArrayLike) -> ArrayLike:
-    is_row_finite = ~(np.isnan(sample_X).any(axis=1) | np.isnan(sample_y))
+    """Drop samples whose parameters or objective value are NaN or infinite."""
+    is_row_finite = np.isfinite(sample_X).all(axis=1) & np.isfinite(sample_y)
     sample_X = sample_X[is_row_finite, :]
     sample_y = sample_y[is_row_finite]
     return sample_X, sample_y
