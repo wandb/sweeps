@@ -8,7 +8,7 @@ maintenance: |
 knowledge:
   - name: lint
     contents: |
-      # pre-commit run --all-files
+      make format
   - name: test
     contents: |
-      # python -m pytest tests -q
+      make test-short
