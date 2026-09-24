@@ -11,4 +11,4 @@ knowledge:
       make format
   - name: test
     contents: |
-      make test-short
+      make test
