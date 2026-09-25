@@ -611,6 +611,66 @@ def test_runs_bayes_nan(sweep_config_bayes_search_2params_with_metric):
     assert_suggestions_match_uniform_distribution(runs, "v2", 1, 10)
 
 
+def test_runs_bayes_diverging_nan_metrics_with_runs_in_flight(
+    sweep_config_bayes_search_2params_with_metric,
+):
+    # A run whose loss blows up to a huge value before going NaN, alongside
+    # in-flight runs, used to make gp.fit raise "Input y contains NaN".
+    runs = [
+        SweepRun(
+            state=RunState.finished,
+            config={"v1": {"value": 2}, "v2": {"value": 2.0}},
+            history=[{"loss": 1e308}, {"loss": float("nan")}],
+            summary_metrics={"loss": "NaN"},
+        ),
+        SweepRun(
+            state=RunState.finished,
+            config={"v1": {"value": 5}, "v2": {"value": 5.0}},
+            history=[{"loss": 0.5}],
+        ),
+        SweepRun(
+            state=RunState.finished,
+            config={"v1": {"value": 8}, "v2": {"value": 8.0}},
+            summary_metrics={"loss": float("inf")},
+        ),
+        SweepRun(
+            state=RunState.running, config={"v1": {"value": 3}, "v2": {"value": 7.0}}
+        ),
+        SweepRun(
+            state=RunState.pending, config={"v1": {"value": 9}, "v2": {"value": 1.5}}
+        ),
+    ]
+
+    suggestion = next_run(sweep_config_bayes_search_2params_with_metric, runs)
+
+    assert 1 <= suggestion.config["v1"]["value"] <= 10
+    assert 1.0 <= suggestion.config["v2"]["value"] <= 10.0
+
+
+def test_next_sample_ignores_non_finite_samples_and_current_X():
+    sample_X = np.array([[0.1], [0.4], [np.inf], [0.8], [0.9]])
+    sample_y = np.array([1.0, 0.5, 0.2, np.inf, 0.3])
+    current_X = np.array([[np.nan], [0.6]])
+
+    suggestion, *_ = bayes.next_sample(
+        sample_X=sample_X,
+        sample_y=sample_y,
+        current_X=current_X,
+        test_X=np.linspace(0.0, 1.0, 11)[:, None],
+    )
+
+    assert 0.0 <= suggestion[0] <= 1.0
+
+
+def test_fit_normalized_gaussian_process_subnormal_y_has_finite_stddev():
+    _, y_mean, y_stddev = bayes.fit_normalized_gaussian_process(
+        np.array([[0.1], [0.5], [0.9]]), np.array([1e-320, 0.0, 0.0])
+    )
+
+    assert np.isfinite(y_mean)
+    assert np.isfinite(y_stddev)
+
+
 def test_runs_bayes_categorical_list():
     v2_min = 1
     v2_max = 10
