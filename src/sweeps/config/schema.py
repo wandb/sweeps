@@ -109,7 +109,9 @@ def validate_min_max(parameter_name: str, parameter_config: Dict) -> None:
         min_value, max_value = parameter_config["min"], parameter_config["max"]
         # The jsonschema validator reports non-numeric bounds (e.g. null) as
         # violations, but this still runs on them, so only compare numbers.
-        if not isinstance(min_value, numbers.Real or not isinstance(max_value, numbers.Real):
+        if not isinstance(min_value, numbers.Real) or not isinstance(
+            max_value, numbers.Real
+        ):
             return
         if min_value >= max_value:
             raise ValueError(
