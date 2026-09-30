@@ -1,4 +1,5 @@
 import json
+import numbers
 from copy import deepcopy
 from pathlib import Path
 from typing import Dict, Optional, Tuple
@@ -105,11 +106,14 @@ def fill_parameter(parameter_name: str, config: Dict) -> Optional[Tuple[str, Dic
 
 def validate_min_max(parameter_name: str, parameter_config: Dict) -> None:
     if "min" in parameter_config and "max" in parameter_config:
-        # this comparison is type safe because the jsonschema enforces type uniformity
-        if parameter_config["min"] >= parameter_config["max"]:
+        min_value, max_value = parameter_config["min"], parameter_config["max"]
+        # The jsonschema validator reports non-numeric bounds (e.g. null) as
+        # violations, but this still runs on them, so only compare numbers.
+        if not all(isinstance(v, numbers.Real) for v in (min_value, max_value)):
+            return
+        if min_value >= max_value:
             raise ValueError(
-                f'{parameter_name}: min {parameter_config["min"]} is not '
-                f'less than max {parameter_config["max"]}'
+                f"{parameter_name}: min {min_value} is not less than max {max_value}"
             )
 
 
