@@ -29,6 +29,22 @@ def test_min_max_validation():
         _ = config.SweepConfig(invalid_config)
 
 
+@pytest.mark.parametrize(
+    "bounds",
+    [
+        {"min": None, "max": 5},
+        {"min": 0, "max": None},
+        {"min": "0", "max": 1},
+        {"min": [0], "max": 1},
+    ],
+)
+def test_non_numeric_min_max_is_a_violation_not_a_crash(bounds):
+    proposed_config = {"method": "random", "parameters": {"v1": bounds}}
+
+    violations = config.schema_violations_from_proposed_config(proposed_config)
+    assert len(violations) > 0
+
+
 def test_negative_sigma_validation():
     invalid_config = {
         "method": "random",
