@@ -863,7 +863,8 @@
     "idle_timeout_mins": {
       "type": "integer",
       "description": "A sweep will be automatically finished if idle for this many minutes. Minimum is 15.",
-      "minimum": 15
+      "minimum": 15,
+      "default": 1440
     },
     "metric": {
       "$ref": "#/definitions/metric"
